@@ -1,0 +1,240 @@
+
+#include <iostream>
+#include <cstring>
+
+#include "wcslib.h"
+#include "chealpix.h"
+
+#include "FitsUtils.h"
+#include "HealpixMap.h"
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
+
+static void GalDeg2ThetaPhiRad(double lDeg, double bDeg, double* thetaRad, double* phiRad)
+{
+*thetaRad = (90-bDeg)*D2R;
+while (lDeg>=360)
+	lDeg -= 360;
+while (lDeg<0)
+	lDeg += 360;
+*phiRad = lDeg*D2R;
+}
+
+static void ThetaPhiRad2GalDeg(double thetaRad, double phiRad, double* lDeg, double* bDeg)
+{
+*lDeg = phiRad*R2D;
+*bDeg = 90-thetaRad*R2D;
+}
+
+
+int Gal2Hpx(int nside, Order order, double lDeg, double bDeg)
+{
+double theta, phi;
+long index;
+GalDeg2ThetaPhiRad(lDeg, bDeg, &theta, &phi);
+if (order==RING)
+	ang2pix_ring(nside, theta, phi, &index);
+else
+	ang2pix_nest(nside, theta, phi, &index);
+return int(index);
+}
+
+void Hpx2Gal(int nside, Order order, int index, double* lDeg, double* bDeg)
+{
+double theta, phi;
+if (order==RING)
+	pix2ang_ring(nside, index, &theta, &phi);
+else
+	pix2ang_nest(nside, index, &theta, &phi);
+ThetaPhiRad2GalDeg(theta, phi, lDeg, bDeg);
+}
+
+
+
+HealpixMap::HealpixMap(int nside, Order order): m_nside(nside), m_order(order)
+{
+if (m_nside<1)
+	m_nside = 1;
+int positions = 12*nside*nside;
+m_values = new float[positions];
+for (int i=0; i<positions; ++i)
+	m_values[i] = 0;
+}
+
+
+void HealpixMap::SetNSide(int nside)
+{
+delete[] m_values;
+m_nside = nside;
+int positions = 12*nside*nside;
+m_values = new float[positions];
+for (int i=0; i<positions; ++i)
+	m_values[i] = 0;
+}
+
+
+
+bool HealpixMap::Save(const char* fileName, int rowOrder)
+{
+fitsfile* fptr;
+int status = 0;
+
+fits_create_file(&fptr, fileName, &status);
+if (status) {
+	cerr << "Failed creating the disk file. Error=" << status << endl;
+	return false;
+	}
+
+/**
+Fits::WriteKey(fptr, &status, "SIMPLE", true, "HealpixMap wrote according to FITS standard");
+Fits::WriteKey(fptr, &status, "BITPIX", 8, "Number of bits per data pixel");
+Fits::WriteKey(fptr, &status, "NAXIS", 0, "Number of data axes");
+Fits::WriteKey(fptr, &status, "EXTEND", true, "FITS data may contain extensions");
+Fits::WriteDate(fptr, &status);
+Fits::WriteAstroComments(fptr, &status);
+*/
+FitsFile fFile(fptr);
+fFile.WriteKey("SIMPLE", true, "HealpixMap wrote according to FITS standard");
+fFile.WriteKey("BITPIX", 8, "Number of bits per data pixel");
+fFile.WriteKey("NAXIS", 0, "Number of data axes");
+fFile.WriteKey("EXTEND", true, "FITS data may contain extensions");
+fFile.WriteDate();
+fFile.WriteAstroComments();
+status = fFile.Status();
+if (status) {
+	cerr << "Failed writing to the primary HDU. Error=" << status << endl;
+	return false;
+	}
+
+/// Second Header
+
+if (rowOrder<1)
+	rowOrder = 1;
+if (rowOrder>m_nside)
+	rowOrder = m_nside;
+int floatCount = rowOrder*rowOrder;
+
+
+fits_create_hdu(fptr, &status);
+if (status)
+	cerr << "Failed creating the HDU extension. Error=" << status << endl;
+else {
+	LONGLONG naxis2 = 12*m_nside*m_nside/floatCount;
+	
+	char* ttype[] = { const_cast<char*>("signal  ") };
+	
+	char typeString[32];
+	sprintf(typeString, "%dE", floatCount);
+	char* tform[1];
+	tform[0] = typeString;
+	
+	char* tunit[] = { const_cast<char*>("unknown ") };
+	
+	fits_create_tbl(fptr, BINARY_TBL, naxis2, 1, ttype, tform, tunit, "xtension", &status);
+/**
+	Fits::WriteKey(fptr, &status, "PIXTYPE", "HEALPIX ", "HEALPIX pixelisation");
+	Fits::WriteKey(fptr, &status, "ORDERING", OrderName[m_order], "Pixel ordering scheme, RING or NESTED");
+	Fits::WriteKey(fptr, &status, "NSIDE", m_nside, "Resolution parameter for HEALPIX");
+	
+	Fits::WriteKey(fptr, &status, "FIRSTPIX", 0, "First pixel # (0 based)");
+	Fits::WriteKey(fptr, &status, "LASTPIX", 12*m_nside*m_nside-1, "Last pixel # (0 based)");
+	Fits::WriteKey(fptr, &status, "INDXSCHM", "IMPLICIT", "Indexing: IMPLICIT or EXPLICIT");
+*/
+	fFile.SetStatus(status);
+	fFile.WriteKey("PIXTYPE", "HEALPIX ", "HEALPIX pixelisation");
+	fFile.WriteKey("ORDERING", OrderName[m_order], "Pixel ordering scheme, RING or NESTED");
+	fFile.WriteKey("NSIDE", m_nside, "Resolution parameter for HEALPIX");
+
+	fFile.WriteKey("FIRSTPIX", 0, "First pixel # (0 based)");
+	fFile.WriteKey("LASTPIX", 12*m_nside*m_nside-1, "Last pixel # (0 based)");
+	fFile.WriteKey("INDXSCHM", "IMPLICIT", "Indexing: IMPLICIT or EXPLICIT");
+	status = fFile.Status();
+
+	fits_write_col(fptr, TFLOAT, 1, 1, 1, 12*m_nside*m_nside, m_values, &status);
+	if (status)
+		cerr << "Failed writing to the HDU extension. Error=" << status << endl;
+	}
+
+return status==0;
+}
+
+
+bool HealpixMap::Load(const char* fileName)
+{
+int status = 0;
+fitsfile* fptr;
+if (fits_open_file(&fptr, fileName, READONLY, &status)==0) {
+	cout << "Loading file " << fileName << endl;
+	FitsFile fFile(fptr); /// This will close the fits file when returning
+	int hdutype;
+	fits_movabs_hdu(fptr, 2, &hdutype, &status);
+	if (status) {
+		cerr << "Second HDU missing" << endl;
+		return false;
+		}
+	cout << "Information: hdutype=" << hdutype << endl;
+	char pixtype[128];
+	bool typeOK = false;
+
+	/// if (Fits::ReadKey(fptr, &status, "PIXTYPE", pixtype))
+	if (ReadFitsKey(fptr, "PIXTYPE", pixtype, &status))
+		if (!strcmp(pixtype, "HEALPIX"))
+			typeOK = true;
+	if (!typeOK) {
+		cerr << "This doesn't seem a HEALPix file" << endl;
+		return false;
+		}
+
+	Order order = NESTED;
+	char ordering[128];
+	/// if (Fits::ReadKey(fptr, &status, "ORDERING", ordering)) {
+	if (ReadFitsKey(fptr, "ORDERING", ordering, &status)) {
+		if (!strcmp(ordering, OrderName[RING]))
+			order = RING;
+		else if (!strcmp(ordering, OrderName[NESTED]))
+			order = NESTED;
+		else {
+			cerr << "ORDERING keyword should be either RING or NESTED" << endl;
+			return false;
+			}
+		}
+	else {
+		cerr << "Keyword ORDERING missing" << endl;
+		return false;
+		}
+
+	int nside;
+	/// if (!Fits::ReadKey(fptr, &status, "NSIDE", &nside)) {
+	if (!ReadFitsKey(fptr, "NSIDE", &nside, &status)) {
+		cerr << "Keyword NSIDE missing" << endl;
+		return false;
+		}
+	if (nside>4096) {
+		cerr << "Sorry, NSIDE greater than 4096 is not supported" << endl;
+		return false;
+		}
+	if (nside<0) {
+		cerr << "NSIDE should be greater than 0" << endl;
+		return false;
+		}
+	int positions = 12*nside*nside;
+	int anynul = 0;
+	float* values = new float[positions];
+	fits_read_col(fptr, TFLOAT, 1, 1, 1, positions, 0, values, &anynul, &status);
+	if (status) {
+		cerr << "Could not read the image" << endl;
+		return false;
+		}
+	if (anynul)
+		cout << "Information: some pixels were undefined" << endl;
+	delete[] m_values;
+	m_values = values;
+	m_nside = nside;
+	m_order = order;
+	return true;
+	}
+cout << "ERROR: Could not open file " << fileName << endl;
+}
