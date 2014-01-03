@@ -111,7 +111,17 @@ public:
 	double timeslot;
 	};
 
-
+class GammaExtractParams: public ExpGenCommonParams
+{
+public:
+	GammaExtractParams();
+	bool Load(int argC, char* argV[]);
+public:
+	double timeslot;
+	const char* evtfile;
+	int filtercode;
+	};
+	
 /// CTS
 
 

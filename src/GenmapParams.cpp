@@ -233,6 +233,36 @@ const PilDescription c_paramsExpT[] = {
 	{ PilNone, "", "" }
 	};
 
+/// Same as above except:
+/// Added: timeslot, evtfile, filtercode
+const PilDescription c_paramsGammaExtract[] = {
+	{ PilString, "outfile", "Output file name" },
+	{ PilString, "logfile", "Grid log index file name" },
+	{ PilString, "sarFileName", "Effective area file name" },
+	{ PilString, "timelist", "Time intervals file name" },
+	{ PilReal, "mdim", "Size of Map (degrees)" },
+	{ PilReal, "la", "Longitude of map center (galactic)" },
+	{ PilReal, "ba", "Latitude of map center (galactic)" },
+	{ PilReal, "lonpole", "Rotation of map(degrees)" },
+	{ PilReal, "albrad", "Radius of earth albedo (degrees)" },
+	{ PilReal, "y_tol", "Boresight movement tolerance (degrees)" },
+	{ PilReal, "roll_tol", "Roll tolerance (degrees)" },
+	{ PilReal, "earth_tol", "Earth tolerance (degrees)" },
+	{ PilInt, "phasecode", "Orbital phase code" },
+	{ PilString, "projection", "Projection (ARC or AIT)" },
+	{ PilReal, "timestep", "LOG file step size" },
+	{ PilReal, "timeslot", "Time slot" },
+	{ PilReal, "index", "Spectral index" },
+	{ PilReal, "tmin", "Initial time (sec)" },
+	{ PilReal, "tmax", "Final time (sec)" },
+	{ PilReal, "emin", "Minimum energy" },
+	{ PilReal, "emax", "Maximum energy" },
+	{ PilReal, "fovradmin", "Min off-axis angle (degrees)" },
+	{ PilReal, "fovradmax", "Max off-axis angle (degrees)" },
+	{ PilString, "evtfile", "Event file index file name" },
+	{ PilInt, "filtercode", "Event filter code" },
+	{ PilNone, "", "" }
+	};
 
 
 bool ExpGenCommonParams::AssignCommonParams()
@@ -322,7 +352,23 @@ PilParams::Print(c_paramsExpT);
 return true;
 }
 
+GammaExtractParams::GammaExtractParams(): ExpGenCommonParams(c_paramsGammaExtract) {}
 
+bool GammaExtractParams::Load(int argC, char* argV[])
+{
+if (!PilParams::Load(argC, argV))
+	return false;
+
+if (!AssignCommonParams())
+	return false;
+PilParams& appParams(*this);
+timeslot = appParams["timeslot"];
+evtfile = appParams["evtfile"];
+filtercode = appParams["filtercode"];
+
+PilParams::Print(c_paramsGammaExtract);
+return true;
+}
 
 
 
