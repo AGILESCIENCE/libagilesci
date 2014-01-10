@@ -35,7 +35,7 @@ ICON_NAME=
 ####### 2) Directories for the installation
 
 # Prefix for each installed program. Only ABSOLUTE PATH
-prefix=/usr/local
+prefix=$(AGILE)
 exec_prefix=$(prefix)
 # The directory to install the binary files in.
 bindir=$(exec_prefix)/bin
