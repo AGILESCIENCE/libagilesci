@@ -1,7 +1,8 @@
 #ifndef _INTERVALS_
 #define _INTERVALS_
 
-
+#include <string>
+using namespace std;
 class Interval
 {
 public:
@@ -32,6 +33,8 @@ public:
 	bool Contains(double value) const { return value>=m_start && value<=m_stop; }
 	double Start() const { return m_start; }
 	double Stop() const { return m_stop; }
+	
+	string String();
 
 private:
 	double m_start;
@@ -64,6 +67,8 @@ public:
 	void Sort();
 	bool Contains(double value) const;
 	int IndexOf(double value) const;
+	
+	string String();
 
 private:
 	int  m_count;

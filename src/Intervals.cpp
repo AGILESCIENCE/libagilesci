@@ -8,6 +8,25 @@
 
 using namespace std;
 
+string Interval::String()
+{
+    stringstream str(ios_base::out);
+    str.precision(6);
+    str << fixed << Start() << ".." << Stop();
+    return str.str();
+}
+
+string Intervals::String()
+{
+    stringstream str(ios_base::out);
+    const char* sep = "";
+    for (int i=0; i<Count(); ++i) {
+        str << sep << m_intervals[i].String();
+        sep = ", ";
+    }
+    return str.str();
+}
+
 
 Interval Union(const Interval& int1, const Interval& int2)
 {
