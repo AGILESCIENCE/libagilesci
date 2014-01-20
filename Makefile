@@ -107,7 +107,9 @@ ifneq (, $(findstring pil, $(LINKERENV)))
 endif
 ifneq (, $(findstring wcs, $(LINKERENV)))
         INCPATH += -I$(AGILE)/include
-	LIBS += -L$(AGILE)/lib -lagilewcs 
+	LIBS += -L$(AGILE)/lib -lagilewcs
+	#INCPATH += -I/local/opt/include
+	#LIBS += -lwcs 
 endif 
 
 ifneq (, $(findstring agile, $(LINKERENV)))

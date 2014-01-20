@@ -33,6 +33,7 @@ public:
 	bool Contains(double value) const { return value>=m_start && value<=m_stop; }
 	double Start() const { return m_start; }
 	double Stop() const { return m_stop; }
+	double Dim() const { return m_stop - m_start; }
 	
 	string String();
 
@@ -57,6 +58,7 @@ public:
 	Interval& operator[](int i) { return m_intervals[i]; }
 
 	int Count() const { return m_count; }
+	double Sum();
 	double Min() const { return m_bounds.Start(); }
 	double Max() const { return m_bounds.Stop(); }
 
@@ -67,6 +69,7 @@ public:
 	void Sort();
 	bool Contains(double value) const;
 	int IndexOf(double value) const;
+	void Clear();
 	
 	string String();
 

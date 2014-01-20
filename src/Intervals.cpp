@@ -22,7 +22,7 @@ string Intervals::String()
     const char* sep = "";
     for (int i=0; i<Count(); ++i) {
         str << sep << m_intervals[i].String();
-        sep = ", ";
+        sep = ",\n";
     }
     return str.str();
 }
@@ -163,12 +163,27 @@ m_phyCount = other.m_phyCount;
 m_count = other.m_count;
 m_sorted = other.m_sorted;
 m_bounds = other.m_bounds;
+//delete[] m_intervals;
 m_intervals = new Interval[m_phyCount];
 for (int i=0; i<m_count; ++i)
 	m_intervals[i] = other.m_intervals[i];
 }
 
+void Intervals::Clear() {
+	m_count = 0;
+	m_phyCount = 16;
+	m_sorted = true;
+	delete[] m_intervals;
+	m_intervals = new Interval[m_phyCount];
+}
 
+double Intervals::Sum()
+{
+double res=0;
+for (int i=0; i<m_count; ++i)
+	res += m_intervals[i].Dim();
+return res;
+}
 
 static string Trim(string s)
 {
