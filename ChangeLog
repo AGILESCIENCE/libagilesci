@@ -1,3 +1,7 @@
+2014-01-20 Andrea Bulgarelli <bulgarelli@iasfbo.inaf.it>
+TAG v1.1.0
++ Intervals::Clear() and Intervals::Sum()
+
 2014-01-10 Andrea Bulgarelli <bulgarelli@iasfbo.inaf.it>
 TAG v1.0.1
 + Makefile
