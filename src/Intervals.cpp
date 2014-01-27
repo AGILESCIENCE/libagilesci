@@ -12,7 +12,7 @@ string Interval::String()
 {
     stringstream str(ios_base::out);
     str.precision(6);
-    str << fixed << Start() << ".." << Stop();
+    str << fixed << Start() << " " << Stop();
     return str.str();
 }
 
@@ -22,7 +22,7 @@ string Intervals::String()
     const char* sep = "";
     for (int i=0; i<Count(); ++i) {
         str << sep << m_intervals[i].String();
-        sep = ",\n";
+        sep = "\n";
     }
     return str.str();
 }
@@ -81,6 +81,24 @@ cout << (m_sorted?"Adding sorted":"Adding UNsorted") << endl;
 	m_bounds = Union(m_bounds, interval);
 	}
 }
+
+void Intervals::AddNoUnion(const Interval& interval)
+{
+if (m_count>=m_phyCount)
+	Enlarge();
+m_intervals[m_count++] = interval;
+if (m_count<=1)
+	m_bounds = interval;
+else {
+	m_sorted = false;
+/**
+	m_sorted = m_sorted && m_bounds.Stop()<interval.Start();
+cout << (m_sorted?"Adding sorted":"Adding UNsorted") << endl;
+*/
+	m_bounds = interval;
+	}
+}
+
 
 
 void Intervals::Add(const Intervals& intervals)
@@ -224,6 +242,35 @@ if (ifile.is_open()) {
 			}
 		} while (!ifile.eof());
 	intervals.Sort();
+	}
+else
+	cerr << "Error opening file " << intervalsFileName << endl;
+return intervals;
+}
+
+Intervals ReadIntervalsNoUnion(const char* intervalsFileName)
+{
+Intervals intervals;
+int lineNum = 0;
+string line;
+ifstream ifile(intervalsFileName);
+if (ifile.is_open()) {
+	do {
+		getline(ifile, line);
+		line = Trim(line);
+		++lineNum;
+		if (line.length()!=0 && line.at(0)!='!') {
+			stringstream str(line, ios_base::in);
+			string name;
+			double start;
+			double stop;
+			str >> start >> stop;
+			if (stop<=start)
+				cerr << "WARNING in line " << lineNum << ": start greater than stop" << endl;
+			intervals.AddNoUnion(Interval(start, stop));
+			}
+		} while (!ifile.eof());
+	//intervals.Sort();
 	}
 else
 	cerr << "Error opening file " << intervalsFileName << endl;

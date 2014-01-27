@@ -65,6 +65,7 @@ public:
 	friend Intervals Intersection(const Intervals& intervals, const Interval& interval);
 
 	void Add(const Interval& interval);
+	void AddNoUnion(const Interval& interval);
 	void Add(const Intervals& intervals);
 	void Sort();
 	bool Contains(double value) const;
@@ -85,7 +86,7 @@ private:
 
 
 Intervals ReadIntervals(const char* intervalsFileName);
-
+Intervals ReadIntervalsNoUnion(const char* intervalsFileName);
 
 #endif
 
