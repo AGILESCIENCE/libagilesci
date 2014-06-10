@@ -97,7 +97,8 @@ ifneq (, $(findstring root, $(LINKERENV)))
 	ROOTLIBS     := $(shell root-config --libs)
 	ROOTGLIBS    := $(shell root-config --glibs)
 	ROOTCONF=-O -pipe -Wall -W -fPIC -D_REENTRANT
-        INCPATH += -I$(ROOTSYS)/include/root
+        #INCPATH += -I$(ROOTSYS)/include/root
+	INCPATH += $(ROOTCFLAGS)
 	LIBS += $(ROOTGLIBS) -lMinuit
 	ALL_CFLAGS += $(ROOTCONF)
 endif
