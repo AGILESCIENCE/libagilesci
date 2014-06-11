@@ -63,6 +63,16 @@ intersection.Sort();
 return intersection;
 }
 
+Intervals IntersectionNoUnion(const Intervals& intervals, const Interval& interval)
+{
+	Intervals intersection;
+	for (int i=0; i<intervals.Count(); ++i)
+	if (Overlap(intervals[i], interval))
+	intersection.Add(Intersection(intervals[i], interval));
+	//intersection.Sort();
+	return intersection;
+}
+
 
 
 void Intervals::Add(const Interval& interval)

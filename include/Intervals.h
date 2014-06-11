@@ -63,7 +63,8 @@ public:
 	double Max() const { return m_bounds.Stop(); }
 
 	friend Intervals Intersection(const Intervals& intervals, const Interval& interval);
-
+	friend Intervals IntersectionNoUnion(const Intervals& intervals, const Interval& interval);
+	
 	void Add(const Interval& interval);
 	void AddNoUnion(const Interval& interval);
 	void Add(const Intervals& intervals);

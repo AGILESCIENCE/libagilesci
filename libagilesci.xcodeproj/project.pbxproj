@@ -1,0 +1,272 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		DDDD7798190E7CD4001F55F0 /* AgileMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgileMap.h; sourceTree = "<group>"; };
+		DDDD7799190E7CD4001F55F0 /* AlikeData5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlikeData5.h; sourceTree = "<group>"; };
+		DDDD779A190E7CD4001F55F0 /* AlikePsf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlikePsf.h; sourceTree = "<group>"; };
+		DDDD779B190E7CD4001F55F0 /* ArrayOf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArrayOf.h; sourceTree = "<group>"; };
+		DDDD779C190E7CD4001F55F0 /* CalibUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalibUtils.h; sourceTree = "<group>"; };
+		DDDD779D190E7CD4001F55F0 /* ConnectedRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectedRegion.h; sourceTree = "<group>"; };
+		DDDD779E190E7CD4001F55F0 /* Ellipse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ellipse.h; sourceTree = "<group>"; };
+		DDDD779F190E7CD4001F55F0 /* FitsUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FitsUtils.h; sourceTree = "<group>"; };
+		DDDD77A0190E7CD4001F55F0 /* GenmapParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenmapParams.h; sourceTree = "<group>"; };
+		DDDD77A1190E7CD4001F55F0 /* HealpixMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HealpixMap.h; sourceTree = "<group>"; };
+		DDDD77A2190E7CD4001F55F0 /* Intervals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Intervals.h; sourceTree = "<group>"; };
+		DDDD77A3190E7CD4001F55F0 /* Labeling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Labeling.h; sourceTree = "<group>"; };
+		DDDD77A4190E7CD4001F55F0 /* MathUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MathUtils.h; sourceTree = "<group>"; };
+		DDDD77A5190E7CD4001F55F0 /* PilParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PilParams.h; sourceTree = "<group>"; };
+		DDDD77A6190E7CD4001F55F0 /* PlotCts2D3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlotCts2D3.h; sourceTree = "<group>"; };
+		DDDD77A7190E7CD4001F55F0 /* Polygon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Polygon.h; sourceTree = "<group>"; };
+		DDDD77A8190E7CD4001F55F0 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		DDDD77A9190E7CD4001F55F0 /* RoiMulti5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoiMulti5.h; sourceTree = "<group>"; };
+		DDDD77AA190E7CD4001F55F0 /* Rotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Rotation.h; sourceTree = "<group>"; };
+		DDDD77AB190E7CD4001F55F0 /* SkyMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SkyMap.h; sourceTree = "<group>"; };
+		DDDD77AC190E7CD4001F55F0 /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		DDDD77AE190E7CDB001F55F0 /* AgileMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AgileMap.cpp; sourceTree = "<group>"; };
+		DDDD77AF190E7CDB001F55F0 /* AlikeData5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlikeData5.cpp; sourceTree = "<group>"; };
+		DDDD77B0190E7CDB001F55F0 /* AlikePsf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlikePsf.cpp; sourceTree = "<group>"; };
+		DDDD77B1190E7CDB001F55F0 /* CalibUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CalibUtils.cpp; sourceTree = "<group>"; };
+		DDDD77B2190E7CDB001F55F0 /* ConnectedRegion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectedRegion.cpp; sourceTree = "<group>"; };
+		DDDD77B3190E7CDB001F55F0 /* Ellipse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Ellipse.cpp; sourceTree = "<group>"; };
+		DDDD77B4190E7CDB001F55F0 /* FitsUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FitsUtils.cpp; sourceTree = "<group>"; };
+		DDDD77B5190E7CDB001F55F0 /* GenmapParams.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenmapParams.cpp; sourceTree = "<group>"; };
+		DDDD77B6190E7CDB001F55F0 /* HealpixMap.cpp_OFF */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = HealpixMap.cpp_OFF; sourceTree = "<group>"; };
+		DDDD77B7190E7CDB001F55F0 /* Intervals.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Intervals.cpp; sourceTree = "<group>"; };
+		DDDD77B8190E7CDB001F55F0 /* Labeling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Labeling.cpp; sourceTree = "<group>"; };
+		DDDD77B9190E7CDB001F55F0 /* MathUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MathUtils.cpp; sourceTree = "<group>"; };
+		DDDD77BA190E7CDB001F55F0 /* PilParams.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PilParams.cpp; sourceTree = "<group>"; };
+		DDDD77BB190E7CDB001F55F0 /* PlotCts2D3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlotCts2D3.cpp; sourceTree = "<group>"; };
+		DDDD77BC190E7CDB001F55F0 /* Polygon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Polygon.cpp; sourceTree = "<group>"; };
+		DDDD77BD190E7CDB001F55F0 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		DDDD77BE190E7CDB001F55F0 /* RoiMulti5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RoiMulti5.cpp; sourceTree = "<group>"; };
+		DDDD77BF190E7CDB001F55F0 /* Rotation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Rotation.cpp; sourceTree = "<group>"; };
+		DDDD77C0190E7CDB001F55F0 /* SkyMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SkyMap.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		DDDD778C190E7CB7001F55F0 = {
+			isa = PBXGroup;
+			children = (
+				DDDD77AD190E7CDB001F55F0 /* src */,
+				DDDD7797190E7CD4001F55F0 /* include */,
+			);
+			sourceTree = "<group>";
+		};
+		DDDD7797190E7CD4001F55F0 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				DDDD7798190E7CD4001F55F0 /* AgileMap.h */,
+				DDDD7799190E7CD4001F55F0 /* AlikeData5.h */,
+				DDDD779A190E7CD4001F55F0 /* AlikePsf.h */,
+				DDDD779B190E7CD4001F55F0 /* ArrayOf.h */,
+				DDDD779C190E7CD4001F55F0 /* CalibUtils.h */,
+				DDDD779D190E7CD4001F55F0 /* ConnectedRegion.h */,
+				DDDD779E190E7CD4001F55F0 /* Ellipse.h */,
+				DDDD779F190E7CD4001F55F0 /* FitsUtils.h */,
+				DDDD77A0190E7CD4001F55F0 /* GenmapParams.h */,
+				DDDD77A1190E7CD4001F55F0 /* HealpixMap.h */,
+				DDDD77A2190E7CD4001F55F0 /* Intervals.h */,
+				DDDD77A3190E7CD4001F55F0 /* Labeling.h */,
+				DDDD77A4190E7CD4001F55F0 /* MathUtils.h */,
+				DDDD77A5190E7CD4001F55F0 /* PilParams.h */,
+				DDDD77A6190E7CD4001F55F0 /* PlotCts2D3.h */,
+				DDDD77A7190E7CD4001F55F0 /* Polygon.h */,
+				DDDD77A8190E7CD4001F55F0 /* README */,
+				DDDD77A9190E7CD4001F55F0 /* RoiMulti5.h */,
+				DDDD77AA190E7CD4001F55F0 /* Rotation.h */,
+				DDDD77AB190E7CD4001F55F0 /* SkyMap.h */,
+				DDDD77AC190E7CD4001F55F0 /* version.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		DDDD77AD190E7CDB001F55F0 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				DDDD77AE190E7CDB001F55F0 /* AgileMap.cpp */,
+				DDDD77AF190E7CDB001F55F0 /* AlikeData5.cpp */,
+				DDDD77B0190E7CDB001F55F0 /* AlikePsf.cpp */,
+				DDDD77B1190E7CDB001F55F0 /* CalibUtils.cpp */,
+				DDDD77B2190E7CDB001F55F0 /* ConnectedRegion.cpp */,
+				DDDD77B3190E7CDB001F55F0 /* Ellipse.cpp */,
+				DDDD77B4190E7CDB001F55F0 /* FitsUtils.cpp */,
+				DDDD77B5190E7CDB001F55F0 /* GenmapParams.cpp */,
+				DDDD77B6190E7CDB001F55F0 /* HealpixMap.cpp_OFF */,
+				DDDD77B7190E7CDB001F55F0 /* Intervals.cpp */,
+				DDDD77B8190E7CDB001F55F0 /* Labeling.cpp */,
+				DDDD77B9190E7CDB001F55F0 /* MathUtils.cpp */,
+				DDDD77BA190E7CDB001F55F0 /* PilParams.cpp */,
+				DDDD77BB190E7CDB001F55F0 /* PlotCts2D3.cpp */,
+				DDDD77BC190E7CDB001F55F0 /* Polygon.cpp */,
+				DDDD77BD190E7CDB001F55F0 /* README */,
+				DDDD77BE190E7CDB001F55F0 /* RoiMulti5.cpp */,
+				DDDD77BF190E7CDB001F55F0 /* Rotation.cpp */,
+				DDDD77C0190E7CDB001F55F0 /* SkyMap.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		DDDD7791190E7CB7001F55F0 /* libagilesci */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = DDDD7794190E7CB7001F55F0 /* Build configuration list for PBXLegacyTarget "libagilesci" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			dependencies = (
+			);
+			name = libagilesci;
+			passBuildSettingsInEnvironment = 1;
+			productName = libagilesci;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		DDDD778D190E7CB7001F55F0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = "Andrea Bulgarelli";
+			};
+			buildConfigurationList = DDDD7790190E7CB7001F55F0 /* Build configuration list for PBXProject "libagilesci" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = DDDD778C190E7CB7001F55F0;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DDDD7791190E7CB7001F55F0 /* libagilesci */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		DDDD7792190E7CB7001F55F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		DDDD7793190E7CB7001F55F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DDDD7795190E7CB7001F55F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUGGING_SYMBOLS = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		DDDD7796190E7CB7001F55F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DDDD7790190E7CB7001F55F0 /* Build configuration list for PBXProject "libagilesci" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DDDD7792190E7CB7001F55F0 /* Debug */,
+				DDDD7793190E7CB7001F55F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DDDD7794190E7CB7001F55F0 /* Build configuration list for PBXLegacyTarget "libagilesci" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DDDD7795190E7CB7001F55F0 /* Debug */,
+				DDDD7796190E7CB7001F55F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DDDD778D190E7CB7001F55F0 /* Project object */;
+}
