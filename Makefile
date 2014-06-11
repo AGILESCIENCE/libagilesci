@@ -76,7 +76,7 @@ LIBS = -lstdc++
 #Insert the optional parameter to the compiler. The CFLAGS could be changed externally by the user
 CFLAGS   = -g 
 #Insert the implicit parameter to the compiler:
-ALL_CFLAGS = -m64 -fexceptions -Wall $(CFLAGS) $(INCPATH)
+ALL_CFLAGS =  -fexceptions -Wall $(CFLAGS) $(INCPATH)
 #Use CPPFLAGS for the preprocessor
 CPPFLAGS = 
 #Set LIBS for addition library
@@ -97,7 +97,8 @@ ifneq (, $(findstring root, $(LINKERENV)))
 	ROOTLIBS     := $(shell root-config --libs)
 	ROOTGLIBS    := $(shell root-config --glibs)
 	ROOTCONF=-O -pipe -Wall -W -fPIC -D_REENTRANT
-        INCPATH += -I$(ROOTSYS)/include/root
+        #INCPATH += -I$(ROOTSYS)/include/root
+	INCPATH += $(ROOTCFLAGS)
 	LIBS += $(ROOTGLIBS) -lMinuit
 	ALL_CFLAGS += $(ROOTCONF)
 endif
