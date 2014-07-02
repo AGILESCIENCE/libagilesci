@@ -3098,7 +3098,7 @@ if (ExtCount()) {
 
 if (SrcCount()) {
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td></tr>" << endl;
+	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td></tr>" << endl;
 	for (int i=0; i<SrcCount(); ++i) {
 		const SourceData& srcData = m_inSrcDataArr[i];
 		htmlout << "<tr><td>" << srcData.label
@@ -3114,7 +3114,8 @@ if (SrcCount()) {
 		if (m_srcLimits[i].bLim)
 			htmlout << " in [" << m_srcLimits[i].bMin << ", " << m_srcLimits[i].bMax << "]";
 	
-		htmlout << "</td><td>" << sqrt(srcData.minTS) << "</td><td>" << srcData.fixflag << "</td></tr>" << endl;
+		htmlout << "</td><td>" << sqrt(srcData.minTS) << "</td><td>" << srcData.fixflag << "</td><td>" << sqrt(m_sources[i].GetULCL()) << "</td><td>" << m_sources[i].GetLocCL() << "</td></tr>" << endl;
+	
 		}
 	htmlout << "</table>" << endl;
 	}
@@ -3210,10 +3211,12 @@ if (ExtCount()) {
 
 
 if (SrcCount()) {
+	
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L</td><td>B</td><td>Radius</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Err</td></tr>" << endl;
+	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>Radius</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Err</td><td>L</td><td>B</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo</td></tr>" << endl;
 	
 	for (int i=0; i<m_srcCount; ++i) {
+		const Ellipse& ellipse = m_sources[i].GetEllipse();
 	/*
 		double totalExposure = 0;
 		for (int map=0; map<m_mapCount; ++map)
@@ -3244,9 +3247,73 @@ if (SrcCount()) {
 					<< "</td><td>" << m_sources[i].GetFluxerr()
 					<< "</td><td>" << m_sources[i].GetFluxul()
 					<< "</td><td>" << m_sources[i].GetIndex()
-					<< "</td><td>" << m_sources[i].GetIndexerr()
-					<< "</td></tr>" << endl;
+		            << "</td><td>" << m_sources[i].GetIndexerr();
+		
+		if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
+		
+			htmlout << "</td><td>" << ellipse.center.x
+					<< "</td><td>" << ellipse.center.y
+					<< "</td><td>" << ellipse.horAxis
+					<< "</td><td>" << ellipse.verAxis
+			<< "</td><td>" << ellipse.attitude*RAD2DEG;
+		} else {
+			htmlout << "</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1";
 		}
+		
+		if (m_inSrcDataArr[i].fixflag) {
+			const char* sep[2] = {"", ","};
+			htmlout << "</td><td>";
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPM(false, m, i, false);
+			htmlout << " +/- ";
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPMErr(false, m, i, false);
+			htmlout << "</td><td>";
+			
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPM(false, m, i, true);
+				htmlout << " +/- ";
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPMErr(false, m, i, true);
+			htmlout << "</td><td>";
+			
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPM(true, m, i, false);
+				htmlout << " +/- ";
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPMErr(true, m, i, false);
+			
+			htmlout << "</td><td>";
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPM(true, m, i, true);
+				htmlout << " +/- ";
+			for (int m=0; m<m_mapCount; ++m)
+				htmlout << sep[bool(m)] << GetFinalDPMErr(true, m, i, true);
+
+		} else {
+			htmlout << "</td><td>";
+			
+			htmlout << "</td><td>";
+			
+			htmlout << "</td><td>";
+			
+			htmlout << "</td><td>";
+			
+		}
+		
+		htmlout << "</td><td>";
+		htmlout << m_fitInfo[i].counts;
+		
+		htmlout << " " << m_fitInfo[i].fcn0;
+		htmlout << " " << m_fitInfo[i].fcn1;
+		htmlout << " " << m_fitInfo[i].edm0;
+		htmlout << " " << m_fitInfo[i].edm1;
+		htmlout << " " << m_fitInfo[i].iter0;
+		htmlout << " " << m_fitInfo[i].iter1;
+		
+			htmlout << "</td></tr>" << endl;
+		
+	}
 	htmlout << "</table>" << endl;
 	}
 
