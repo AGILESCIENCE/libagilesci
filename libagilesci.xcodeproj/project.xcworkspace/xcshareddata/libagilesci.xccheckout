@@ -5,34 +5,34 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>570E262E-B5AA-427D-9168-4DB864153EEE</string>
+	<string>EC5EEE66-8CCD-49C3-BC9E-835D0363FE59</string>
 	<key>IDESourceControlProjectName</key>
 	<string>libagilesci</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>3C324B47-916B-48AF-B03E-523CCA439EE1</key>
-		<string>ssh://github.com/AndreaBulgarelli/libagilesci.git</string>
+		<key>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</key>
+		<string>ssh://github.com/ASTRO-EDU/libagilesci.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>libagilesci/libagilesci.xcodeproj/project.xcworkspace</string>
+	<string>libagilesci.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>3C324B47-916B-48AF-B03E-523CCA439EE1</key>
-		<string>../../..</string>
+		<key>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</key>
+		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>ssh://github.com/AndreaBulgarelli/libagilesci.git</string>
+	<string>ssh://github.com/ASTRO-EDU/libagilesci.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>110</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>3C324B47-916B-48AF-B03E-523CCA439EE1</string>
+	<string>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>3C324B47-916B-48AF-B03E-523CCA439EE1</string>
+			<string>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</string>
 			<key>IDESourceControlWCCName</key>
 			<string>libagilesci</string>
 		</dict>

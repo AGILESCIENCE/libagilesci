@@ -2681,6 +2681,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
 	srcout << "! Flux, Err, +Err, -Err, UL, Exp" << endl;
 	srcout << "! Index, Err" << endl;
+	srcout << "! cts, fcn0, fcn1, edm0, edm1, iter0, iter1" << endl;
 	if (m_inSrcDataArr[i].fixflag) {
 		srcout << "! Gal coeffs and errs" << endl;
 		srcout << "! Gal zero coeffs and errs" << endl;
@@ -2725,6 +2726,17 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure /// m_sources[i].GetExp()
 				<< endl;
 	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << endl;
+	
+	//AB
+	
+	srcout << m_fitInfo[i].counts;
+	
+	srcout << " " << m_fitInfo[i].fcn0;
+	srcout << " " << m_fitInfo[i].fcn1;
+	srcout << " " << m_fitInfo[i].edm0;
+	srcout << " " << m_fitInfo[i].edm1;
+	srcout << " " << m_fitInfo[i].iter0;
+	srcout << " " << m_fitInfo[i].iter1 << endl;
 
 	if (m_inSrcDataArr[i].fixflag) {
 		const char* sep[2] = {"", ","};
