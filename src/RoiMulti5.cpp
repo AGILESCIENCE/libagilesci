@@ -2666,6 +2666,49 @@ if (m_srcCount) {
 output.close();
 }
 
+static bool OpenConditionalBin(ofstream& f, bool sameValues, int row, int count)
+{
+	if (!sameValues) {
+		f << "<td>";
+		return true;
+	}
+	else
+		if (row==0) {
+			f << "<td rowspan=" << count << ">";
+			return true;
+		}
+	return false;
+}
+
+
+static void WriteIsoDate(ofstream& f, const char* isoDdate)
+{
+	char date[64];
+	strncpy(date, isoDdate, 32);
+	if (strlen(date)==19 && date[10]=='T') {
+		date[10] = 0;
+		f << date << "&nbsp;" << date+11;
+	}
+	else if (date[0]==0)
+		f << "&nbsp;";
+	else
+		f << isoDdate;
+}
+
+static void WriteIsoDate2(ofstream& f, const char* isoDdate)
+{
+	char date[64];
+	strncpy(date, isoDdate, 32);
+	if (strlen(date)==19 && date[10]=='T') {
+		date[10] = 0;
+		f << date << "T" << date+11;
+	}
+	else if (date[0]==0)
+		f << "T";
+	else
+		f << isoDdate;
+}
+
 void RoiMulti::WriteSources(const char* fileName, bool skipFixed, bool skipEllipses) const
 {
 for (int i=0; i<m_srcCount; ++i) {
@@ -2673,34 +2716,54 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel());
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level" << endl;
+	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ]" << endl;
 	srcout << "! sqrt(TS)" << endl ;
-	srcout << "! L_peak, B_peak" << endl;
+	srcout << "! L_peak, B_peak, Dist from initial position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
-	srcout << "! L, B, r, a, b, phi" << endl;
+	srcout << "! L, B, Dist from initial position, r, a, b, phi" << endl;
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
 	srcout << "! Flux, Err, +Err, -Err, UL, Exp" << endl;
 	srcout << "! Index, Err" << endl;
 	srcout << "! cts, fcn0, fcn1, edm0, edm1, iter0, iter1" << endl;
-	if (m_inSrcDataArr[i].fixflag) {
+	
+	//if (m_inSrcDataArr[i].fixflag) {
 		srcout << "! Gal coeffs and errs" << endl;
 		srcout << "! Gal zero coeffs and errs" << endl;
 		srcout << "! Iso coeffs and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
-		}
+	//	}
+	srcout << "! Start date, end date" << endl;
+	srcout << "! Emin..emax, fovmin..fovmax, albedo, binsize, expstep, phasecode" << endl;
 	srcout << m_sources[i].GetLabel()
 				<< " " << m_inSrcDataArr[i].fixflag	/// Original flag
 				<< " " << m_inSrcDataArr[i].index	/// Original index
 				<< " " << sqrt(m_sources[i].GetULCL())
 				<< " " << m_sources[i].GetLocCL()
-				<< endl;
-	/// zzz m_sources[i].PrintAbphi();
-	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << endl;
-
-	if (ellipse.horAxis!=0 && ellipse.verAxis!=0)
-		srcout << ellipse.center.x << " " << ellipse.center.y << " " << m_sources[i].GetRadius() << " " << ellipse.horAxis << " " << ellipse.verAxis << " " << ellipse.attitude*RAD2DEG << " " << endl;
+				<< " " << m_inSrcDataArr[i].srcL
+				<< " " << m_inSrcDataArr[i].srcB
+	<< " " << m_inSrcDataArr[i].flux;
+	
+	if (m_srcLimits[i].lLim)
+		srcout <<  " [ " << m_srcLimits[i].lMin << " , " << m_srcLimits[i].lMax << " ] ";
 	else
-		srcout << "(Ellipse not found)" << endl;
+		srcout << " [ -1 , -1 ] ";
+	
+	if (m_srcLimits[i].bLim)
+		srcout << " [ " << m_srcLimits[i].bMin << " , " << m_srcLimits[i].bMax << " ] ";
+	else
+		srcout << " [ -1 , -1 ] ";
+	
+		srcout	<< endl;
+	/// zzz m_sources[i].PrintAbphi();
+	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
+	
+	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << " " << dist << endl;
+
+	if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
+		double dist2 = SphDistDeg(ellipse.center.x, ellipse.center.y, m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
+		srcout << ellipse.center.x << " " << ellipse.center.y << " " << dist2 << " " << m_sources[i].GetRadius() << " " << ellipse.horAxis << " " << ellipse.verAxis << " " << ellipse.attitude*RAD2DEG << " " << endl;
+	} else
+		srcout << "-1 -1 -1 -1 -1 -1 -1 " << endl;
 
 	double exposure = GetTotalExposure(i);
 /**
@@ -2765,8 +2828,50 @@ for (int i=0; i<m_srcCount; ++i) {
 		for (int m=0; m<m_mapCount; ++m)
 			srcout << sep[bool(m)] << GetFinalDPMErr(true, m, i, true);
 		srcout << endl;
-		}
-
+	} else  {
+		srcout << "0 0\n0 0\n0 0\n0 0\n";
+	}
+	bool sameDate = true;
+	for (int map=0; map<m_mapCount; ++map) {
+		const AgileMap& m = m_ctsMaps[map];
+		WriteIsoDate2(srcout, m.GetStartDate());
+		srcout << " ";
+		WriteIsoDate2(srcout, m.GetEndDate());
+		srcout << endl;
+		break;
+	}
+	for (int map=0; map<m_mapCount; ++map) {
+		const AgileMap& m = m_ctsMaps[map];
+		srcout << m.GetEmin() << ".." << m.GetEmax();
+		if(m_mapCount > 1 && map != m_mapCount - 1)
+			srcout << ",";
+	}
+	srcout << " ";
+	for (int map=0; map<m_mapCount; ++map) {
+		const AgileMap& m = m_ctsMaps[map];
+		srcout << m.GetFovMin() << ".." << m.GetFovMax();
+		if(m_mapCount > 1 && map != m_mapCount - 1)
+			srcout << ",";
+	}
+	srcout << " ";
+	const AgileMap& m = m_ctsMaps[0];
+	srcout << m.GetAlbedo() << " ";
+	srcout << m.GetYbin() << " ";
+	srcout << m_expMaps[0].GetStep() << " ";
+	srcout << m.GetPhaseCode() << endl;
+	/*
+	if (OpenConditionalBin(htmlout, sameEnergy, map, m_mapCount))
+		htmlout << m.GetEmin() << ".." << m.GetEmax() << "</td>";
+	if (OpenConditionalBin(htmlout, sameFOV, map, m_mapCount))
+		htmlout << m.GetFovMin() << ".." << m.GetFovMax() << "</td>";
+	
+	if (OpenConditionalBin(htmlout, sameCenter, map, m_mapCount))
+		htmlout <<m.GetMapCenterL() << ",&nbsp;" << m.GetMapCenterB() << "</td>";
+	WriteConditionalBin(htmlout, m.GetAlbedo(), sameAlbedo, map, m_mapCount);
+	WriteConditionalBin(htmlout, m.GetYbin(), sameBinSize, map, m_mapCount);
+	WriteConditionalBin(htmlout, m_expMaps[map].GetStep(), sameStep, map, m_mapCount);
+	WriteConditionalBin(htmlout, m.GetPhaseCode(), samePhCode, map, m_mapCount);
+	*/
 	srcout.close();
 	if (skipEllipses)
 		continue;
@@ -2884,34 +2989,9 @@ if (p)
 	*p = 0;
 }
 
-static bool OpenConditionalBin(ofstream& f, bool sameValues, int row, int count)
-{
-if (!sameValues) {
-	f << "<td>";
-	return true;
-	}
-else
-	if (row==0) {
-		f << "<td rowspan=" << count << ">";
-		return true;
-		}
-return false;
-}
 
 
-static void WriteIsoDate(ofstream& f, const char* isoDdate)
-{
-char date[64];
-strncpy(date, isoDdate, 32);
-if (strlen(date)==19 && date[10]=='T') {
-	date[10] = 0;
-	f << date << "&nbsp;" << date+11;
-	}
-else if (date[0]==0)
-	f << "&nbsp;";
-else
-	f << isoDdate;
-}
+
 
 static void WriteConditionalBin(ofstream& f, double value, bool sameValues, int row, int count)
 {
@@ -3225,7 +3305,7 @@ if (ExtCount()) {
 if (SrcCount()) {
 	
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>Radius</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Err</td><td>L</td><td>B</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo (cts fcn0 fcn1 edm0 edm1 iter0 iter1)</td></tr>" << endl;
+	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>dist</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Err</td><td>L</td><td>B</td><td>distE</td><td>Radius</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo (cts fcn0 fcn1 edm0 edm1 iter0 iter1)</td></tr>" << endl;
 	
 	for (int i=0; i<m_srcCount; ++i) {
 		const Ellipse& ellipse = m_sources[i].GetEllipse();
@@ -3240,12 +3320,14 @@ if (SrcCount()) {
 	*/
 
 		double exposure = GetTotalExposure(i);
-
+		double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 		htmlout << "<tr><td>" << m_sources[i].GetLabel()
 					<< "</td><td>" << sqrt(m_sources[i].GetTS())
 					<< "</td><td>" << m_sources[i].GetSrcL()
 					<< "</td><td>" << m_sources[i].GetSrcB()
-					<< "</td><td>" << m_sources[i].GetRadius()
+		
+					
+					<< "</td><td>" << dist
 /**
 					<< "</td><td>" << m_sources[i].GetExp()
 					<< "</td><td>" << m_sources[i].GetCounts()
@@ -3261,15 +3343,18 @@ if (SrcCount()) {
 					<< "</td><td>" << m_sources[i].GetIndex()
 		            << "</td><td>" << m_sources[i].GetIndexerr();
 		
-		if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
 		
+		if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
+			double dist2 = SphDistDeg(ellipse.center.x, ellipse.center.y, m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 			htmlout << "</td><td>" << ellipse.center.x
 					<< "</td><td>" << ellipse.center.y
+					<< "</td><td>" << dist2
+					<< "</td><td>" << m_sources[i].GetRadius()
 					<< "</td><td>" << ellipse.horAxis
 					<< "</td><td>" << ellipse.verAxis
 			<< "</td><td>" << ellipse.attitude*RAD2DEG;
 		} else {
-			htmlout << "</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1";
+			htmlout << "</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1";
 		}
 		
 		if (m_inSrcDataArr[i].fixflag) {
