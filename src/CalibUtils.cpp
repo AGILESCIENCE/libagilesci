@@ -215,7 +215,7 @@ if (a_inf_fit==a_sup_fit)
 	aeff = a_inf_fit;
 else
 	aeff = a_inf_fit  + ((a_sup_fit-a_inf_fit) / (m_theta[m2]-m_theta[m1])) * (theta - m_theta[m1]);
-if (isnan(aeff))
+if (std::isnan(aeff))
 	aeff = 0;
 
 return aeff;
@@ -533,7 +533,7 @@ if (a_inf_fit==a_sup_fit)
 	aeff = a_inf_fit;
 else
 	aeff = a_inf_fit  + ((a_sup_fit-a_inf_fit) / (m_theta[m2]-m_theta[m1])) * (theta - m_theta[m1]);
-if (isnan(aeff))
+if (std::isnan(aeff))
 	aeff = 0;
 return aeff;
 }

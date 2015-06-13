@@ -13,6 +13,7 @@
 #define _ROI_MULTI_
 
 /// #include <iomanip>
+#include <fstream>
 
 #include "TNamed.h"
 #include "TVirtualFitter.h"
@@ -597,7 +598,7 @@ private:	/// Data
 	FitInfo*        m_fitInfo;
 	int             m_sourceParOffset; /// m_diffParCount+m_mapCount*m_extCount
 
-	ofstream*       m_logFile;
+	std::ofstream*       m_logFile;
 /**
 	void Log(const char* text);
 	ostream& Logfile() { return m_logFile ? *m_logFile : std::clog; }
