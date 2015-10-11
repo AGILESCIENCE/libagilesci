@@ -1210,7 +1210,7 @@ extern void PlotCts2D_FINE(
 	std::ofstream asciiFile2;
 	
 	TString listFile(outFile);
-	listFile += ".list";
+	//listFile += ".list";
 	TString regFile(outFile);
 	regFile += ".reg";
 	if (skysegmentation == 0 || skysegmentation == 1) {

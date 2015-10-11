@@ -10,29 +10,41 @@
 	<string>libagilesci</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</key>
-		<string>ssh://github.com/ASTRO-EDU/libagilesci.git</string>
+		<key>290F4FB8119039BF1F709F3F87672EC12684DE0D</key>
+		<string>github.com:AGILESCIENCE/BUILD_GRID_SCI_git.git</string>
+		<key>FC5965958824BB3E18A40E9D7BC5E2CA66350987</key>
+		<string>github.com:ASTRO-EDU/libagilesci.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>libagilesci.xcodeproj/project.xcworkspace</string>
+	<string>libagilesci.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</key>
+		<key>290F4FB8119039BF1F709F3F87672EC12684DE0D</key>
+		<string>../../..</string>
+		<key>FC5965958824BB3E18A40E9D7BC5E2CA66350987</key>
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>ssh://github.com/ASTRO-EDU/libagilesci.git</string>
+	<string>github.com:ASTRO-EDU/libagilesci.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</string>
+	<string>FC5965958824BB3E18A40E9D7BC5E2CA66350987</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>3C22577A-366C-4A3B-90CC-30F3AA4EFAD1</string>
+			<string>290F4FB8119039BF1F709F3F87672EC12684DE0D</string>
+			<key>IDESourceControlWCCName</key>
+			<string></string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>FC5965958824BB3E18A40E9D7BC5E2CA66350987</string>
 			<key>IDESourceControlWCCName</key>
 			<string>libagilesci</string>
 		</dict>
