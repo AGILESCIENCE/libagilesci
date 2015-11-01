@@ -503,7 +503,7 @@ for (int m=0; m<m_mapCount; ++m) {
 			counts += ctsMap(r, c);
 	m_countsArr[m] = int(counts);
 	}
-delete[] m_ctsMaps;
+//delete[] m_ctsMaps; //AB 2015-11-01
 m_ctsMaps = ctsMapArr;
 return true;
 }
