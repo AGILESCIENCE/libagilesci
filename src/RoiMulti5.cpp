@@ -2902,8 +2902,6 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_sources[i].GetFlux();
 	srcout << " " << m_sources[i].GetFluxerr();
 	srcout << " " << m_sources[i].GetFluxul();
-	srcout << " " << m_sources[i].GetCounts();
-	srcout << " " << m_sources[i].GetCountsErr();
 	srcout << " " << m_sources[i].GetIndex();
 	srcout << " " << m_inSrcDataArr[i].fixflag; /// zzz why not from the sources array?
 	srcout << " " << m_sources[i].GetMinTS();
