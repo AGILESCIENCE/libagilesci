@@ -2900,70 +2900,24 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_sources[i].GetSrcB();
 	srcout << " " << m_sources[i].GetTS();
 	srcout << " " << m_sources[i].GetFlux();
+	srcout << " " << m_sources[i].GetFluxerr();
+	srcout << " " << m_sources[i].GetFluxul();
+	srcout << " " << m_sources[i].GetCounts();
+	srcout << " " << m_sources[i].GetCountsErr();
 	srcout << " " << m_sources[i].GetIndex();
 	srcout << " " << m_inSrcDataArr[i].fixflag; /// zzz why not from the sources array?
 	srcout << " " << m_sources[i].GetMinTS();
 
-	char sep[2] = {' ', ','};
-	int count = SingleGalPar() ? 1 : m_mapCount;
-	for (int map=0; map<count; ++map)
-		srcout << sep[bool(map)] << GetFinalDPM(false, map, i, false);
-	count = SingleIsoPar() ? 1 : m_mapCount;
-	for (int map=0; map<count; ++map)
-		srcout << sep[bool(map)] << GetFinalDPM(true, map, i, false);
-
-
-/**
-	bool singleGal = SingleGalPar();
-	bool singleIso = SingleIsoPar();
-
-	if (singleGal)
-		srcout << " " << m_galSrc[0].GetCoeff();
-	else {
-		char sep = ' ';
-		for (int map=0; map<m_mapCount; ++map) {
-			srcout << sep << m_galSrc[map].GetCoeff();
-			sep = ' ';
-			}
-		}
-	
-	if (singleIso)
-		srcout << " " << m_isoSrc[0].GetCoeff();
-	else {
-		char sep = ' ';
-		for (int map=0; map<m_mapCount; ++map) {
-			srcout << sep << m_isoSrc[map].GetCoeff();
-			sep = ' ';
-			}
-		}
-*/
-/**
-	char sep = ' ';
-	for (int par = 0; par<m_galParCount; ++par) {
-		srcout << sep << GetDPM(false, par, i, false);
-		sep = ',';
-		}
-	sep = ' ';
-	for (int par = 0; par<m_isoParCount; ++par) {
-		srcout << sep << GetDPM(true, par, i, false);
-		sep = ',';
-		}
-*/
 
 	if (m_sources[i].GetRadius())
 		srcout << " " << m_sources[i].GetRadius();
 	else
 		srcout << " -1";
 
+	srcout << " " << m_sources[i].GetExp();
 
 	double exposure = GetTotalExposure(i);
-/**
-	srcout << " " << m_sources[i].GetCounts();
-	srcout << " " << m_sources[i].GetCountsErr();
-	srcout << " " << m_sources[i].GetFluxul();
-	srcout << " " << m_sources[i].GetExp();
-	srcout << " " << m_fitInfo[i].counts;
-*/
+
 	srcout << " " << exposure*m_sources[i].GetFlux();
 	srcout << " " << exposure*m_sources[i].GetFluxerr();
 	srcout << " " << exposure*m_sources[i].GetFluxul();
@@ -2975,7 +2929,18 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_fitInfo[i].edm0;
 	srcout << " " << m_fitInfo[i].edm1;
 	srcout << " " << m_fitInfo[i].iter0;
-	srcout << " " << m_fitInfo[i].iter1 << endl;
+	srcout << " " << m_fitInfo[i].iter1;
+	
+	char sep[2] = {' ', ','};
+	int count = SingleGalPar() ? 1 : m_mapCount;
+	for (int map=0; map<count; ++map)
+		srcout << sep[bool(map)] << GetFinalDPM(false, map, i, false);
+	count = SingleIsoPar() ? 1 : m_mapCount;
+	for (int map=0; map<count; ++map)
+		srcout << sep[bool(map)] << GetFinalDPM(true, map, i, false);
+
+	srcout << endl;
+
 	}
 }
 
