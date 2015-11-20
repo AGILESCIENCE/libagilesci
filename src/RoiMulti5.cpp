@@ -2714,7 +2714,7 @@ void RoiMulti::WriteSources(const char* fileName, bool skipFixed, bool skipEllip
 for (int i=0; i<m_srcCount; ++i) {
 	if (skipFixed && !m_inSrcDataArr[i].fixflag)
 		continue;
-	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel());
+	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".src");
 	ofstream srcout(srcoutname.c_str());
 	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ]" << endl;
 	srcout << "! sqrt(TS)" << endl ;
@@ -2888,7 +2888,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 
 
-/// NUMIT L B TS FLUX SPECTRAL_INDEX FIXFLAG MINTS GAL ISO R FLUXERROR COUNTS COUNTSERROR UL EXP NCOUNTS [DIAGNOSTIC PARAMETERS]
+/// NUMIT L B TS FLUX FLUXERR FLUXUL SPECTRAL_INDEX FIXFLAG MINTS R EXP CTS CTSERROR CTSUL TOTEXP TOTNCOUNTS FCN0 FCN1 EDM0 EDM1 ITER0 ITER1 GAL ISO
 
 
 
