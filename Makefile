@@ -67,12 +67,12 @@ ICON_DIR = ui
 ifneq (, $(findstring mpi, $(LINKERENV)))
 CC       = mpic++
 else
-CC       = gcc
+CC       = g++
 endif
 
 #Set INCPATH to add the inclusion paths
 INCPATH = -I $(INCLUDE_DIR) 
-LIBS = -lstdc++ 
+LIBS =
 #Insert the optional parameter to the compiler. The CFLAGS could be changed externally by the user
 CFLAGS   = -g 
 #Insert the implicit parameter to the compiler:
@@ -140,7 +140,7 @@ ifneq (, $(findstring apple, $(SYSTEM)))
         endif
 endif 
 
-LINK     = $CC
+LINK     = ${CC}
 #for link
 LFLAGS = -shared -Wl,-soname,$(TARGET1) -Wl,-rpath,$(DESTDIR)
 AR       = ar cqs
