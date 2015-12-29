@@ -2578,7 +2578,9 @@ if (!m_mapCount || !(m_srcCount+m_extCount)) {
 	cerr << "Not writing file " << fileName << ": No data to write" << endl;
 	return;
 	}
-ofstream output(string(fileName) + ".sources");
+//string srcoutname(string(fileName) + ".sources");
+//ofstream output(srcoutname.c_str());
+	ofstream output(fileName);
 
 char parname[64];
 output << "! DiffName, Coeff, Err, +Err, -Err" << endl;
