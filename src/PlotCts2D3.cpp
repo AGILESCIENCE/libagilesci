@@ -1244,8 +1244,8 @@ extern void PlotCts2D_FINE(
 			cout << outl << " " << outb << " " << dista << " " << sourceradiusremove<< endl;
 			if(sourceradiusremove == 0 || dista <= sourceradiusremove) {
 				
-				asciiFile1 << "10e-07 " << outl << " " << outb << " 2.1 1 2 " <<  skysegmentation << k+kold << "\n";
-				asciiFile2 << "ellipse(" << outl << "," << outb << "," << regionFinal->list[k].sigma_x << "," << regionFinal->list[k].sigma_y << ",0) # color=red width=1 text={" << skysegmentation << k+kold << "}\n";
+				asciiFile1 << "10e-07 " << outl << " " << outb << " 2.1 1 2 S" <<  skysegmentation << k+kold << "\n";
+				asciiFile2 << "ellipse(" << outl << "," << outb << "," << regionFinal->list[k].sigma_x << "," << regionFinal->list[k].sigma_y << ",0) # color=red width=1 text={S" << skysegmentation << k+kold << "}\n";
 			}
 		}
 		
