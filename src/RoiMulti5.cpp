@@ -2578,7 +2578,7 @@ if (!m_mapCount || !(m_srcCount+m_extCount)) {
 	cerr << "Not writing file " << fileName << ": No data to write" << endl;
 	return;
 	}
-ofstream output(fileName);
+ofstream output(string(fileName) + ".sources");
 
 char parname[64];
 output << "! DiffName, Coeff, Err, +Err, -Err" << endl;
@@ -2714,7 +2714,7 @@ void RoiMulti::WriteSources(const char* fileName, bool skipFixed, bool skipEllip
 for (int i=0; i<m_srcCount; ++i) {
 	if (skipFixed && !m_inSrcDataArr[i].fixflag)
 		continue;
-	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".src");
+	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
 	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ]" << endl;
 	srcout << "! sqrt(TS)" << endl ;
