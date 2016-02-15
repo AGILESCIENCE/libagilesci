@@ -318,14 +318,22 @@ while (lDeg>=360)
 double l = lDeg*DEG2RAD;
 double b = bDeg*DEG2RAD;
 double theta = sin(b)*sinba+cos(b)*cosba*cos(l-la);
-if (theta < -1.0)
-	theta = M_PI;
-else if (theta > 1.0)
-	theta = 0.0;
-else
-	theta = acos(theta);
-double x = RAD2DEG/Sinaa(theta) * cos(b)*sin(l-la);
-double y = RAD2DEG/Sinaa(theta) * (sin(b)*cosba - cos(b)*sinba*cos(l-la));
+
+double x, y;
+if(theta == 1.0) {
+    x = 0.0;
+    y = 0.0;
+}
+else {
+    if (theta < -1.0)
+        theta = M_PI;
+    else if (theta > 1.0)
+        theta = 0.0;
+    else
+        theta = acos(theta);
+    x = RAD2DEG/Sinaa(theta) * cos(b)*sin(l-la);
+    y = RAD2DEG/Sinaa(theta) * (sin(b)*cosba - cos(b)*sinba*cos(l-la));
+}
 
 *row = int(floor(half_mapX-x/mres));
 *col = int(floor(half_mapY+y/mres));
