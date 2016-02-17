@@ -17,7 +17,7 @@ public:	/// Construction
 					, m_lonpole(180.0), m_emin(400), m_emax(50000)
 					, m_lp(-999), m_bp(-999), m_gp(0.0), m_mapIndex(2.1)
 					, m_fovMin(0.0), m_fovMax(0.0), m_albedo(0.0), m_phaseCode(0l)
-					, m_step(0.0) { m_dateObs[0]=0; m_dateEnd[0]=0; m_fileName[0]=0; }
+					, m_step(0.0), m_tstart(0.0), m_tstop(0.0) { m_dateObs[0]=0; m_dateEnd[0]=0; m_fileName[0]=0; }
 	AgileMap(const AgileMap &another): MatD() { Copy(another); }
 	AgileMap(const char* fileName): MatD() { Read(fileName); }
 	~AgileMap() {}
@@ -61,6 +61,9 @@ public:	/// General information
 	const char* GetStartDate() const { return m_dateObs; }
 	const char* GetEndDate() const { return m_dateEnd; }
 
+    double GetTstart() const { return m_tstart; }
+    double GetTstop() const { return m_tstop; }
+
 	/// Setting members
 	void SetMapCenter(double l, double b) { m_la2=l, m_ba2=b; }
 	void SetXYbin(double xbin, double ybin) { m_xbin=xbin; m_ybin=ybin; }
@@ -79,6 +82,8 @@ public:	/// General information
 
 	void SetStartDate(const char* dateObs);
 	void SetEndDate(const char* dateEnd);
+
+	void SetTT(double tstart, double tstop) { m_tstart = tstart; m_tstop = tstop; }
 
 	/// Other information
 	// double x(int i, int j) const { return (i+1-m_x0)*m_xbin; }
@@ -135,6 +140,8 @@ private:	/// Data
 	double m_step;		/// STEP (exposure maps only)
 	char m_dateObs[32];	/// DATE-OBS
 	char m_dateEnd[32];	/// DATE-END
+    double m_tstart;    /// TSTART
+    double m_tstop;     /// TSTOP
 	char m_fileName[1024];
 
 	void Copy(const AgileMap& another);

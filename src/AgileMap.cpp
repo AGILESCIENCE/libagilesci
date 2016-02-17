@@ -56,6 +56,8 @@ strncpy(m_dateObs, another.m_dateObs, 32);
 m_dateObs[31] = 0;
 strncpy(m_dateEnd, another.m_dateEnd, 32);
 m_dateEnd[31] = 0;
+m_tstart = another.m_tstart;
+m_tstop = another.m_tstop;
 strncpy(m_fileName, another.m_fileName, 256);
 m_fileName[255] = 0;
 }
@@ -141,6 +143,8 @@ f.ReadKey("SC-Z-BII", &m_bp, double(-999));
 f.ReadKey("SC-LONPL", &m_gp, 0.0);
 f.ReadKey("DATE-OBS", m_dateObs, "");
 f.ReadKey("DATE-END", m_dateEnd, "");
+f.ReadKey("TSTART", &m_tstart, 0.0);
+f.ReadKey("TSTOP", &m_tstop, 0.0);
 f.ReadKey("FOVMIN", &m_fovMin, 0.0);
 f.ReadKey("FOV", &m_fovMax, 0.0);
 f.ReadKey("ALBEDO", &m_albedo, 0.0);
@@ -195,6 +199,8 @@ if (m_dateObs[0])
 if (m_dateEnd[0])
 	f.WriteKey("DATE-END", m_dateEnd);
 
+f.WriteKey("TSTART", m_tstart);
+f.WriteKey("TSTOP", m_tstop);
 f.WriteKey("FOVMIN", m_fovMin);
 f.WriteKey("FOV", m_fovMax);
 f.WriteKey("ALBEDO", m_albedo);
