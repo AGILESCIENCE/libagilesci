@@ -239,7 +239,6 @@ if (status) {
     return status;
 }
 from.Close();
-std::cerr << "COPIED!!" << std::endl;
 
 f.UpdateKey("BITPIX", DOUBLE_IMG);
 f.UpdateKey("NAXIS", 2);
