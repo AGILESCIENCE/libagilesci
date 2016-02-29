@@ -214,6 +214,79 @@ if (f.Status())
 return f.Status();
 }
 
+int AgileMap::WriteWithAllMetadata(const char* fileName) const
+{
+FitsFile f;
+if (!f.Create(fileName)) {
+	cerr << "ERROR " << f.Status() << " creating " << fileName << endl;
+	return f.Status();
+	}
+
+MatD mat;
+TransposeTo(mat);
+
+/// this are the changes for metadata copy instead of the method Write
+FitsFile from;
+if (!from.Open(m_fileName)) {
+    cerr << "ERROR " << f.Status() << " reopening " << m_fileName << endl;
+    return f.Status();
+}
+
+int status = 0;
+fits_copy_header(from, f, &status);
+if (status) {
+    cerr << "ERROR " << status << " copying hdu from " << m_fileName << " to " << fileName << endl;
+    return status;
+}
+from.Close();
+std::cerr << "COPIED!!" << std::endl;
+
+f.UpdateKey("BITPIX", DOUBLE_IMG);
+f.UpdateKey("NAXIS", 2);
+f.UpdateKey("NAXIS1", mat.Cols());
+f.UpdateKey("NAXIS2", mat.Rows());
+/// end metadata changes
+
+long fpixel[2] = { 1, 1 };
+fits_write_pix(f, TDOUBLE, fpixel, mat.Size(), const_cast<double*>(mat.Buffer()), f);
+
+f.UpdateKey("CTYPE1", "GLON-ARC");
+f.UpdateKey("CTYPE2", "GLAT-ARC");
+f.UpdateKey("CRPIX1", m_x0);
+f.UpdateKey("CRVAL1", m_la2);
+f.UpdateKey("CDELT1", m_xbin);
+f.UpdateKey("CRPIX2", m_y0);
+f.UpdateKey("CRVAL2", m_ba2);
+f.UpdateKey("CDELT2", m_ybin);
+f.UpdateKey("LONPOLE", m_lonpole);
+f.UpdateKey("MINENG", m_emin);
+f.UpdateKey("MAXENG", m_emax);
+f.UpdateKey("INDEX", m_mapIndex);
+f.UpdateKey("SC-Z-LII", m_lp);
+f.UpdateKey("SC-Z-BII", m_bp);
+f.UpdateKey("SC-LONPL", m_gp);
+
+if (m_dateObs[0])
+	f.UpdateKey("DATE-OBS", m_dateObs);
+if (m_dateEnd[0])
+	f.UpdateKey("DATE-END", m_dateEnd);
+
+f.UpdateKey("TSTART", m_tstart);
+f.UpdateKey("TSTOP", m_tstop);
+f.UpdateKey("FOVMIN", m_fovMin);
+f.UpdateKey("FOV", m_fovMax);
+f.UpdateKey("ALBEDO", m_albedo);
+f.UpdateKey("PHASECOD", m_phaseCode);
+
+if (m_step)
+	f.UpdateKey("STEP", m_step);
+
+if (f.Status())
+	cerr << "ERROR " << f.Status() << " writing to " << fileName << endl;
+return f.Status();
+}
+
+
 
 double AgileMap::Area(int i, int j) const
 {

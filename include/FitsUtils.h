@@ -34,6 +34,13 @@ bool WriteFitsKey(fitsfile *fptr, const char* name, int value, int* status, cons
 bool WriteFitsKey(fitsfile *fptr, const char* name, long value, int* status, const char* comment=0);
 bool WriteFitsKey(fitsfile *fptr, const char* name, const char* value, int* status, const char* comment=0);
 
+/// Writing keywords. They modify it again if it was already present
+bool UpdateFitsKey(fitsfile *fptr, const char* name, bool value, int* status, const char* comment=0);
+bool UpdateFitsKey(fitsfile *fptr, const char* name, float value, int* status, const char* comment=0);
+bool UpdateFitsKey(fitsfile *fptr, const char* name, double value, int* status, const char* comment=0);
+bool UpdateFitsKey(fitsfile *fptr, const char* name, int value, int* status, const char* comment=0);
+bool UpdateFitsKey(fitsfile *fptr, const char* name, long value, int* status, const char* comment=0);
+bool UpdateFitsKey(fitsfile *fptr, const char* name, const char* value, int* status, const char* comment=0);
 
 bool WriteFitsAstroComments(fitsfile* fptr, int* status);
 bool WriteFitsDate(fitsfile* fptr, int* status); /// Write the DATE keyword with UTC time
@@ -102,6 +109,20 @@ public:
 		{ return ::WriteFitsKey(m_fptr, name, value, &m_status, comment); }
 	bool WriteKey(const char* name, const char* value, const char* comment=0)
 		{ return ::WriteFitsKey(m_fptr, name, value, &m_status, comment); }
+
+	bool UpdateKey(const char* name, bool value, const char* comment=0)
+		{ return ::UpdateFitsKey(m_fptr, name, value, &m_status, comment); }
+	bool UpdateKey(const char* name, float value, const char* comment=0)
+		{ return ::UpdateFitsKey(m_fptr, name, value, &m_status, comment); }
+	bool UpdateKey(const char* name, double value, const char* comment=0)
+		{ return ::UpdateFitsKey(m_fptr, name, value, &m_status, comment); }
+	bool UpdateKey(const char* name, int value, const char* comment=0)
+		{ return ::UpdateFitsKey(m_fptr, name, value, &m_status, comment); }
+	bool UpdateKey(const char* name, long value, const char* comment=0)
+		{ return ::UpdateFitsKey(m_fptr, name, value, &m_status, comment); }
+	bool UpdateKey(const char* name, const char* value, const char* comment=0)
+		{ return ::UpdateFitsKey(m_fptr, name, value, &m_status, comment); }
+
 
 	bool WriteAstroComments() { return WriteFitsAstroComments(m_fptr, &m_status); }
 	bool WriteDate() { return WriteFitsDate(m_fptr, &m_status); }

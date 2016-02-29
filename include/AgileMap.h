@@ -28,6 +28,7 @@ public:	/// Operators
 public:	/// I/O (the image is transposed on file)
 	int Read(const char* fileName);
 	int Write(const char* fileName) const;
+	int WriteWithAllMetadata(const char* fileName) const;
 	void Zero() { MatD::operator=(0.0); }
 
 public:	/// General information

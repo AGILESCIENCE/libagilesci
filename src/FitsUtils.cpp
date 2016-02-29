@@ -152,6 +152,49 @@ return *status;
 }
 
 
+bool UpdateFitsKey(fitsfile *fptr, const char* name, bool value, int* status, const char* comment)
+{
+if (!*status)
+	fits_update_key(fptr, TLOGICAL, const_cast<char*>(name), &value, const_cast<char*>(comment), status);
+return *status;
+}
+
+bool UpdateFitsKey(fitsfile *fptr, const char* name, float value, int* status, const char* comment)
+{
+if (!*status)
+	fits_update_key(fptr, TFLOAT, const_cast<char*>(name), &value, const_cast<char*>(comment), status);
+return *status;
+}
+
+bool UpdateFitsKey(fitsfile *fptr, const char* name, double value, int* status, const char* comment)
+{
+if (!*status)
+	fits_update_key(fptr, TDOUBLE, const_cast<char*>(name), &value, const_cast<char*>(comment), status);
+return *status;
+}
+
+bool UpdateFitsKey(fitsfile *fptr, const char* name, int value, int* status, const char* comment)
+{
+if (!*status)
+	fits_update_key(fptr, TINT, const_cast<char*>(name), &value, const_cast<char*>(comment), status);
+return *status;
+}
+
+bool UpdateFitsKey(fitsfile *fptr, const char* name, long value, int* status, const char* comment)
+{
+if (!*status)
+	fits_update_key(fptr, TLONG, const_cast<char*>(name), &value, const_cast<char*>(comment), status);
+return *status;
+}
+
+bool UpdateFitsKey(fitsfile *fptr, const char* name, const char* value, int* status, const char* comment)
+{
+if (!*status)
+	fits_update_key(fptr, TSTRING, const_cast<char*>(name), const_cast<char*>(value), const_cast<char*>(comment), status);
+return *status;
+}
+
+
 
 bool FitsFile::ColumnInfo(const char* colName, int* colnum, long* nrows)
 {
