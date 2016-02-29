@@ -225,7 +225,6 @@ if (!f.Create(fileName)) {
 MatD mat;
 TransposeTo(mat);
 
-/// this are the changes for metadata copy instead of the method Write
 FitsFile from;
 if (!from.Open(m_fileName)) {
     cerr << "ERROR " << f.Status() << " reopening " << m_fileName << endl;
@@ -240,11 +239,9 @@ if (status) {
 }
 from.Close();
 
-f.UpdateKey("BITPIX", DOUBLE_IMG);
 f.UpdateKey("NAXIS", 2);
 f.UpdateKey("NAXIS1", mat.Cols());
 f.UpdateKey("NAXIS2", mat.Rows());
-/// end metadata changes
 
 long fpixel[2] = { 1, 1 };
 fits_write_pix(f, TDOUBLE, fpixel, mat.Size(), const_cast<double*>(mat.Buffer()), f);
