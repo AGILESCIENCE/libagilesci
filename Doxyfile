@@ -3,8 +3,8 @@
 #---------------------------------------------------------------------------
 # General configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = BaseProject 
-PROJECT_NUMBER         = 1.0.0
+PROJECT_NAME           = libagilesci
+PROJECT_NUMBER         = 1.2.0
 OUTPUT_DIRECTORY       = ref
 OUTPUT_LANGUAGE        = English
 EXTRACT_ALL            = YES

@@ -1,3 +1,22 @@
+2016-03-04 Andrea Bulgarelli <bulgarelli@iasfbo.inaf.it>, Andrea Zoli <zoli@iasfbo.inaf.it>
+TAG v1.2.0
+Fix segfault when sources coordinates are exactly the same of the center of the map.
+RoiMulti5: Fix labels in the output files.
+Add minuit DEBUG prints on pre and post-fitting.
+AgileMap: fix the bitpix.
+AgileMap: remove testing print.
+Add the AgileMap::WriteWithAllMetadata() method.
+Handle AgileMap tstart,tstop keywords.
+removed. sources
+.log.sources and .sources
+source name with initial S
+Add build files to .gitignore.
+Using g++ to compile c++ code.
+.src extension of single source file
+new version of the output of simmulti
+crash at the second iteration. fix it
+bug on .list output - removed
+
 2014-01-20 Andrea Bulgarelli <bulgarelli@iasfbo.inaf.it>
 TAG v1.1.0
 + Intervals::Clear() and Intervals::Sum()
