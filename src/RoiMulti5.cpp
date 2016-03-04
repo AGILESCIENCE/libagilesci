@@ -2106,6 +2106,10 @@ srcData.TS = map.GetTS();
 
 Int_t RoiMulti::Fit(const char* opt, int source, bool zero, int flags, Double_t* amin)
 {
+#ifdef DEBUG
+    std::cout << "### pre-fitting parameters" << std::endl;
+    m_model.Print("V");
+#endif
 
 /// zzz
 for (int i=0; i<SrcCount(); ++i) {
@@ -2267,6 +2271,12 @@ if (m_logFile && source>=0) { /// Exclude extended sources for now
 
 	logFile << " " << m_lCenter << " " << m_bCenter << " " << fcn << " " << edm << " " << iter << endl;
 	}
+
+#ifdef DEBUG
+    std::cout << "### post-fitting parameters" << std::endl;
+    m_model.Print("V");
+#endif
+
 return fitResult;
 }
 
