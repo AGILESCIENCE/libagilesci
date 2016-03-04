@@ -2593,7 +2593,7 @@ if (!m_mapCount || !(m_srcCount+m_extCount)) {
 	ofstream output(fileName);
 
 char parname[64];
-output << "! DiffName, Coeff, Err, +Err, -Err" << endl;
+output << "! DiffName, Flux, Err, +Err, -Err" << endl;
 
 bool singleGal = SingleGalPar();
 bool singleIso = SingleIsoPar();
@@ -2626,7 +2626,7 @@ else
 
 
 if (ExtCount()) {
-	output << "! ExtSrcName, sqrt(TS), Coeff, Err, +Err, -Err" << endl;
+	output << "! ExtSrcName, sqrt(TS), Flux, Err, +Err, -Err" << endl;
 	for (int i=0; i<ExtCount(); ++i) {
 		const AlikeExtMap& extMap = m_extSrcArr[ExtIndex(0, i)];
 		double BaryExposure = EvalExposure(extMap.GetBaryL(), extMap.GetBaryB(), m_expMaps[0]);
@@ -2641,7 +2641,7 @@ if (ExtCount()) {
 
 
 if (m_srcCount) {
-	output << "! SrcName, sqrt(TS), L, B, Counts, Err, Flux, Err, Index, Err";
+	output << "! SrcName, sqrt(TS), L_peak, B_peak, Counts, Err, Flux, Err, Index, Err";
 	if (!skipFitInfo)
 		output << " [fcn0 fcn1 edm0 edm1 iter0 iter1]";
 	output << endl;
