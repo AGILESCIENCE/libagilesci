@@ -5,7 +5,6 @@
 #include <string.h>
 #include "MathUtils.h"
 
-
 static void IncFloatStr(char* dStr)
 {
 if (dStr[0]=='-' || dStr[0]=='+')
@@ -82,33 +81,12 @@ return angle ? sin(angle)/angle : 0.0;
 
 double SphDistDeg(double long1, double lat1, double long2, double lat2)
 {
-double rxy = cos(lat1*DEG2RAD);
-double z1 = sin(lat1*DEG2RAD);
-
-double x1 = rxy*cos(long1*DEG2RAD);
-double y1 = rxy*sin(long1*DEG2RAD);
-
-rxy = cos(lat2*DEG2RAD);
-double z2 = sin(lat2*DEG2RAD);
-
-double x2 = rxy*cos(long2*DEG2RAD);
-double y2 = rxy*sin(long2*DEG2RAD);
- 
-/// Compute the vector cross product for both points
-double cs = x1*x2 + y1*y2 + z1*z2;
-double xc = y1*z2 - z1*y2;
-double yc = z1*x2 - x1*z2;
-double zc = x1*y2 - y1*x2;
-double sn = sqrt(xc*xc + yc*yc + zc*zc);
- 
-/// Convert to polar
-if (cs || sn) {
-	double a = atan2(sn, cs);
-	if (a<0)
-		a += 2*M_PI;
-	return a*RAD2DEG;
-	}
-return 0;
+    double l1 = long1*DEG2RAD;
+    double l2 = long2*DEG2RAD;
+    double b1 = lat1*DEG2RAD;
+    double b2 = lat2*DEG2RAD;
+    double dist = acos(sin(b1)*sin(b2) + cos(b1)*cos(b2) *cos(l1-l2));
+    return dist*RAD2DEG;
 }
 
 const double psi[6]    = { 0.57477043300, 4.9368292465,  0.00000000000, 0.00000000000, 0.11142137093, 4.71279419371};

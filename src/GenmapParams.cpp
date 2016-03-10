@@ -29,7 +29,7 @@ fits_get_hdu_num(input, &i);
 
 char str[100] = "TT";
 float timezero = 0.0;
-char * secstr = "s";
+char secstr[] = "s";
 
 fits_update_key(input, TDOUBLE, "TSTART", &t1,  "[OBT]first event time", &status);
 fits_update_key(input, TDOUBLE, "TSTOP", &t2,  "[OBT]last event time", &status);
@@ -435,13 +435,13 @@ int ExpGenParams::write_fits_header(long i, fitsfile *mapFits, int & status)
 	
 	fits_update_key(mapFits, TDOUBLE,  "MINENG", &emin, NULL, &status);
 	fits_update_key(mapFits, TDOUBLE,  "MAXENG", &emax, NULL, &status);
-	char * str1 =  "AGILE";		
+	char str1[] =  "AGILE";
 	fits_update_key(mapFits, TSTRING,  "TELESCOP", str1, NULL, &status);
 
-	char * str2 =  "GRID";
+	char str2[] =  "GRID";
 	fits_update_key(mapFits, TSTRING,  "INSTRUME", str2, NULL, &status);	
 	
-	char * str6 =  "T";
+	char str6[] =  "T";
 	
 	fits_update_key(mapFits, TSTRING,  "PIXCENT", str6, NULL, &status);	
 
@@ -610,11 +610,11 @@ fits_update_key(mapFits, TDOUBLE, "CDELT1", &xx, NULL, &status);
 xx = mres;
 fits_update_key(mapFits, TDOUBLE, "CDELT2", &xx, NULL, &status);
 
-char * unit =  "deg";
+char unit[] = "deg";
 fits_update_key(mapFits, TSTRING, "CUNIT1", unit, NULL, &status);
 fits_update_key(mapFits, TSTRING, "CUNIT2", unit, NULL, &status);
 
-char * str3 =  "FK5";
+char str3[] = "FK5";
 fits_update_key(mapFits, TSTRING,  "RADESYS", str3, NULL, &status);
 
 xx = 2000.0;
@@ -625,13 +625,13 @@ WriteTime(mapFits, tmin, tmax);
 
 fits_update_key(mapFits, TDOUBLE,  "MINENG", &emin, NULL, &status);
 fits_update_key(mapFits, TDOUBLE,  "MAXENG", &emax, NULL, &status);
-char * str1 =  "AGILE";
+char str1[] = "AGILE";
 fits_update_key(mapFits, TSTRING,  "TELESCOP", str1, NULL, &status);
 
-char * str2 =  "GRID";
+char str2[] = "GRID";
 fits_update_key(mapFits, TSTRING,  "INSTRUME", str2, NULL, &status);	
 
-char * str6 =  "T";
+char str6[] = "T";
 fits_update_key(mapFits, TSTRING,  "PIXCENT", str6, NULL, &status);	
 
 char str7[FLEN_FILENAME] = "";

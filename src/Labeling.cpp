@@ -33,7 +33,8 @@ static double GetSpaceDensity2D(int i, int j)
 
 static int SecondStep(unsigned int last_i, unsigned int NewLabel, int* C )
 {
-	unsigned int i, j, k, NumGroup;
+	unsigned int i, k;
+	int j, NumGroup;
 	int N = dimX;
 	int M = dimY;
 	//Compattazione degli identificatori delle classi di equivalenza
@@ -91,7 +92,8 @@ int LabelingDuePassi()
 	int lp, lq;		//label dei pixel p e q
 	unsigned int last_i;
 
-	int i, j, k;
+	int i, j;
+	unsigned int k;
 	int NumObject = 0;	//utilizzato per contare il numero di oggetti individuati
 	// 	UChar_t BG = 0;
 	long int count=0;
@@ -155,7 +157,7 @@ int LabelingDuePassi()
 							lx = lp;
 						else	//FONDI
 						{
-							int k, Clp = C[lp], Clq = C[lq];
+							int Clp = C[lp], Clq = C[lq];
 
 							//unione delle due classi di equivalenza Clp e Clq
 							if(F[Clq] == 1)		//e' presente una sola label
@@ -217,7 +219,8 @@ int LabelingDuePassi8()
 	int lp, lq, lr, ls;		//label dei pixel p e q
 	unsigned int last_i;
 
-	int i, j, k;
+	int i, j;
+	unsigned int k;
 	int NumObject = 0;	//utilizzato per contare il numero di oggetti individuati
 	// 	UChar_t BG = 0;
 	long int count=0;
@@ -283,7 +286,7 @@ int LabelingDuePassi8()
 					if(C[lp] != C[lr] && lp != BG && lr!= BG)
 					{
 						//esiste x, allora fondi
-						int k, Clp = C[lp], Clr = C[lr];
+						int Clp = C[lp], Clr = C[lr];
 
 						//unione delle due classi di equivalenza Clp e Clq
 						if(F[Clr] == 1)		//e' presente una sola label
@@ -330,7 +333,7 @@ int LabelingDuePassi8()
 								lx = lk;
 							else	//FONDI
 							{
-								int k, Clk = C[lk], Cls = C[ls];
+								int Clk = C[lk], Cls = C[ls];
 
 								//unione delle due classi di equivalenza Clp e Clq
 								if(F[Cls] == 1)		//e' presente una sola label

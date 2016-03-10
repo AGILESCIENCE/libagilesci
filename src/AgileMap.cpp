@@ -108,7 +108,7 @@ if (!f.Open(fileName)) {
 	}
 
 strncpy(m_fileName, fileName, 1024);
-m_fileName[1024] = 0;
+m_fileName[1023] = 0;
 int bitpix, naxis;
 long naxes[2] = { 1, 1 };
 if (fits_get_img_param(f, 2, &bitpix, &naxis, naxes, f)) {

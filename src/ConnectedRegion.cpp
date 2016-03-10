@@ -231,11 +231,11 @@ void ConnectedRegionList::CalculateBaricenterAndError(Int_t nbindeg) {
 			h1->GetXaxis()->SetRangeUser(list[k].center_x - radius_bin * 1.1,  list[k].center_x + radius_bin * 1.1);
 			h1->SetTitle(name);
 			h1->Fit("gaus", "Q");
-			TF1* f1 = h1->GetFunction("gaus");
-			Float_t mean = f1->GetParameter(1); //mean gaus
-			Float_t sigma = f1->GetParameter(2); //sigma gaus
-			Float_t chi2 = f1->GetChisquare(); //chi square fit
-			Float_t ndf = f1->GetNDF(); //NDF fit
+//			TF1* f1 = h1->GetFunction("gaus");
+//			Float_t mean = f1->GetParameter(1); //mean gaus
+//			Float_t sigma = f1->GetParameter(2); //sigma gaus
+//			Float_t chi2 = f1->GetChisquare(); //chi square fit
+//			Float_t ndf = f1->GetNDF(); //NDF fit
 // 			cout << "X mean " << mean << " sigma " << sigma << " sigma in radius " << sigma / nbindeg << " ";
 // 			cout << " X sigma 2 " << sigmaX_2 << " sigma2 in radius " << sigmaX_2 / nbindeg << endl;
 			list[k].sigma_x = sigmaX_2 / nbindeg;
@@ -270,11 +270,11 @@ void ConnectedRegionList::CalculateBaricenterAndError(Int_t nbindeg) {
 			h2->GetXaxis()->SetRangeUser(list[k].center_y - radius_bin * 1.1,  list[k].center_y + radius_bin * 1.1);
 			h2->SetTitle(name);
 			h2->Fit("gaus", "Q");
-			TF1* f2 = h2->GetFunction("gaus");
-			Float_t mean2 = f2->GetParameter(1); //mean gaus
-			Float_t sigma2 = f2->GetParameter(2); //sigma gaus
-			Float_t chi22 = f2->GetChisquare(); //chi square fit
-			Float_t ndf2 = f2->GetNDF(); //NDF fit
+//			TF1* f2 = h2->GetFunction("gaus");
+//			Float_t mean2 = f2->GetParameter(1); //mean gaus
+//			Float_t sigma2 = f2->GetParameter(2); //sigma gaus
+//			Float_t chi22 = f2->GetChisquare(); //chi square fit
+//			Float_t ndf2 = f2->GetNDF(); //NDF fit
 // 			cout << "Y mean " << mean2 << " sigma " << sigma2 << " sigma in radius " << sigma2 / nbindeg << " ";
 // 			cout << " Y sigma 2 " << sigmaY_2 << " sigma2 in radius " << sigmaY_2 / nbindeg << endl;
 			list[k].sigma_y = sigmaY_2 / nbindeg;
