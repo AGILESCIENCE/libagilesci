@@ -73,22 +73,6 @@ return dStr;
 
 
 
-double Sinaa(double angle)
-{
-return angle ? sin(angle)/angle : 0.0;
-}
-
-
-double SphDistDeg(double long1, double lat1, double long2, double lat2)
-{
-    double l1 = long1*DEG2RAD;
-    double l2 = long2*DEG2RAD;
-    double b1 = lat1*DEG2RAD;
-    double b2 = lat2*DEG2RAD;
-    double dist = acos(sin(b1)*sin(b2) + cos(b1)*cos(b2) *cos(l1-l2));
-    return dist*RAD2DEG;
-}
-
 const double psi[6]    = { 0.57477043300, 4.9368292465,  0.00000000000, 0.00000000000, 0.11142137093, 4.71279419371};
 const double stheta[6] = { 0.88998808748,-0.88998808748, 0.39777715593,-0.39777715593, 0.86766622025,-0.86766622025};
 const double ctheta[6] = { 0.45598377618, 0.45598377618, 0.91748206207, 0.91748206207, 0.49714719172, 0.49714719172};

@@ -24,10 +24,20 @@ const double DEG2RAD = M_PI/180.0;
 /// Return (and set) the user string or an internal static
 char* DoubleStr(double dVal, int decimals=-1, char* dStr=0);
 
+inline double Sinaa(double angle)
+{
+    return angle ? sin(angle)/angle : 0.0;
+}
 
-double Sinaa(double angle);
-
-double SphDistDeg(double long1, double lat1, double long2, double lat2);
+inline double SphDistDeg(double long1, double lat1, double long2, double lat2)
+{
+    double l1 = long1*DEG2RAD;
+    double l2 = long2*DEG2RAD;
+    double b1 = lat1*DEG2RAD;
+    double b2 = lat2*DEG2RAD;
+    double dist = acos(sin(b1)*sin(b2) + cos(b1)*cos(b2) *cos(l1-l2));
+    return dist*RAD2DEG;
+}
 
 void Euler(double ai, double bi, double * ao, double * bo, int select);
 
