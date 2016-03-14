@@ -2537,6 +2537,7 @@ if (diffVar && SrcCount()) {
 				cout << endl;
 				}
 		}
+        delete []varSrcArr;
 	}
 }
 
@@ -2697,6 +2698,7 @@ static void WriteIsoDate(ofstream& f, const char* isoDdate)
 {
 	char date[64];
 	strncpy(date, isoDdate, 32);
+	date[33]='\0';
 	if (strlen(date)==19 && date[10]=='T') {
 		date[10] = 0;
 		f << date << "&nbsp;" << date+11;
@@ -2711,6 +2713,7 @@ static void WriteIsoDate2(ofstream& f, const char* isoDdate)
 {
 	char date[64];
 	strncpy(date, isoDdate, 32);
+	date[33]='\0';
 	if (strlen(date)==19 && date[10]=='T') {
 		date[10] = 0;
 		f << date << "T" << date+11;

@@ -685,6 +685,9 @@ TH2D* CreateConnectedRegions(TH2D* hist, Int_t nconreg, Int_t typeconreg, Int_t 
 	#endif
 
 	nconnectedregion_found = ncon;
+
+    delete []src_tmp;
+    delete []src_conreg_final;
 	return hist;
 
 }
@@ -934,7 +937,6 @@ ConnectedRegionList* CreateConnectedRegions_ONEBYONE(TH2D* hist, Int_t nconreg, 
 
 	Double_t* src = new Double_t[M*N];
 	Double_t* src_tmp = new Double_t[M*N];
-	Double_t* src_conreg_final = new Double_t[M*N];
 	for(int i=0; i< M; i++)
 		for(int j=0; j< N; j++)
 			src[i*M+j] = 0;

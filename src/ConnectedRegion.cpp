@@ -280,6 +280,7 @@ void ConnectedRegionList::CalculateBaricenterAndError(Int_t nbindeg) {
 			list[k].sigma_y = sigmaY_2 / nbindeg;
 		}
 	}
+	delete []src;
 }
 
 void ConnectedRegionList::SetIndexes() {
