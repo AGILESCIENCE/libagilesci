@@ -6,6 +6,7 @@
 
 
 #include <cmath>
+#include <assert.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -35,7 +36,10 @@ inline double SphDistDeg(double long1, double lat1, double long2, double lat2)
     double l2 = long2*DEG2RAD;
     double b1 = lat1*DEG2RAD;
     double b2 = lat2*DEG2RAD;
-    double dist = acos(sin(b1)*sin(b2) + cos(b1)*cos(b2) *cos(l1-l2));
+    double val = sin(b1)*sin(b2) + cos(b1)*cos(b2) *cos(l1-l2);
+    if(val > 1.0) return 0.0;
+    double dist = acos(val);
+    assert(!isnan(dist));
     return dist*RAD2DEG;
 }
 
