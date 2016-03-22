@@ -32,6 +32,13 @@ inline double Sinaa(double angle)
 
 inline double SphDistDeg(double long1, double lat1, double long2, double lat2)
 {
+    // cache the last computation
+    static double prev_long1=0.0, prev_long2=0.0, prev_lat1=0.0, prev_lat2=0.0;
+    static double prev_dist = 0.0;
+    if(prev_long1 == long1 && prev_long2 == long2 &&
+       prev_lat1 == lat1 && prev_lat2 == lat2)
+        return prev_dist;
+
     double l1 = long1*DEG2RAD;
     double l2 = long2*DEG2RAD;
     double b1 = lat1*DEG2RAD;
@@ -40,7 +47,16 @@ inline double SphDistDeg(double long1, double lat1, double long2, double lat2)
     if(val > 1.0) return 0.0;
     double dist = acos(val);
     assert(!isnan(dist));
-    return dist*RAD2DEG;
+    dist*=RAD2DEG;
+
+    // update the cache
+    prev_dist=dist;
+    prev_long1=long1;
+    prev_long2=long2;
+    prev_lat1=lat1;
+    prev_lat2=lat2;
+
+    return dist;
 }
 
 void Euler(double ai, double bi, double * ao, double * bo, int select);
