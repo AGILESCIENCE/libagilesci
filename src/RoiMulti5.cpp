@@ -340,6 +340,7 @@ RoiMulti::RoiMulti():
 
 	m_binCount(0),
 	m_fluxScaleFactor(0.0),
+	m_fluxScaleFactorMulInv(0.0),
 	m_fluxUpperBound(0.0)
 {
 	m_countsHist.Sumw2();
@@ -1108,7 +1109,7 @@ for (int s=0; s<m_srcCount; ++s) {
 		if (changes & AlikePsfSource::PositionChanged)
 			s_fitterChanges[s*2+1] += 1;
 		}
-	result += par[SrcFluxPar(s)] * source(m_binList[bin]) * source.GetNormFactor() * source.GetExp() / m_fluxScaleFactor;
+	result += par[SrcFluxPar(s)] * source(m_binList[bin]) * source.GetNormFactor() * source.GetExp() * m_fluxScaleFactorMulInv;
 	}
 
 /**
@@ -1191,6 +1192,7 @@ DiffTogether = 3. All the coeffs are proportionally variable (single parameter)
 
 
 m_fluxScaleFactor = FLUX_SCALE_FACTOR;
+m_fluxScaleFactorMulInv = 1.0 / FLUX_SCALE_FACTOR;
 m_fluxUpperBound =  FLUX_UPPER_BOUND;
 
 cout << endl << "Flux factor: " << m_fluxScaleFactor << "; upper bound: " << m_fluxUpperBound << endl;
@@ -1478,9 +1480,9 @@ TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 Double_t flux_plus, flux_minus, flux_parab, globcc;
 fitter->GetErrors(SrcFluxPar(source), flux_plus, flux_minus, flux_parab, globcc);
 for (int cts=0; cts<m_mapCount; ++cts) {
-	m_sources[m_srcCount*cts+source].SetFluxerr(flux_parab/m_fluxScaleFactor);
-	m_sources[m_srcCount*cts+source].SetFluxlo(flux_minus/m_fluxScaleFactor);
-	m_sources[m_srcCount*cts+source].SetFluxhi(flux_plus/m_fluxScaleFactor);
+	m_sources[m_srcCount*cts+source].SetFluxerr(flux_parab*m_fluxScaleFactorMulInv);
+	m_sources[m_srcCount*cts+source].SetFluxlo(flux_minus*m_fluxScaleFactorMulInv);
+	m_sources[m_srcCount*cts+source].SetFluxhi(flux_plus*m_fluxScaleFactorMulInv);
 	}
 }
 
@@ -1546,9 +1548,9 @@ Double_t flux_plus, flux_minus, flux_parab, globcc;
 fitter->GetErrors(SrcFluxPar(source), flux_plus, flux_minus, flux_parab, globcc);
 for (int cts=0; cts<m_mapCount; ++cts) {
 	if (flux > 0.0)
-		m_sources[m_srcCount*cts+source].SetFluxul(flux + flux_plus/m_fluxScaleFactor);
+		m_sources[m_srcCount*cts+source].SetFluxul(flux + flux_plus*m_fluxScaleFactorMulInv);
 	else
-		m_sources[m_srcCount*cts+source].SetFluxul(flux_plus/m_fluxScaleFactor - flux);
+		m_sources[m_srcCount*cts+source].SetFluxul(flux_plus*m_fluxScaleFactorMulInv - flux);
 	}
 SetErrorDef(olderrdef);
 }

@@ -512,7 +512,7 @@ private:	/// Internal operations
 	void FixSrcIndex(int source) { FixSrcIndex(source, m_sources[source].GetIndex()); }
 
 	/// Reading the Model and setting up diff and source components
-	double PeekSrcFluxPar(int source) const { return m_model.GetParameter(SrcFluxPar(source))/m_fluxScaleFactor; }
+	double PeekSrcFluxPar(int source) const { return m_model.GetParameter(SrcFluxPar(source))*m_fluxScaleFactorMulInv; }
 	void GetSrcPars(int source);
 	void GetFluxErrors(int source);
 
@@ -611,6 +611,7 @@ private:	/// Data
 
 	/// Tuning the flux parameter
 	double m_fluxScaleFactor;
+	double m_fluxScaleFactorMulInv;
 	double m_fluxUpperBound;
 
 

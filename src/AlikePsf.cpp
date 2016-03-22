@@ -416,6 +416,7 @@ if (changes!=NoChanges) {
 	cerr << "OK, count=" << count << ", deltaRho=" << deltaRho << endl;
 	cerr << "Rows=" << Rows() << ", Cols=" << Cols() << endl;
 */
+    double deltaRhoMultInv = 1.0 / deltaRho;
 	for (int c=0; c<count; ++c) {
 		int bin = circle[c];
 /*
@@ -428,8 +429,8 @@ if (changes!=NoChanges) {
 			}
 */
 		double srcdist = SphDistDeg(m_srcL, m_srcB, l(bin), b(bin));
-		int psfind = srcdist/deltaRho;
-		double resid = (srcdist - rhoArr[psfind])/deltaRho;
+		int psfind = srcdist * deltaRhoMultInv;
+		double resid = (srcdist - rhoArr[psfind]) * deltaRhoMultInv;
 		double correction;
 		if (resid<0)
 			if (psfind==0)
