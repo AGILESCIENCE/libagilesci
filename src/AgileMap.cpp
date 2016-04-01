@@ -299,37 +299,8 @@ return atan2d(x(i),-y(j));
 
 bool AgileMap::GetRowCol(double lDeg, double bDeg, int* row, int* col) const
 {
-/// Minimize round-off errors
-/*while (lDeg<0)
-	lDeg += 360;
-while (lDeg>=360)
-	lDeg -= 360;*/
-
-lDeg = fmod(lDeg, 360.0);
-
-// skip computation if we are on the map border
-bool skip = false;
-if(lDeg > l(0, 0)) {
-    *col = 0;
-    skip = true;
-}
-else if(lDeg < l(Cols()-1, 0)) {
-    *col = Cols()-1;
-    skip = true;
-}
-if(bDeg < b(0, 0)) {
-    *row = 0;
-    skip = true;
-}
-else if(bDeg > b(0, Rows()-1)) {
-    *row = Rows()-1;
-    skip = true;
-}
-if(skip)
-    return false;
-
-double la = m_la2 * DEG2RAD;
-double ba = m_ba2 * DEG2RAD;
+double la = GetMapCenterL() * DEG2RAD;
+double ba = GetMapCenterB() * DEG2RAD;
 double cosba = cos(ba);
 double sinba = sin(ba);
 
@@ -337,6 +308,12 @@ double mres = fabs(GetXbin());
 /// double half_mdim = (GetX0() - 0.5)*mres;
 double half_mapX = Cols()/2;
 double half_mapY = Rows()/2;
+
+/// Minimize round-off errors
+while (lDeg<0)
+	lDeg += 360;
+while (lDeg>=360)
+	lDeg -= 360;
 
 double l = lDeg*DEG2RAD;
 double b = bDeg*DEG2RAD;
