@@ -296,9 +296,17 @@ double AgileMap::phi(int i, int j) const
 return atan2d(x(i),-y(j));
 }
 
-
+//#define DEBUG
 bool AgileMap::GetRowCol(double lDeg, double bDeg, int* row, int* col) const
 {
+#ifdef DEBUG
+std::cout << "in: " << lDeg << " " << bDeg << std::endl;
+#endif
+if(lDeg > 360.0 || lDeg < 0.0)
+    return false;
+if(bDeg > 90.0 || lDeg < -90.0)
+    return false;
+
 double la = GetMapCenterL() * DEG2RAD;
 double ba = GetMapCenterB() * DEG2RAD;
 double cosba = cos(ba);
@@ -314,6 +322,10 @@ while (lDeg<0)
 	lDeg += 360;
 while (lDeg>=360)
 	lDeg -= 360;
+
+#ifdef DEBUG
+std::cout << "in2: " << lDeg << " " << bDeg << std::endl;
+#endif
 
 double l = lDeg*DEG2RAD;
 double b = bDeg*DEG2RAD;
@@ -337,6 +349,9 @@ else {
 
 *row = int(floor(half_mapX-x/mres));
 *col = int(floor(half_mapY+y/mres));
+#ifdef DEBUG
+std::cout << "out: " << *row << " " << *col << " " << std::boolalpha << (*row>=0 && *row<Rows() && *col>=0 && *col<Cols()) << std::endl;
+#endif
 return *row>=0 && *row<Rows() && *col>=0 && *col<Cols();
 }
 
