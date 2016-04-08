@@ -1932,11 +1932,15 @@ cout << covar2(1,0) << " " << covar2(1,1) << endl;
 void RoiMulti::MakeEllipse(int source)
 {
 cout << "Finding contour for source " << source+1 << endl;
+for(int i=0; i<m_mapCount*2; i++) // Fix gal and iso parameters
+    gMinuit->FixParameter(i);
 s_fitterIterations = 0;
 TGraph* graph = (TGraph*)gMinuit->Contour(40, SrcLPar(source), SrcBPar(source));
 cout << "Done in " << s_fitterIterations-1 << " iterations" << endl;
 GraphToEllipse(graph, m_sources[source]);
 delete graph;
+for(int i=0; i<m_mapCount*2; i++) // Release gal and iso parameters
+    gMinuit->Release(i);
 }
 
 
