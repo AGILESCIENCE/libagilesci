@@ -341,7 +341,10 @@ RoiMulti::RoiMulti():
 	m_binCount(0),
 	m_fluxScaleFactor(0.0),
 	m_fluxScaleFactorMulInv(0.0),
-	m_fluxUpperBound(0.0)
+	m_fluxUpperBound(0.0),
+	m_status(-1),
+	m_cts(-1),
+	m_ctsMove(-1)
 {
 	m_countsHist.Sumw2();
 if (sm_singleton)
@@ -1009,14 +1012,11 @@ void RoiMulti::Move(double lCenter, double bCenter)
 m_lCenter = lCenter;
 m_bCenter = bCenter;
 
-
-	/// zzz temporary
-	double totCts = 0;
-	for (int r=0; r<m_ctsMaps[0].Rows(); ++r)
-		for (int c=0; c<m_ctsMaps[0].Cols(); ++c)
-			totCts += m_ctsMaps[0](r,c);
-	cout << "Total CTS IN MOVE = " << totCts << endl;
-
+m_ctsMove = 0;
+for (int r=0; r<m_ctsMaps[0].Rows(); ++r)
+    for (int c=0; c<m_ctsMaps[0].Cols(); ++c)
+        m_ctsMove += m_ctsMaps[0](r,c);
+cout << "Total CTS IN MOVE = " << m_ctsMove << endl;
 
 AlikeCircle* masks = new AlikeCircle[m_alignedMaps?1:m_mapCount];
 if (m_alignedMaps) {	/// Create a single mask if all the maps are aligned
@@ -1936,6 +1936,9 @@ for(int i=0; i<m_mapCount*2; i++) // Fix gal and iso parameters
     gMinuit->FixParameter(i);
 s_fitterIterations = 0;
 TGraph* graph = (TGraph*)gMinuit->Contour(40, SrcLPar(source), SrcBPar(source));
+int status = gMinuit->GetStatus(); // we are avoiding m_status this time because overlap with the step before in the loop2
+m_sources[source].SetStatus(4, status);
+m_sources[source].SetCts(4, m_cts);
 cout << "Done in " << s_fitterIterations-1 << " iterations" << endl;
 GraphToEllipse(graph, m_sources[source]);
 delete graph;
@@ -1948,13 +1951,21 @@ void RoiMulti::Loop2(const char* fitOpt)
 {
 cout << endl << "Begin second loop" << endl << endl;
 
+ResetFitStatus();
+ResetFitCts();
 bool diffParsStored = LoopExt(fitOpt);
+for (int source=0; source<SrcCount(); ++source) {
+    m_sources[source].SetStatus(2, m_status);
+    m_sources[source].SetCts(2, m_cts);
+}
 
 double* savedFlux = new double[SrcCount()];
 for (int source=0; source<SrcCount(); ++source) {
 	savedFlux[source] = m_sources[source].GetFlux();
 	Double_t fixedflux = m_sources[source].GetFlux();
 	if (fixedflux == 0 || m_sources[source].GetFixflag()) {
+        ResetFitStatus();
+        ResetFitCts();
 		cout << endl<< "Considering source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
 		double srcL = m_sources[source].GetSrcL();
 		double srcB = m_sources[source].GetSrcB();
@@ -2015,7 +2026,11 @@ for (int source=0; source<SrcCount(); ++source) {
 				}
 //				MakeCovarMat(source);
 				MakeEllipse(source);
-				}
+            }
+            else {
+                m_sources[source].SetStatus(4, -1);
+                m_sources[source].SetCts(4, -1);
+            }
 			FixSrcPos(source, srcL, srcB);
 			SetErrorDef(olderrdef);
 			cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed, Errordef = " << olderrdef << endl;
@@ -2032,11 +2047,32 @@ for (int source=0; source<SrcCount(); ++source) {
 			*/
 
 			}
+        else {
+            if(m_sources[source].GetFixflag() <= FluxFree) {
+                m_sources[source].SetStatus(4, -1);
+                m_sources[source].SetCts(4, -1);
+            }
+            else {
+                m_sources[source].SetStatus(4, 2);
+                m_sources[source].SetCts(4, 2);
+            }
+        }
 		savedFlux[source] = PeekSrcFluxPar(source);
 		GetSrcPars(source);
 
-		if (m_sources[source].GetFixflag() & IndexFree)
+        m_sources[source].SetStatus(3, m_status);
+        m_sources[source].SetCts(3, m_cts);
+
+        ResetFitStatus();
+		if (m_sources[source].GetFixflag() & IndexFree) {
 			FitIndex(source);
+            m_sources[source].SetStatus(5, m_status);
+            m_sources[source].SetCts(5, m_cts);
+        }
+        else {
+            m_sources[source].SetStatus(5, -1);
+            m_sources[source].SetCts(5, -1);
+        }
 
 		GetFluxErrors(source);
 		if (!diffParsStored) {
@@ -2045,10 +2081,18 @@ for (int source=0; source<SrcCount(); ++source) {
 			/// PrintDiffData();
 			diffParsStored = true;	/// Collecting the diff paramaters after the first (strongest) source
 			}
+        ResetFitStatus();
 		GetSrcUL(source);
+        m_sources[source].SetStatus(6, m_status);
+        m_sources[source].SetCts(6, m_cts);
 		}
-	else
+	else {
 		cout << "Skipping source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
+		for(int step=2; step<7; step++) {
+            m_sources[source].SetStatus(step, -1);
+            m_sources[source].SetCts(step, -1);
+        }
+    }
 
 	if (fixedflux == 0) {
 		Nullify(source);
@@ -2156,7 +2200,8 @@ for (int i=0; i<m_srcCount*2; ++i)
 	s_fitterChanges[i] = 0;
 
 Int_t fitResult = m_countsHist.Fit(&m_model, opt ,"", 0, m_binCount);
-
+if(fitResult >= 4000) fitResult -= 4000;
+SetFitStatus(fitResult);
 /// Evaluate the exposure again if the position was free
 
 
@@ -2296,7 +2341,8 @@ ReleaseExtPar(source);
 SetExtPar(source);
 cout << endl << "Extended source " << source+1 << ": " << m_extData.Name(source) << ": Flux free" << endl;
 Double_t amin0, amin1;
-Fit(fitOpt, -source-1, false, 1, &amin1); /// zzz
+Fit(fitOpt, -source-1, false, 1, &amin1);
+
 if (!*diffParsStored) {
 	*diffParsStored = true;
 	GetDiffPars();
@@ -2307,7 +2353,7 @@ for (int i=0; i<=source; ++i)
 	GetExtPar(i);
 NullifyExt(source);
 cout << "Extended source " << source+1 << ": " << m_extData.Name(source) << ": Flux=0" << endl;
-Fit(fitOpt, -source-1, true, 1, &amin0); /// zzz
+Fit(fitOpt, -source-1, true, 1, &amin0);
 
 SetExtPar(source);
 ReleaseExtPar(source);
@@ -2373,7 +2419,6 @@ void RoiMulti::Loop1(const char* fitOpt)
 {
 /// Move(m_sources[0].GetSrcL(), m_sources[0].GetSrcB());
 
-/// zzz
 for (int i=0; i<SrcCount(); ++i) {
 	double cnt = 0;
 	for (int r=0; r<m_sources[i].Rows(); ++r)
@@ -2391,10 +2436,17 @@ for (int i=0; i<SrcCount(); ++i)
 		Nullify(i);
 cout << "Begin first loop" << endl << endl;
 
-
+ResetFitStatus();
+ResetFitCts();
 LoopExt(fitOpt);
+for (int source=0; source<SrcCount(); ++source) {
+    m_sources[source].SetStatus(0, m_status);
+    m_sources[source].SetCts(0, m_cts);
+}
 
 for (int source=0; source<SrcCount(); ++source) {
+    ResetFitStatus();
+    ResetFitCts();
 	if (m_sources[source].GetFixflag()) {
 		cout << "Considering source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
 		double circL = m_sources[source].GetSrcL();
@@ -2408,6 +2460,8 @@ for (int source=0; source<SrcCount(); ++source) {
 		}
 	else
 		cout << "Skipping source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
+        m_sources[source].SetStatus(1, m_status);
+        m_sources[source].SetCts(1, m_cts);
 	}
 }
 
@@ -2755,6 +2809,8 @@ for (int i=0; i<m_srcCount; ++i) {
 	//	}
 	srcout << "! Start date, end date" << endl;
 	srcout << "! Emin..emax, fovmin..fovmax, albedo, binsize, expstep, phasecode" << endl;
+	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
+	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
 	srcout << m_sources[i].GetLabel()
 				<< " " << m_inSrcDataArr[i].fixflag	/// Original flag
 				<< " " << m_inSrcDataArr[i].index	/// Original index
@@ -2880,6 +2936,18 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << m.GetYbin() << " ";
 	srcout << m_expMaps[0].GetStep() << " ";
 	srcout << m.GetPhaseCode() << endl;
+
+	for(int step=0; step<7; step++) {
+	    int lstatus = m_sources[i].GetStatus(step);
+	    if (lstatus > 0) lstatus = 1;
+        srcout << lstatus << " ";
+    }
+    srcout << endl;
+	for(int step=0; step<7; step++) {
+        srcout << m_sources[i].GetCts(step) << " ";
+	}
+    srcout << endl;
+
 	/*
 	if (OpenConditionalBin(htmlout, sameEnergy, map, m_mapCount))
 		htmlout << m.GetEmin() << ".." << m.GetEmax() << "</td>";

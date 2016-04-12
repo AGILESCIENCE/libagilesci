@@ -121,7 +121,12 @@ public: /// Construction
 		m_idxErr(0), m_exposure(0), m_ts(0), m_minTS(3),
 		m_ulcl(0.95), m_loccl(0.95), m_fixflag(0), /// m_covar(),
 		m_polygon(), m_ellipse(), m_radius(0), m_label()
-		{}
+        {
+            for(int i=0; i<7; i++) {
+                m_status[i] = -100;
+                m_cts[i] = -100;
+            }
+        }
 
 	~AlikeSourceMap() {}
 
@@ -195,6 +200,12 @@ public:	/// Data Access
 	string GetLabel() const { return m_label; }
 	string SetLabel(string label) { m_label = label; return m_label; }
 
+    void SetStatus(int step, int status) { m_status[step] = status; }
+    int GetStatus(int step) { return m_status[step]; }
+
+    void SetCts(int step, int cts) { m_cts[step] = cts; }
+    int GetCts(int step) { return m_cts[step]; }
+
 private: /// Data
 	Double_t m_flux;
 	Double_t m_fluxerr;
@@ -218,6 +229,9 @@ private: /// Data
 	Ellipse  m_ellipse;	/// Ellipse centered in m_polygon barycenter and best fitting it
 	double   m_radius;	/// Radius of a circle with the same area as m_polygon
 	string   m_label;
+
+	int m_status[7]; // Fit status for each one of the 7 analysis steps
+	int m_cts[7];    // Last counts of cts in move for the source, for each one of the 7 analysis steps
 
 private: /// No implementation
 	AlikeSourceMap(const AlikeSourceMap&);
@@ -581,6 +595,10 @@ private:	/// Data
 	double GetFinalDPM(bool iso, int par, int source, bool zero) const; /// Multiplied by m_galCoeffs[par] or m_isoCoeffs[par] when the case
 	double GetFinalDPMErr(bool iso, int par, int source, bool zero) const; /// Multiplied by m_galCoeffs[par] or m_isoCoeffs[par] when the case
 
+    void ResetFitStatus() { m_status = -1; }
+    void ResetFitCts() { m_cts = -1; }
+    // Stop status assignment on errors (with last cts counts) for each fit loop.
+    void SetFitStatus(int status) { if(m_status <= 0) { m_status = status; m_cts = m_ctsMove; } }
 
 	/// Extended sources
 	ExtData         m_extData;
@@ -614,6 +632,9 @@ private:	/// Data
 	double m_fluxScaleFactorMulInv;
 	double m_fluxUpperBound;
 
+    int m_status;
+    int m_cts;
+    int m_ctsMove;
 
 private:		/// Forbidden functions
 	RoiMulti(const RoiMulti& another);					/// Singleton class, copy constructor not allowed
