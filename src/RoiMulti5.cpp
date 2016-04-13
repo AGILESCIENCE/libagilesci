@@ -2819,7 +2819,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "! Iso coeffs [" << m_isoLimitMin << " , " << m_isoLimitMax << "] and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
 	//	}
-	srcout << "! Start date, end date" << endl;
+	srcout << "! Start date, end date, start TT, end TT, start MJD, end MJD" << endl;
 	srcout << "! Emin..emax, fovmin..fovmax, albedo, binsize, expstep, phasecode" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
@@ -2926,6 +2926,14 @@ for (int i=0; i<m_srcCount; ++i) {
 		WriteIsoDate2(srcout, m.GetStartDate());
 		srcout << " ";
 		WriteIsoDate2(srcout, m.GetEndDate());
+		srcout << " ";
+		srcout << (unsigned long) m.GetTstart();
+		srcout << " ";
+		srcout << (unsigned long) m.GetTstop();
+		srcout << " ";
+		srcout << (m.GetTstart() / 86400.0)+53005.0;
+		srcout << " ";
+		srcout << (m.GetTstop() / 86400.0)+53005.0;
 		srcout << endl;
 		break;
 	}
