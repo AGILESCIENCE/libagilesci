@@ -481,7 +481,7 @@ private:	/// Internal operations
 	void Move(double lCenter, double bCenter);
 
 	/// Diffuse parameters
-	void SetGalPar(int map, double val) { m_model.SetParameter(GalCoeffPar(map), val); }
+    void SetGalPar(int map, double val) { m_model.SetParameter(GalCoeffPar(map), val); }
 	void SetIsoPar(int map, double val) { m_model.SetParameter(IsoCoeffPar(map), val); }
 	void SetGalPar(int map) { SetGalPar(map, m_galSrc[map].GetCoeff()); }
 	void SetIsoPar(int map) { SetIsoPar(map, m_isoSrc[map].GetCoeff()); }
@@ -489,15 +489,15 @@ private:	/// Internal operations
 	void FixGalPar(int map) { m_model.FixParameter(GalCoeffPar(map), m_galSrc[map].GetCoeff()); }
 	void FixIsoPar(int map) { m_model.FixParameter(IsoCoeffPar(map), m_isoSrc[map].GetCoeff()); }
 
-	void ReleaseGalPar(int map) { m_model.SetParLimits(GalCoeffPar(map), 0, 100.0); }
-	void ReleaseIsoPar(int map) { m_model.SetParLimits(IsoCoeffPar(map), 0, 100.0); }
+	void ReleaseGalPar(int map) { m_model.SetParLimits(GalCoeffPar(map), m_galLimitMin, m_galLimitMax); }
+	void ReleaseIsoPar(int map) { m_model.SetParLimits(IsoCoeffPar(map), m_isoLimitMin, m_isoLimitMax); }
 
 	/// Extended Sources
-	void NullifyExt(int source) { m_model.FixParameter(ExtCoeffPar(source), 0); }
+    void NullifyExt(int source) { m_model.FixParameter(ExtCoeffPar(source), 0); }
 	void SetExtPar(int source, double val) { m_model.SetParameter(ExtCoeffPar(source), val); }
 	void SetExtPar(int source) { SetExtPar(source, m_extSrcArr[ExtIndex(0, source)].GetCoeff()); }
 	void FixExtPar(int source) { m_model.FixParameter(ExtCoeffPar(source), m_extSrcArr[ExtIndex(0, source)].GetCoeff()); }
-	void ReleaseExtPar(int source) { m_model.SetParLimits(ExtCoeffPar(source), 0, 1000.0); }
+	void ReleaseExtPar(int source) { m_model.SetParLimits(ExtCoeffPar(source), m_extLimitMin, m_extLimitMax); }
 	void GetExtPar(int source);
 
 	/// Source parameters
@@ -505,7 +505,7 @@ private:	/// Internal operations
 	void SetSrcPars(int source);
 
 	/// Flux parameter
-	void ReleaseSrcFlux(int source) { m_model.SetParLimits(SrcFluxPar(source), 0, m_fluxUpperBound); }
+    void ReleaseSrcFlux(int source) { m_model.SetParLimits(SrcFluxPar(source), m_fluxLimitMin, m_fluxLimitMax); }
 	void SetSrcFlux(int source, double flux) { m_model.SetParameter(SrcFluxPar(source), flux*m_fluxScaleFactor); }
 	void SetSrcFlux(int source) { SetSrcFlux(source, m_sources[source].GetFlux()); }
 	void FixSrcFlux(int source, double flux) { m_model.FixParameter(SrcFluxPar(source), flux*m_fluxScaleFactor); }
@@ -519,7 +519,7 @@ private:	/// Internal operations
 	void FixSrcPos(int source, double l, double b);
 
 	/// Spectral index parameter
-	void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), 0.5, 5.0); }
+    void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_indexLimitMin, m_indexLimitMax); }
 	void SetSrcIndex(int source, double index) { m_model.SetParameter(SrcIdxPar(source), index); }
 	void SetSrcIndex(int source) { SetSrcIndex(source, m_sources[source].GetIndex()); }
 	void FixSrcIndex(int source, double index) { m_model.FixParameter(SrcIdxPar(source), index); }
@@ -635,6 +635,17 @@ private:	/// Data
     int m_status;
     int m_cts;
     int m_ctsMove;
+
+    double m_galLimitMin;
+    double m_galLimitMax;
+    double m_isoLimitMin;
+    double m_isoLimitMax;
+    double m_extLimitMin;
+    double m_extLimitMax;
+    double m_fluxLimitMin;
+    double m_fluxLimitMax;
+    double m_indexLimitMin;
+    double m_indexLimitMax;
 
 private:		/// Forbidden functions
 	RoiMulti(const RoiMulti& another);					/// Singleton class, copy constructor not allowed

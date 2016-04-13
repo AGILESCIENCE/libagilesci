@@ -344,7 +344,19 @@ RoiMulti::RoiMulti():
 	m_fluxUpperBound(0.0),
 	m_status(-1),
 	m_cts(-1),
-	m_ctsMove(-1)
+	m_ctsMove(-1),
+
+    m_galLimitMin(0.0),
+    m_galLimitMax(100.0),
+    m_isoLimitMin(0.0),
+    m_isoLimitMax(100.0),
+    m_extLimitMin(0.0),
+    m_extLimitMax(1000.0),
+    m_fluxLimitMin(0.0),
+    m_fluxLimitMax(FLUX_UPPER_BOUND),
+    m_indexLimitMin(0.5),
+    m_indexLimitMax(5.0)
+
 {
 	m_countsHist.Sumw2();
 if (sm_singleton)
@@ -2797,14 +2809,14 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L, B, Dist from initial position, r, a, b, phi" << endl;
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
-	srcout << "! Flux, Err, +Err, -Err, UL, Exp" << endl;
-	srcout << "! Index, Err" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp" << endl;
+	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Err" << endl;
 	srcout << "! cts, fcn0, fcn1, edm0, edm1, iter0, iter1" << endl;
 	
 	//if (m_inSrcDataArr[i].fixflag) {
-		srcout << "! Gal coeffs and errs" << endl;
+		srcout << "! Gal coeffs [" << m_galLimitMin << " , " << m_galLimitMax << "] and errs" << endl;
 		srcout << "! Gal zero coeffs and errs" << endl;
-		srcout << "! Iso coeffs and errs" << endl;
+		srcout << "! Iso coeffs [" << m_isoLimitMin << " , " << m_isoLimitMax << "] and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
 	//	}
 	srcout << "! Start date, end date" << endl;
