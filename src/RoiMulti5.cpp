@@ -2162,6 +2162,7 @@ srcData.srcL = map.GetSrcL();
 srcData.srcB = map.GetSrcB();
 srcData.index = map.GetIndex();
 srcData.TS = map.GetTS();
+srcData.UL = map.GetFluxul();
 }
 
 
