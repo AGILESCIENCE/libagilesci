@@ -2158,11 +2158,11 @@ for (int source=0; source<SrcCount(); ++source) {
 static void SaveResults(SourceData& srcData, const AlikeSourceMap& map)
 {
 srcData.flux = map.GetFlux();
+srcData.fluxul = map.GetFluxul();
 srcData.srcL = map.GetSrcL();
 srcData.srcB = map.GetSrcB();
 srcData.index = map.GetIndex();
 srcData.TS = map.GetTS();
-srcData.UL = map.GetFluxul();
 }
 
 

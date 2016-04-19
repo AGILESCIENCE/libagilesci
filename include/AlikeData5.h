@@ -86,11 +86,11 @@ struct SourceData
 	double TS;
 	double gal;
 	double iso;
-	double UL;
+	double fluxul;
 
-	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), TS(0), gal(0), iso(0), UL(0) {}
+	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), TS(0), gal(0), iso(0), fluxul(0) {}
 	SourceData(const SourceData& another):
-		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), TS(another.TS), gal(another.gal), iso(another.iso), UL(another.UL) {}
+		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul) {}
 	
 	/// void GetResultsFrom(const AlikeSourceMap& map);
 	
