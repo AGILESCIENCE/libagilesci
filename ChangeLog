@@ -1,3 +1,18 @@
+2016-04-19 Andrea Zoli <bulgarelli@iasfbo.inaf.it>
+TAG v1.3.0
+SphDistDeg function reworked using another more compact math solution (MathUtils.cpp).
+GetRowCol function reworked, when searching for points (l, b) outside the map now the function returns false.
+Changed strategy for the ellipse generation: Fix the gal and iso parameters before the contour generation.
+For each step of 7 fitting steps of RoiMulti save the fitting result status or error and the cts counts being used.
+Report in the output .source files the limits of flux, index, gal and iso parameters.
+Report in the output .source files the TT and MJD.
+Save the fluxul in the struct SourceData (used during iterative analysis).
+Optimize using deltaRhoMultInv and m_fluxScaleFactorMulInv.
+Changed CFLAGS. Compilation optimization flag is now -O2, added flag -pipe, etc.
+Fixed warnings signed vs unsigned, char* vs const char*, unused variables, and some out-of-buffer assigments.
+Inlining SphDistDeg and Sina functions (MathUtils.cpp).
+Removed some memory leaks and added some null-string terminator after some strncpy calls.
+
 2016-03-04 Andrea Bulgarelli <bulgarelli@iasfbo.inaf.it>, Andrea Zoli <zoli@iasfbo.inaf.it>
 TAG v1.2.0
 Fix segfault when sources coordinates are exactly the same of the center of the map.
