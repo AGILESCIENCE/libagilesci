@@ -2824,6 +2824,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << "! Emin..emax, fovmin..fovmax, albedo, binsize, expstep, phasecode" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
+    srcout << "! skytype.filter_irf" << std::endl;
 	srcout << m_sources[i].GetLabel()
 				<< " " << m_inSrcDataArr[i].fixflag	/// Original flag
 				<< " " << m_inSrcDataArr[i].index	/// Original index
@@ -2968,6 +2969,40 @@ for (int i=0; i<m_srcCount; ++i) {
         srcout << m_sources[i].GetCts(step) << " ";
 	}
     srcout << endl;
+
+    const AgileMap& gasMap = m_gasMaps[0];
+
+    std::string tmp = "None";
+    if(gasMap.GetSkyL()[0] != 0) {
+        tmp = gasMap.GetSkyL();
+        std::string::size_type pos1 = tmp.find(".")+1;
+        std::string::size_type pos2 = tmp.find("_", pos1)+1;
+        std::string::size_type pos3 = tmp.find(".", pos2);
+        if (pos1 != std::string::npos && pos2 != std::string::npos && pos3 != std::string::npos) {
+            std::string s = tmp.substr(pos1, pos3-pos1);
+            tmp = s;
+        }
+        else {
+            tmp = "None";
+        }
+    }
+    srcout << tmp << " ";
+
+    tmp = "None";
+    if(gasMap.GetSkyL()[0] != 0) {
+        tmp = gasMap.GetSkyL();
+        std::string::size_type pos1 = tmp.find(".")+1;
+        std::string::size_type pos2 = tmp.find("_", pos1)+1;
+        std::string::size_type pos3 = tmp.find(".", pos2);
+        if (pos1 != std::string::npos && pos2 != std::string::npos && pos3 != std::string::npos) {
+            std::string s = tmp.substr(pos1, pos3-pos1);
+            tmp = s;
+        }
+        else {
+            tmp = "None";
+        }
+    }
+    srcout << tmp << endl;
 
 	/*
 	if (OpenConditionalBin(htmlout, sameEnergy, map, m_mapCount))

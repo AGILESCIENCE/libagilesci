@@ -17,7 +17,11 @@ public:	/// Construction
 					, m_lonpole(180.0), m_emin(400), m_emax(50000)
 					, m_lp(-999), m_bp(-999), m_gp(0.0), m_mapIndex(2.1)
 					, m_fovMin(0.0), m_fovMax(0.0), m_albedo(0.0), m_phaseCode(0l)
-					, m_step(0.0), m_tstart(0.0), m_tstop(0.0) { m_dateObs[0]=0; m_dateEnd[0]=0; m_fileName[0]=0; }
+					, m_step(0.0), m_tstart(0.0), m_tstop(0.0) {
+					    m_dateObs[0]=0; m_dateEnd[0]=0;
+					    m_skyL[0]=0; m_skyH[0]=0;
+					    m_fileName[0]=0;
+					}
 	AgileMap(const AgileMap &another): MatD() { Copy(another); }
 	AgileMap(const char* fileName): MatD() { Read(fileName); }
 	~AgileMap() {}
@@ -64,6 +68,9 @@ public:	/// General information
 
     double GetTstart() const { return m_tstart; }
     double GetTstop() const { return m_tstop; }
+
+	const char* GetSkyL() const { return m_skyL; }
+	const char* GetSkyH() const { return m_skyH; }
 
 	/// Setting members
 	void SetMapCenter(double l, double b) { m_la2=l, m_ba2=b; }
@@ -143,6 +150,8 @@ private:	/// Data
 	char m_dateEnd[32];	/// DATE-END
     double m_tstart;    /// TSTART
     double m_tstop;     /// TSTOP
+    char m_skyL[1024];  /// SKYL
+    char m_skyH[1024];  /// SKYH
 	char m_fileName[1024];
 
 	void Copy(const AgileMap& another);

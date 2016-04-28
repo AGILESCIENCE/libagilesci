@@ -58,6 +58,10 @@ strncpy(m_dateEnd, another.m_dateEnd, 32);
 m_dateEnd[31] = 0;
 m_tstart = another.m_tstart;
 m_tstop = another.m_tstop;
+strncpy(m_skyL, another.m_skyL, 1024);
+m_skyL[1023] = 0;
+strncpy(m_skyH, another.m_skyH, 1024);
+m_skyH[1023] = 0;
 strncpy(m_fileName, another.m_fileName, 256);
 m_fileName[255] = 0;
 }
@@ -150,6 +154,8 @@ f.ReadKey("FOV", &m_fovMax, 0.0);
 f.ReadKey("ALBEDO", &m_albedo, 0.0);
 f.ReadKey("PHASECOD", &m_phaseCode, 0l);
 f.ReadKey("STEP", &m_step, 0.0);
+f.ReadKey("SKYL", m_skyL, "");
+f.ReadKey("SKYH", m_skyH, "");
 
 if (f.Status())
 	cerr << "ERROR " << f.Status() << " reading " << fileName << endl;
@@ -208,6 +214,11 @@ f.WriteKey("PHASECOD", m_phaseCode);
 
 if (m_step)
 	f.WriteKey("STEP", m_step);
+
+if (m_skyL[0])
+	f.WriteKey("SKYL", m_skyL);
+if (m_skyH[0])
+	f.WriteKey("SKYH", m_skyH);
 
 if (f.Status())
 	cerr << "ERROR " << f.Status() << " writing to " << fileName << endl;
@@ -276,6 +287,11 @@ f.UpdateKey("PHASECOD", m_phaseCode);
 
 if (m_step)
 	f.UpdateKey("STEP", m_step);
+
+if (m_skyL[0])
+	f.UpdateKey("SKYL", m_skyL);
+if (m_skyH[0])
+	f.UpdateKey("SKYH", m_skyH);
 
 if (f.Status())
 	cerr << "ERROR " << f.Status() << " writing to " << fileName << endl;
