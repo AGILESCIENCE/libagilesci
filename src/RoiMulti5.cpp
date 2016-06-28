@@ -2923,15 +2923,17 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "0 0\n0 0\n0 0\n0 0\n";
 	}
 	bool sameDate = true;
+    srcout << std::fixed;
+    srcout << std::setprecision(7);
 	for (int map=0; map<m_mapCount; ++map) {
 		const AgileMap& m = m_ctsMaps[map];
 		WriteIsoDate2(srcout, m.GetStartDate());
 		srcout << " ";
 		WriteIsoDate2(srcout, m.GetEndDate());
 		srcout << " ";
-		srcout << (unsigned long) m.GetTstart();
+		srcout << m.GetTstart();
 		srcout << " ";
-		srcout << (unsigned long) m.GetTstop();
+		srcout << m.GetTstop();
 		srcout << " ";
 		srcout << (m.GetTstart() / 86400.0)+53005.0;
 		srcout << " ";
@@ -2939,6 +2941,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << endl;
 		break;
 	}
+    srcout.copyfmt(std::ios(NULL));
 	for (int map=0; map<m_mapCount; ++map) {
 		const AgileMap& m = m_ctsMaps[map];
 		srcout << m.GetEmin() << ".." << m.GetEmax();
