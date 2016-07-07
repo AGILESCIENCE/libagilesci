@@ -57,8 +57,11 @@ Intervals Intersection(const Intervals& intervals, const Interval& interval)
 {
 Intervals intersection;
 for (int i=0; i<intervals.Count(); ++i)
-	if (Overlap(intervals[i], interval))
-		intersection.Add(Intersection(intervals[i], interval));
+	if (Overlap(intervals[i], interval)) {
+                Interval intv = Intersection(intervals[i], interval);
+		if (intv.Start() != intv.Stop())
+			intersection.Add(intv);
+	}
 intersection.Sort();
 return intersection;
 }
