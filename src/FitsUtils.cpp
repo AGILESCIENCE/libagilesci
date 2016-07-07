@@ -2,9 +2,17 @@
 
 
 #include <cstring>
+#include <fstream>
 #include "FitsUtils.h"
 
-
+void CopyFile(const char* iname, const char* oname)
+{
+    std::ifstream ifs(iname, std::ios::binary);
+    std::ofstream ofs(oname, std::ios::binary);
+    ofs << ifs.rdbuf();
+    ifs.close();
+    ofs.close();
+}
 
 bool ReadFitsKey(fitsfile* fptr, const char* name, float* value, int* status)
 {

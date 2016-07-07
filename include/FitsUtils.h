@@ -8,6 +8,7 @@
 
 #include "fitsio.h"
 
+void CopyFile(const char* iname, const char* oname);
 
 /// Functions reading and writing keys (they do nothing if status already points to an error)
 /// They return true if the keyword was actually read or written
