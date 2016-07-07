@@ -173,6 +173,38 @@ string LogExprString(const Intervals& intvs, int phasecode, int timeStep)
     return str.str();
 }
 
+string EvtExprString(const Intervals &intvs, double emin, double emax, double albrad, double fovradmax, double fovradmin, int phasecode, int filtercode)
+{
+    if (intvs.Count() <= 0)
+        return string("");
+    stringstream str(std::ios_base::out);
+    str << TimesExprString(intvs);
+    str << " && ENERGY >= " << emin;
+    str << " && ENERGY <= " << emax;
+    str << " && PH_EARTH > " << albrad;
+    str << " && THETA < " << fovradmax;
+    str << " && THETA >= " << fovradmin;
+    if ((phasecode & 1) == 1)
+        str << " && PHASE .NE. 0";
+    if ((phasecode & 2) == 2)
+        str << " && PHASE .NE. 1";
+    if ((phasecode & 4) == 4)
+        str << " && PHASE .NE. 2";
+    if ((phasecode & 8) == 8)
+        str << " && PHASE .NE. 3";
+    if ((phasecode & 16) == 16)
+        str << " && PHASE .NE. 4";
+    if ((filtercode & 1) == 1)
+        str << " && EVSTATUS .NE. 'L'";
+    if ((filtercode & 2) == 2)
+        str << " && EVSTATUS .NE. 'G'";
+    if ((filtercode & 4) == 4)
+        str << " && EVSTATUS .NE. 'S'";
+    return str.str();
+}
+
+
+
 void CopyFile(const char* iname, const char* oname)
 {
     std::ifstream ifs(iname, std::ios::binary);

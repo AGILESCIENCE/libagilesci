@@ -22,6 +22,10 @@ std::string TimesExprString(const Intervals& intvs);
 
 std::string LogExprString(const Intervals& intvs, int phasecode, int timeStep);
 
+std::string EvtExprString(const Intervals &intvs, double emin, double emax,
+                          double albrad, double fovradmax, double fovradmin,
+                          int phasecode, int filtercode);
+
 int MakeSelection(const char *fileList, Intervals& selection,
                   std::string expr, const char *selectionFilename,
                   const char *templateFilename);
