@@ -441,7 +441,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     fits_get_num_rows(templateFits, &oldnrows, &status);
     fits_delete_rows(templateFits, 1, oldnrows, &status);
 
+#ifdef DEBUG
     cout << "Evaluating exposure.." << endl;
+#endif
 
     char tempFilename[FLEN_FILENAME];
     tmpnam(tempFilename);
@@ -449,7 +451,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     double learth, bearth;
     double lp0 = 0, bp0 = 0, gp0 = 0;
     for (int intvIndex = 0; intvIndex < intervals.Count(); intvIndex++) {
+#ifdef DEBUG
         cout << "Interval #" << intvIndex << endl;
+#endif
         vector<double> &A = exposures[intvIndex];
         Intervals sIntv;
         sIntv.Add(intervals[intvIndex]);
@@ -583,8 +587,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         }
     }
     delete []raeffArr;
-
+#ifdef DEBUG
     cout << "Ending evaluation" << endl;
+#endif
 
     if (find == 0)
         return 1005;
@@ -685,7 +690,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                     }
                 }
             }
+#ifdef DEBUG
             cout << "Ending interpolation" << endl;
+#endif
         }
     }
 
@@ -892,12 +899,15 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
     fits_get_num_rows(templateFits, &oldnrows, &status);
     fits_delete_rows(templateFits, 1, oldnrows, &status);
 
+#ifdef DEBUG
     cout << "Evaluating counts.." << endl;
+#endif
 
     int totalCounts = 0;
     for (int intvIndex = 0; intvIndex < intervals.Count(); intvIndex++) {
-
+#ifdef DEBUG
         cout << "Interval #" << intvIndex << endl;
+#endif
         Intervals sIntv;
         sIntv.Add(intervals[intvIndex]);
         string selExpr = selection::TimesExprString(sIntv);
@@ -964,6 +974,9 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
         }
         fits_delete_rows(templateFits, 1, nrows, &status);
     }
+#ifdef DEBUG
+    cout << "Ending evaluation" << endl;
+#endif
 
     if (saveMaps) {
         vector<unsigned short> sum;
