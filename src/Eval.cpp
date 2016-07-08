@@ -432,11 +432,14 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
 
     fitsfile* templateFits;
-    if (fits_open_file(&templateFits, templateFilename, READONLY, &status)) {
+    if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
         cerr << "ERROR opening template file " << templateFilename << endl;
         return -1;
     }
     fits_movabs_hdu(templateFits, 2, &hdutype, &status);
+    long oldnrows;
+    fits_get_num_rows(templateFits, &oldnrows, &status);
+    fits_delete_rows(templateFits, 1, oldnrows, &status);
 
     cout << "Evaluating exposure.." << endl;
 
@@ -446,16 +449,6 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     double learth, bearth;
     double lp0 = 0, bp0 = 0, gp0 = 0;
     for (int intvIndex = 0; intvIndex < intervals.Count(); intvIndex++) {
-        CopyFile(templateFilename, tempFilename);
-        FitsFile tempFits(tempFilename, READWRITE);
-        if (!tempFits.Ok()) {
-            char strerr[100];
-            tempFits.Error(strerr);
-            cerr << "Failed opening temp: " << tempFilename  << " " << strerr << endl;
-            return -100;
-        }
-        tempFits.MoveAbsHDU(2);
-
         cout << "Interval #" << intvIndex << endl;
         vector<double> &A = exposures[intvIndex];
         Intervals sIntv;
@@ -464,20 +457,20 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 #ifdef DEBUG
         cout << "selExpr: " << selExpr << endl;
 #endif
-        fits_select_rows(selectionFits, tempFits, (char*)selExpr.c_str(), &status);
+        fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
 #ifdef DEBUG
         cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         find++;
 
         long allnrows;
-        fits_get_num_rows(tempFits, &allnrows, &status);
+        fits_get_num_rows(templateFits, &allnrows, &status);
 #ifdef DEBUG
         cout << "all nrows: " << allnrows << endl;
 #endif
 
         long rowblockincrement = size;
-        fits_get_rowsize(tempFits, &rowblockincrement, &status);
+        fits_get_rowsize(templateFits, &rowblockincrement, &status);
 #ifdef DEBUG
         cout << "Row block size = " << rowblockincrement << endl;
 #endif
@@ -489,12 +482,12 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 #ifdef DEBUG
             cout << "Reading " << nrows << " rows" << endl;
 #endif
-            ReadFitsCol(tempFits, ra_y, "ATTITUDE_RA_Y", rowblockzero, nrows, &status);
-            ReadFitsCol(tempFits, dec_y, "ATTITUDE_DEC_Y", rowblockzero, nrows, &status);
-            ReadFitsCol(tempFits, livetime, "LIVETIME", rowblockzero, nrows, &status);
-            ReadFitsCol(tempFits, phase, "PHASE", rowblockzero, nrows, &status);
-            ReadFitsCol(tempFits, earth_ra, "EARTH_RA", rowblockzero, nrows, &status);
-            ReadFitsCol(tempFits, earth_dec, "EARTH_DEC", rowblockzero, nrows, &status);
+            ReadFitsCol(templateFits, ra_y, "ATTITUDE_RA_Y", rowblockzero, nrows, &status);
+            ReadFitsCol(templateFits, dec_y, "ATTITUDE_DEC_Y", rowblockzero, nrows, &status);
+            ReadFitsCol(templateFits, livetime, "LIVETIME", rowblockzero, nrows, &status);
+            ReadFitsCol(templateFits, phase, "PHASE", rowblockzero, nrows, &status);
+            ReadFitsCol(templateFits, earth_ra, "EARTH_RA", rowblockzero, nrows, &status);
+            ReadFitsCol(templateFits, earth_dec, "EARTH_DEC", rowblockzero, nrows, &status);
 
             long count = 0;
             double earth_ra0 = earth_ra[0], earth_dec0 = earth_dec[0];
@@ -583,7 +576,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         }
 #endif
         delete []change;
-        tempFits.Delete();
+        fits_delete_rows(templateFits, 1, allnrows, &status);
         if (status) {
             delete []raeffArr;
             return status;
@@ -846,6 +839,8 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             fits_close_file(mapFits, &status);
         }
     }
+    fits_close_file(selectionFits, &status);
+    fits_close_file(templateFits, &status);
 
     return status;
 }
@@ -888,27 +883,19 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
     fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
 
     fitsfile* templateFits;
-    if (fits_open_file(&templateFits, templateFilename, READONLY, &status)) {
+    if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
         cerr << "ERROR opening template file " << templateFilename << endl;
         return -1;
     }
     fits_movabs_hdu(templateFits, 2, &hdutype, &status);
+    long oldnrows;
+    fits_get_num_rows(templateFits, &oldnrows, &status);
+    fits_delete_rows(templateFits, 1, oldnrows, &status);
 
     cout << "Evaluating counts.." << endl;
 
-    char tempFilename[FLEN_FILENAME];
-    tmpnam(tempFilename);
     int totalCounts = 0;
     for (int intvIndex = 0; intvIndex < intervals.Count(); intvIndex++) {
-        CopyFile(templateFilename, tempFilename);
-        FitsFile tempFits(tempFilename, READWRITE);
-        if (!tempFits.Ok()) {
-            char strerr[100];
-            tempFits.Error(strerr);
-            cerr << "Failed opening temp: " << tempFilename  << " " << strerr << endl;
-            return -100;
-        }
-        tempFits.MoveAbsHDU(2);
 
         cout << "Interval #" << intvIndex << endl;
         Intervals sIntv;
@@ -917,26 +904,26 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
 #ifdef DEBUG
         cout << "selExpr: " << selExpr << endl;
 #endif
-        fits_select_rows(selectionFits, tempFits, (char*)selExpr.c_str(), &status);
+        fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
 #ifdef DEBUG
         cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         long nrows;
-        fits_get_num_rows(tempFits, &nrows, &status);
+        fits_get_num_rows(templateFits, &nrows, &status);
 #ifdef DEBUG
         cout << "Reading all " << nrows << " rows" << endl;
 #endif
 
         int raColumn, decColumn;
-        fits_get_colnum(tempFits, 1, (char*)"RA", &raColumn, &status);
-        fits_get_colnum(tempFits, 1, (char*)"DEC", &decColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
 
         double ra, dec, l, b, the, x, y, i = 0, ii = 0;
         double baa = ba * DEG2RAD;
         double laa = la * DEG2RAD;
         for (long k = 0; k<nrows; k++) {
-            fits_read_col(tempFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
-            fits_read_col(tempFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
             Euler(ra, dec, &l, &b, 1);
             l *= DEG2RAD;
             b *= DEG2RAD;
@@ -975,7 +962,7 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
                 totalCounts++;
             }
         }
-        tempFits.Delete();
+        fits_delete_rows(templateFits, 1, nrows, &status);
     }
 
     if (saveMaps) {
@@ -1050,6 +1037,8 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
         cout << "Closing " << outfile << endl;
         fits_close_file(mapFits, &status);
     }
+    fits_close_file(selectionFits, &status);
+    fits_close_file(templateFits, &status);
 
     return status;
 }
