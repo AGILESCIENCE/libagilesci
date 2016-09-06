@@ -447,9 +447,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
     char tempFilename[FLEN_FILENAME];
     tmpnam(tempFilename);
-    double lp = 0, bp = 0;
+    double lp = 0., bp = 0.;
     double learth, bearth;
-    double lp0 = 0, bp0 = 0, gp0 = 0;
+    double lp0 = 0., bp0 = 0., gp0 = 0.;
     for (int intvIndex = 0; intvIndex < intervals.Count(); intvIndex++) {
 #ifdef DEBUG
         cout << "Interval #" << intvIndex << endl;
@@ -542,6 +542,8 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                 if (k == count && (rowblockzero + nrows) >= allnrows) {
                     lp0 = lp;
                     bp0 = bp;
+                    if (isnan(lp0)) lp0 = 0.;
+                    if (isnan(bp0)) bp0 = 0.;
                     //gp0=gp[lowrow]*R2D;
                 }
 
@@ -580,7 +582,8 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         }
 #endif
         delete []change;
-        fits_delete_rows(templateFits, 1, allnrows, &status);
+        if (allnrows > 0)
+            fits_delete_rows(templateFits, 1, allnrows, &status);
         if (status) {
             delete []raeffArr;
             return status;
@@ -972,7 +975,8 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
                 totalCounts++;
             }
         }
-        fits_delete_rows(templateFits, 1, nrows, &status);
+        if (nrows > 0)
+            fits_delete_rows(templateFits, 1, nrows, &status);
     }
 #ifdef DEBUG
     cout << "Ending evaluation" << endl;
