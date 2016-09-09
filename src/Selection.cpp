@@ -328,6 +328,12 @@ int MakeSelection(const char *fileList, Intervals& selection,
     if (skippedFiles)
         cout << "Skipped " << skippedFiles << " files." << endl;
 
+    if (!selectionOpened) {
+        cout << "Missing archive data for the given interval." << endl;
+        return -110;
+    }
+
+
     long allnrows;
     fits_get_num_rows(selectionFits, &allnrows, &status);
     selectionFits.Close();
