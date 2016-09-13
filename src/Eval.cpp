@@ -252,14 +252,14 @@ int WriteTime(fitsfile* input, double t1, double t2)
     double inttstart;
     double sec = tstr->tm_sec + modf(t1, &inttstart);
     char datestr[FLEN_KEYWORD];
-    fits_time2str( tstr->tm_year + 1900, tstr->tm_mon + 1, tstr->tm_mday, tstr->tm_hour, tstr->tm_min, sec, 0, datestr, &status);
+    fits_time2str(tstr->tm_year + 1900, tstr->tm_mon + 1, tstr->tm_mday, tstr->tm_hour, tstr->tm_min, sec, 0, datestr, &status);
     fits_update_key(input, TSTRING, "DATE-OBS",  datestr, "start date and time of the observation(TT)", &status);
 
     tt += (time_t)((t2 - inttstart) / tinc);
     tstr = gmtime(&tt);
     sec = tstr->tm_sec + modf(t2, &inttstart);
     char datestr1[FLEN_KEYWORD];
-    fits_time2str( tstr->tm_year + 1900, tstr->tm_mon + 1, tstr->tm_mday, tstr->tm_hour, tstr->tm_min, sec, 0, datestr1, &status);
+    fits_time2str(tstr->tm_year + 1900, tstr->tm_mon + 1, tstr->tm_mday, tstr->tm_hour, tstr->tm_min, sec, 0, datestr1, &status);
     fits_update_key(input, TSTRING, "DATE-END",  datestr1, "end date and time of the observation(TT)", &status);
 
     if (i == hdnum) {
@@ -480,7 +480,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 #endif
         long* change = new long[rowblockincrement];
 
-        for (long rowblockzero=0 ; rowblockzero < allnrows ; rowblockzero += rowblockincrement) {
+        for (long rowblockzero=0; rowblockzero < allnrows; rowblockzero += rowblockincrement) {
             long nrows = (rowblockzero + rowblockincrement < allnrows) ? rowblockincrement : (allnrows - rowblockzero);
 
 #ifdef DEBUG
@@ -515,11 +515,11 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             long lowrow = 0, highrow = 0;
             for (long k = 0; k<=count; k++) {
                 time = 0;
-                if ( k == 0 ) {
+                if (k == 0) {
                     lowrow = 0;
                     highrow = change[0];
                 }
-                else if ( k == count ) {
+                else if (k == count) {
                     lowrow = change[k-1];
                     highrow = nrows;
                 }
@@ -614,7 +614,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
         if(binstep > 1) {
             cout << "Beginning interpolation.." << endl;
-            for (long long m = 0; m < nmaps ; m++) {
+            for (long long m = 0; m < nmaps; m++) {
                 int step0 = binstep;
                 bool end0 = true;
                 for (outpixel[0]=1; end0; outpixel[0]+=binstep) {
@@ -666,7 +666,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                             }
 
                             pixel4 = A[m*npixels+(outpixel[1] - 1)*mxdim+(outpixel[0]-1 + step0)];
-                            //cout << pixel << "," <<  pixel2 << "," <<  pixel3 << "," <<  pixel4 << " ; ";
+                            //cout << pixel << "," <<  pixel2 << "," <<  pixel3 << "," <<  pixel4 << "; ";
                             //si lavora sul secondo triangolo
                             y3 = outpixel[0] + step0;
                             x3 = outpixel[1];
@@ -738,7 +738,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             //string out = maps[i].outfile;
 
             cout << "Creating file " << out << endl;
-            if ( fits_create_file(&mapFits, out, &status) != 0 ) {
+            if (fits_create_file(&mapFits, out, &status) != 0) {
                 cerr << "Error opening file " << out << endl;
                 return status;
             }
@@ -958,7 +958,7 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
             else if (proj == AIT) {
                 l=l-laa;
 
-                if ( l < M_PI  )
+                if (l < M_PI)
                 l=-l;
                 else
                 l=2*M_PI -l;
@@ -998,7 +998,7 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
         long naxes[2] = { mxdim, mxdim };
         fitsfile * mapFits;
         cout << "Creating file " << outfile << endl;
-        if ( fits_create_file(&mapFits, outfile, &status) != 0 ) {
+        if (fits_create_file(&mapFits, outfile, &status) != 0) {
             cerr << "Error opening file " << outfile << endl;
             return status;
         }
@@ -1057,6 +1057,340 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
     fits_close_file(selectionFits, &status);
     fits_close_file(templateFits, &status);
 
+    return status;
+}
+
+
+/*int EvalGasMap(AgileMap &gasMap, AgileMap &expMap, const char* lowresdiffuseFilename,
+               const char* hiresdiffuseFilename)
+{
+    gasMap = expMap;
+
+    double xbin, ybin, x0, y0, la2, ba2;
+    long dim1, dim2;
+    cout << "Loading diffuse file.." << endl;
+    FitsFile lMap;
+    if (!lMap.Open(lowresdiffuseFilename)) {
+        cout << "ERR: Cannot open: " << lowresdiffuseFilename << endl;
+        return -200;
+    }
+    lMap.MoveAbsHDU(2);
+    lMap.ReadKey("NAXIS1", &dim1);
+    lMap.ReadKey("NAXIS2", &dim2);
+    lMap.ReadKey("CDELT1", &xbin);
+    lMap.ReadKey("CDELT2", &ybin);
+    lMap.ReadKey("CRPIX1", &x0);
+    lMap.ReadKey("CRPIX2", &y0);
+    lMap.ReadKey("CRVAL1", &la2);
+    lMap.ReadKey("CRVAL2", &ba2);
+    cout << dim1 << " " << dim2 << " " << xbin << " " << ybin << " " << x0 << " " << y0 << " ";
+    cout << la2 << " " << ba2 << endl;
+    MatD mat(dim1, dim2), lmat(dim2, dim1);
+    long fpixel[2] = {1, 1};
+    fits_read_pix(lMap, TDOUBLE, fpixel, mat.Size(), NULL, mat.Buffer(), NULL, lMap);
+    mat.TransposeTo(lmat);
+
+    double xbinHI, ybinHI, x0HI, y0HI, la2HI, ba2HI;
+    long dim1HI, dim2HI;
+    MatD hmat;
+    cout << "Loading hires diffuse file.." << endl;
+    FitsFile hMap;
+    bool hiStatus = hMap.Open(hiresdiffuseFilename);
+    if (!hiStatus) {
+        std::cout << "ERROR: '" << hiresdiffuseFilename <<
+        "' will not be used because a FITS keyword is missing" << endl;
+    }
+    else {
+        hMap.MoveAbsHDU(2);
+        hMap.ReadKey("NAXIS1", &dim1HI);
+        hMap.ReadKey("NAXIS2", &dim2HI);
+        hMap.ReadKey("CDELT1", &xbinHI);
+        hMap.ReadKey("CDELT2", &ybinHI);
+        hMap.ReadKey("CRPIX1", &x0HI);
+        hMap.ReadKey("CRPIX2", &y0HI);
+        hMap.ReadKey("CRVAL1", &la2HI);
+        hMap.ReadKey("CRVAL2", &ba2HI);
+        mat.ResizeTo(dim1HI, dim2HI);
+        hmat.ResizeTo(dim2HI, dim1HI);
+        fits_read_pix(hMap, TDOUBLE, fpixel, mat.Size(), NULL, mat.Buffer(), NULL, hMap);
+        mat.TransposeTo(hmat);
+        cout << dim1HI << " " << dim2HI << " " << xbinHI << " " << ybinHI << " " << x0HI << " " << y0HI << " ";
+        cout << la2HI << " " << ba2HI << endl;
+    }
+
+    long lopix[3] = {1, 1};
+    long hipix[4] = {1, 1};
+    bool hiRes = false;
+    for (int y = 0; y < expMap.Dim(0); y++) {
+        for (int x = 0; x < expMap.Dim(1); x++) {
+            double ll = expMap.l(y, x);
+            double bb = expMap.b(y, x);
+            if (hiStatus) {
+                hiRes = false;
+            }
+            else {
+                hipix[0] = (long) (0.5 + fmod(x0HI + (ll - la2HI) / xbinHI + 720.0/fabs(xbinHI), 360.0/fabs(xbinHI)));
+                hipix[1] = (long) (0.5 + y0HI + (bb - ba2HI) / ybinHI);
+                hiRes = hipix[0] >= 1 && hipix[0] <= dim1HI && hipix[1] >= 1 && hipix[1] <= dim2HI;
+            }
+            if (hiRes) {
+                gasMap(y, x) = hmat(hipix[0], hipix[1]);
+            }
+            else {
+                lopix[0] = (long) (0.5 + x0 + (ll - la2) / xbin + 720.0/fabs(xbin), 360.0/fabs(xbin));
+                lopix[1] = (long) (0.5 + y0 + (bb - ba2) / ybin);
+                if (lopix[1] > dim1)
+                    lopix[1] = dim1;
+                else if (lopix[1] < 1)
+                    lopix[1] = 1;
+                gasMap(y, x) = lmat(lopix[0], lopix[1]);
+            }
+        }
+    }
+}*/
+
+int EvalGasMap(AgileMap &gasMap, AgileMap &expMap, const char* loresdiffuseFilename,
+               const char* hiresdiffuseFilename)
+{
+    int status = 0;
+
+    long outpixel[2];
+    int bitpix   =  DOUBLE_IMG;
+    double pixels = 0.0;
+    double nulval = 1.0/0.0;
+    int anynul = 0;
+
+    double lox0 = 0, loy0 = 0;
+    int lonaxis;
+    long lonaxes[3];
+    double lol0 = 0, lob0 = 0;
+    double lodl = 0, lodb = 0;
+    long lonx = 0, lony = 0;
+
+
+    int hiresstatus = 0;
+    double hix0 = 0, hiy0 = 0;
+    int hinaxis;
+    long hinaxes[3];
+    double hil0 = 0, hib0 = 0;
+    double hidl = 0, hidb = 0;
+    long hinx = 0, hiny = 0;
+
+    fitsfile* lodiffuseFits;
+    fitsfile* hidiffuseFits;
+
+    if (fits_open_image(&lodiffuseFits, loresdiffuseFilename, READONLY, &status) != 0) {
+        printf("Errore in apertura file '%s'\n", loresdiffuseFilename);
+        return status;
+        }
+
+    if (fits_open_image(&hidiffuseFits, hiresdiffuseFilename, READONLY, &hiresstatus) != 0) {
+        printf("Cannot read high res diffuse file '%s'\n", hiresdiffuseFilename);
+    } else {
+        fits_get_img_param(hidiffuseFits, 3, &bitpix, &hinaxis, hinaxes, &hiresstatus);
+        fits_read_key(hidiffuseFits,TLONG,"NAXIS1",&hinx,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TLONG,"NAXIS2",&hiny,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TDOUBLE,"CRVAL1",&hil0,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TDOUBLE,"CDELT1",&hidl,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TDOUBLE,"CRPIX1",&hix0,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TDOUBLE,"CRVAL2",&hib0,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TDOUBLE,"CDELT2",&hidb,NULL,&hiresstatus);
+        fits_read_key(hidiffuseFits,TDOUBLE,"CRPIX2",&hiy0,NULL,&hiresstatus);
+        if (hiresstatus != 0)
+            printf("ERROR: '%s' will not be used because a FITS keyword is missing\n", hiresdiffuseFilename);
+    }
+
+    gasMap = expMap;
+
+    fits_get_img_param(lodiffuseFits, 3, &bitpix, &lonaxis, lonaxes, &status);
+    fits_read_key(lodiffuseFits,TLONG,"NAXIS1",&lonx,NULL,&status);
+    fits_read_key(lodiffuseFits,TLONG,"NAXIS2",&lony,NULL,&status);
+    fits_read_key(lodiffuseFits,TDOUBLE,"CRVAL1",&lol0,NULL,&status);
+    fits_read_key(lodiffuseFits,TDOUBLE,"CDELT1",&lodl,NULL,&status);
+    fits_read_key(lodiffuseFits,TDOUBLE,"CRPIX1",&lox0,NULL,&status);
+    fits_read_key(lodiffuseFits,TDOUBLE,"CRVAL2",&lob0,NULL,&status);
+    fits_read_key(lodiffuseFits,TDOUBLE,"CDELT2",&lodb,NULL,&status);
+    fits_read_key(lodiffuseFits,TDOUBLE,"CRPIX2",&loy0,NULL,&status);
+
+    long nrows = expMap.Rows();
+    long ncols = expMap.Cols();
+
+    long lodiffusepixel[3] = {1,1,1};
+    long hidiffusepixel[4] = {1,1,1,1};
+
+    bool inhiresmap = FALSE;
+    double ll, bb;
+
+    for (outpixel[0]=1;outpixel[0]<=nrows;outpixel[0]++) {
+        for(outpixel[1]=1;outpixel[1]<=ncols;outpixel[1]++) {
+            ll = expMap.l(outpixel[0]-1,outpixel[1]-1);
+            bb = expMap.b(outpixel[0]-1,outpixel[1]-1);
+            if (hiresstatus != 0)
+                inhiresmap = FALSE;
+            else {
+                hidiffusepixel[0] = (long)(0.5 + fmod(hix0 + (ll - hil0) / hidl + 720.0/fabs(hidl), 360.0/fabs(hidl)));
+                hidiffusepixel[1] = (long)(0.5 + hiy0 + (bb - hib0) / hidb);
+                inhiresmap = hidiffusepixel[0] >= 1 && hidiffusepixel[0] <= hinx && hidiffusepixel[1] >= 1 && hidiffusepixel[1] <= hiny;
+            }
+            if (inhiresmap) {
+                fits_read_pix(hidiffuseFits, TDOUBLE, hidiffusepixel, 1, &nulval, &pixels, &anynul, &hiresstatus);
+                if (hiresstatus == 0 && anynul == 0) {
+                    gasMap(outpixel[0]-1, outpixel[1]-1) = pixels;
+                }
+                else {
+                    hiresstatus = 0;
+                    inhiresmap = FALSE;
+                }
+            }
+            if (!inhiresmap) {
+                lodiffusepixel[0] = (long)(0.5 + fmod(lox0 + (ll - lol0) / lodl + 720.0/fabs(lodl), 360.0/fabs(lodl)));
+                lodiffusepixel[1] = (long)(0.5 + loy0 + (bb - lob0) / lodb);
+                if (lodiffusepixel[1] > lony)
+                    lodiffusepixel[1] = lony;
+                else if (lodiffusepixel[1] < 1)
+                    lodiffusepixel[1] = 1;
+
+                fits_read_pix(lodiffuseFits, TDOUBLE, lodiffusepixel, 1, NULL, &pixels, NULL, &status);
+                gasMap(outpixel[0]-1, outpixel[1]-1) = pixels;
+            }
+            if (status) throw;
+        }
+    }
+    fits_close_file(lodiffuseFits, &status);
+    fits_close_file(hidiffuseFits, &hiresstatus);
+
+    return status;
+}
+
+
+/*    char str7[] =  "(cm**2 s sr)**(-1)";
+    fits_update_key(outFits, TSTRING,  "BUNIT", str7, NULL, &status);
+    char keyword[FLEN_FILENAME];
+    char comment[FLEN_FILENAME];
+    strcpy(keyword, "GAS");
+    fits_update_key(outFits, TSTRING,  "EXTNAME", keyword, NULL, &status);
+    if (fits_read_key(lodiffuseFits,TSTRING,"DH_CONF_",keyword,comment,&status) == 0)
+        fits_update_key(outFits,TSTRING,"DH_CONF_",keyword,comment,&status);
+    else status = 0;
+    if (fits_read_key(lodiffuseFits,TSTRING,"STAN_CON",keyword,comment,&status) == 0)
+        fits_update_key(outFits,TSTRING,"STAN_CON",keyword,comment,&status);
+    else status = 0;
+    if (fits_read_key(lodiffuseFits,TSTRING,"FILE_ID",keyword,comment,&status) == 0)
+        fits_update_key(outFits,TSTRING,"FILE_ID",keyword,comment,&status);
+    else status = 0;
+
+    // overwrite DH_CONF_, STAN_CON, FILE_ID from the sar filename if is present.
+    char sarfile[FLEN_FILENAME];
+    if (fits_read_key(expFits, TSTRING, "SARFILE", &sarfile, NULL, &status) == 0) {
+        std::string tmp(sarfile);
+        std::string::size_type pos1 = sizeof("AG_GRID_")-1; // after this prefix
+        std::string::size_type pos2 = tmp.find("_", pos1)+1;
+        std::string::size_type pos3 = tmp.find("_", pos2)+1;
+        std::string::size_type pos4 = tmp.find(".", pos3);
+        if (pos2 != std::string::npos && pos3 != std::string::npos && pos4 != std::string::npos) {
+            std::string dhconf = tmp.substr(pos1, pos2-pos1-1);
+            std::string stancon = tmp.substr(pos2, pos3-pos2-1);
+            std::string fileid = tmp.substr(pos3, pos4-pos3);
+            const char dhcomment[] = "GRID - DHSim configuration ID";
+            fits_update_key(outFits, TSTRING, "DH_CONF_", (void*)dhconf.c_str(), dhcomment, &status);
+            const char stancomment[] = "GRID - Standard an. configuration ID";
+            fits_update_key(outFits, TSTRING, "STAN_CON", (void*)stancon.c_str(), stancomment, &status);
+            const char fcomment[] = "File Identification Number/Issue";
+            fits_update_key(outFits, TSTRING, "FILE_ID", (void*)fileid.c_str(), fcomment, &status);
+        }
+    }
+    else status = 0;
+
+    char* lofile = basename(loresdiffusefile);
+    const char lowrescomment[] = "Low res diffuse file";
+    fits_update_key(outFits, TSTRING, "SKYL", lofile, lowrescomment, &status);
+    char* hifile = basename(hiresdiffusefile);
+    const char highrescomment[] = "High res diffuse file";
+    fits_update_key(outFits, TSTRING, "SKYH", hifile, highrescomment, &status);
+*/
+
+
+
+int EvalGas(const char* outfile, const char* expfile, const char* diffusefile,
+            const char* hiresdiffusefile)
+{
+    AgileMap expMap;
+    int status = expMap.Read(expfile);
+    if (status) return status;
+
+    AgileMap gasMap;
+    status = EvalGasMap(gasMap, expMap, diffusefile, hiresdiffusefile);
+    if (status) return status;
+
+    std::string outstr(outfile);
+    bool gz = false;
+    if (outstr.size() >= 3 && outstr.compare(outstr.size() - 3, 3, ".gz") == 0) {
+        gz = true;
+        outstr[outstr.size()-3] = '\0';
+    }
+    status = gasMap.WriteWithAllMetadata(outstr.c_str());
+    if (status) return status;
+
+    FitsFile outf;
+    if (!outf.Open(outstr.c_str(), READWRITE)) {
+        cerr << "ERROR " << outf.Status() << " opening " << outstr << endl;
+    return outf.Status();
+    }
+    FitsFile expf;
+    if (!expf.Open(expfile)) {
+        cerr << "ERROR " << expf.Status() << " opening " << expfile << endl;
+    return outf.Status();
+    }
+    FitsFile lof;
+    if (!lof.Open(diffusefile)) {
+        cerr << "ERROR " << lof.Status() << " opening " << diffusefile << endl;
+    return lof.Status();
+    }
+
+    std::string diff(diffusefile);
+    size_t idx = diff.find_last_of("\\/");
+    if (std::string::npos != idx)
+        diff.erase(0, idx+1);
+    std::string hidiff(hiresdiffusefile);
+    idx = hidiff.find_last_of("\\/");
+    if (std::string::npos != idx)
+        hidiff.erase(0, idx+1);
+
+    outf.UpdateKey("BUNIT", "(cm**2 s sr)**(-1)");
+    outf.UpdateKey("EXTNAME", "GAS");
+    outf.UpdateKey("SKYL", diff.c_str());
+    outf.UpdateKey("SKYH", hidiff.c_str());
+    char str[1024];
+    if (lof.ReadKey("DH_CONF_", str, ""))
+        outf.UpdateKey("DH_CONF_", str);
+    if (lof.ReadKey("STAN_CON", str, ""))
+        outf.UpdateKey("STAN_CON", str);
+    if (lof.ReadKey("FILE_ID", str, ""))
+        outf.UpdateKey("FILE_ID", str);
+    char sarfile[1024];
+    expf.ReadKey("SARFILE", sarfile, "");
+    if (std::string(sarfile).compare("")) {
+        std::string tmp(sarfile);
+        std::string::size_type pos1 = sizeof("AG_GRID_")-1; // after this prefix
+        std::string::size_type pos2 = tmp.find("_", pos1)+1;
+        std::string::size_type pos3 = tmp.find("_", pos2)+1;
+        std::string::size_type pos4 = tmp.find(".", pos3);
+        if (pos2 != std::string::npos && pos3 != std::string::npos && pos4 != std::string::npos) {
+            std::string dhconf = tmp.substr(pos1, pos2-pos1-1);
+            std::string stancon = tmp.substr(pos2, pos3-pos2-1);
+            std::string fileid = tmp.substr(pos3, pos4-pos3);
+            outf.UpdateKey("DH_CONF_", dhconf.c_str());
+            outf.UpdateKey("STAN_CON", stancon.c_str());
+            outf.UpdateKey("FILE_ID", fileid.c_str());
+        }
+    }
+    outf.Close();
+
+    if (gz) {
+        std::string cmd = "gzip ";
+        cmd += outstr;
+        system(cmd.c_str());
+    }
     return status;
 }
 

@@ -13,7 +13,8 @@
 #define LIBAGILESCI_EVAL_H
 
 #include <vector>
-#include <Intervals.h>
+#include "Intervals.h"
+#include "AgileMap.h"
 
 namespace eval
 {
@@ -40,6 +41,11 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
                Intervals &intervals, std::vector< std::vector<int> > &counts,
                bool saveMaps);
 
-}
+int EvalGasMap(AgileMap &gasMap, AgileMap &expMap, const char* loresdiffuseFilename,
+               const char* hiresdiffuseFilename);
 
+int EvalGas(const char* outfile, const char* expfile, const char* diffusefile,
+            const char* hiresdiffusefile);
+
+}
 #endif
