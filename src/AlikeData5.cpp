@@ -504,7 +504,7 @@ for (int m=0; m<m_mapCount; ++m) {
 	m_countsArr[m] = int(counts);
 	}
 //delete[] m_ctsMaps; //AB 2015-11-01
-m_ctsMaps = ctsMapArr;
+*m_ctsMaps = *ctsMapArr;
 return true;
 }
 
