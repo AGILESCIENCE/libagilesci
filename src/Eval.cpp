@@ -1347,7 +1347,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
 			
 			if (the < radius) {
             	totalCounts++;
-            	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << the << endl;
+            	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
             }
         }
         counts[intvIndex]=totalCounts;
