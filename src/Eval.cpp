@@ -1320,14 +1320,14 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
 
         double ra, dec, l, b, the;
-        double baa = ba * DEG2RAD;
-        double laa = la * DEG2RAD;
+        double baa = ba;// * DEG2RAD;
+        double laa = la;// * DEG2RAD;
         for (long k = 0; k<nrows; k++) {
             fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
             fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
             Euler(ra, dec, &l, &b, 1);
-            l *= DEG2RAD;
-            b *= DEG2RAD;
+            //l *= DEG2RAD;
+            //b *= DEG2RAD;
             
             double the = SphDistDeg(l, b, laa, baa);
 			cout << l << " " << b << " " << laa << " " << baa << " " << the << endl;
