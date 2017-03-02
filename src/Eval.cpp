@@ -1299,10 +1299,12 @@ int EvalCountsInRadius(const char *outfile, double tmin,
 #endif
         Intervals sIntv;
         sIntv.Add(intervals[intvIndex]);
-        string selExpr = selection::TimesExprString(sIntv);
+        //string selExpr = selection::TimesExprString(sIntv);
+        string selExpr = selection::EvtExprString(sIntv, emin, emax, albrad, fovradmax, fovradmin, phasecode, filtercode);
 #ifdef DEBUG
         cout << "selExpr: " << selExpr << endl;
 #endif
+		cout << "selExpr: " << selExpr << endl;
         fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
 #ifdef DEBUG
         cout << "Rows from " << tempFilename << " selected" << endl;
