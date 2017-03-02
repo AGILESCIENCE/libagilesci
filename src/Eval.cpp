@@ -1318,21 +1318,37 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         int raColumn, decColumn;
         fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
-
+        
+        int enColumn, pheColumn, thetaColumn, phaseColumn, timeColumn;
+        fits_get_colnum(templateFits, 1, (char*)"ENERGY", &enColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"PH_EARTH", &pheColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"THETA", &thetaColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"PHASE", &phaseColumn, &status);
+		fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
+		
         double ra, dec, l, b, the;
         double baa = ba;// * DEG2RAD;
         double laa = la;// * DEG2RAD;
+        double timec, energyc, ph_earthc, thetac, phasec;
         for (long k = 0; k<nrows; k++) {
             fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
             fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
             Euler(ra, dec, &l, &b, 1);
             //l *= DEG2RAD;
             //b *= DEG2RAD;
+            fits_read_col(templateFits, TDOUBLE, enColumn, k+1, 1, 1, NULL, &energyc, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, timeColumn, k+1, 1, 1, NULL, &timec, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, pheColumn, k+1, 1, 1, NULL, &ph_earthc, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, thetaColumn, k+1, 1, 1, NULL, &thetac, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, phaseColumn, k+1, 1, 1, NULL, &phasec, NULL, &status);
+            
             
             double the = SphDistDeg(l, b, laa, baa);
-			cout << l << " " << b << " " << laa << " " << baa << " " << the << endl;
-			if (the < radius)
+			
+			if (the < radius) {
             	totalCounts++;
+            	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << the << endl;
+            }
         }
         counts[intvIndex]=totalCounts;
         if (nrows > 0)
