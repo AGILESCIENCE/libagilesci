@@ -1330,6 +1330,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
 			if (the < radius)
             	totalCounts++;
         }
+        counts[intvIndex]=totalCounts;
         if (nrows > 0)
             fits_delete_rows(templateFits, 1, nrows, &status);
     }
