@@ -1328,7 +1328,9 @@ int EvalCountsInRadius(const char *outfile, double tmin,
             Euler(ra, dec, &l, &b, 1);
             l *= DEG2RAD;
             b *= DEG2RAD;
+            
             double the = SphDistDeg(l, b, laa, baa);
+			cout << l << " " << b << " " << laa << " " << baa << " " << the << endl;
 			if (the < radius)
             	totalCounts++;
         }
