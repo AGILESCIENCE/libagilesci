@@ -1256,4 +1256,91 @@ int EvalGas(const char* outfile, const char* expfile, const char* diffusefile,
     return status;
 }
 
+int EvalCountsInRadius(const char *outfile, double tmin,
+               double tmax, double radius, double la, double ba,
+               double lonpole, double emin, double emax, double fovradmax,
+               double fovradmin, double albrad, int phasecode, int filtercode,
+               const char *selectionFilename,  const char *templateFilename,
+               Intervals &intervals, vector<int> &counts)
+{
+    int status = 0;
+
+    counts.resize(intervals.Count());
+    for (int i=0; i < intervals.Count(); i++) {
+            counts[i] = 0;
+    }
+
+    int hdutype;
+    fitsfile* selectionFits;
+    if (fits_open_file(&selectionFits, selectionFilename, READONLY, &status)) {
+        cerr << "ERROR opening selection file " << selectionFilename << endl;
+        return -1;
+    }
+    fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
+
+    fitsfile* templateFits;
+    if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
+        cerr << "ERROR opening template file " << templateFilename << endl;
+        return -1;
+    }
+    fits_movabs_hdu(templateFits, 2, &hdutype, &status);
+    long oldnrows;
+    fits_get_num_rows(templateFits, &oldnrows, &status);
+    fits_delete_rows(templateFits, 1, oldnrows, &status);
+
+#ifdef DEBUG
+    cout << "Evaluating counts.." << endl;
+#endif
+
+    int totalCounts = 0;
+    for (int intvIndex = 0; intvIndex < intervals.Count(); intvIndex++) {
+#ifdef DEBUG
+        cout << "Interval #" << intvIndex << endl;
+#endif
+        Intervals sIntv;
+        sIntv.Add(intervals[intvIndex]);
+        string selExpr = selection::TimesExprString(sIntv);
+#ifdef DEBUG
+        cout << "selExpr: " << selExpr << endl;
+#endif
+        fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
+#ifdef DEBUG
+        cout << "Rows from " << tempFilename << " selected" << endl;
+#endif
+        long nrows;
+        fits_get_num_rows(templateFits, &nrows, &status);
+#ifdef DEBUG
+        cout << "Reading all " << nrows << " rows" << endl;
+#endif
+
+        int raColumn, decColumn;
+        fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
+
+        double ra, dec, l, b, the;
+        double baa = ba * DEG2RAD;
+        double laa = la * DEG2RAD;
+        for (long k = 0; k<nrows; k++) {
+            fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
+            fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
+            Euler(ra, dec, &l, &b, 1);
+            l *= DEG2RAD;
+            b *= DEG2RAD;
+            double the = SphDistDeg(l, b, laa, baa);
+			if (the < radius)
+            	totalCounts++;
+        }
+        if (nrows > 0)
+            fits_delete_rows(templateFits, 1, nrows, &status);
+    }
+#ifdef DEBUG
+    cout << "Ending evaluation" << endl;
+#endif
+
+    fits_close_file(selectionFits, &status);
+    fits_close_file(templateFits, &status);
+
+    return status;
+}
+
 }

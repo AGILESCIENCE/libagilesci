@@ -30,6 +30,7 @@ inline double Sinaa(double angle)
     return angle ? sin(angle)/angle : 0.0;
 }
 
+/// distance in Galactic coordinates. Longitude=l, latitude=b
 inline double SphDistDeg(double long1, double lat1, double long2, double lat2)
 {
     double l1 = long1*DEG2RAD;
@@ -43,6 +44,14 @@ inline double SphDistDeg(double long1, double lat1, double long2, double lat2)
     return dist*RAD2DEG;
 }
 
+/// convert from Equatorial (RA, DEC) to Galactic (l,b) coordinates
 void Euler(double ai, double bi, double * ao, double * bo, int select);
+
+inline double Exposure_cm2s(double exp, double lat, double mres)
+{
+	//exp [cm2 s sr]
+	//return in [cm2 s]
+	return exp  / ( pow(mres/180.0,2) * cos(lat));	
+}
 
 #endif

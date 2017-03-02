@@ -40,7 +40,16 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
                const char *selectionFilename,  const char *templateFilename,
                Intervals &intervals, std::vector< std::vector<int> > &counts,
                bool saveMaps);
-
+               
+/// Count the number of events (specified by radius) in a circle.
+/// The results are in counts
+int EvalCountsInRadius(const char *outfile, double tmin,
+               double tmax, double radius, double la, double ba,
+               double lonpole, double emin, double emax, double fovradmax,
+               double fovradmin, double albrad, int phasecode, int filtercode,
+               const char *selectionFilename,  const char *templateFilename,
+               Intervals &intervals, vector<int> &counts);
+               
 int EvalGasMap(AgileMap &gasMap, AgileMap &expMap, const char* loresdiffuseFilename,
                const char* hiresdiffuseFilename);
 
