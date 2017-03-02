@@ -48,7 +48,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
                double lonpole, double emin, double emax, double fovradmax,
                double fovradmin, double albrad, int phasecode, int filtercode,
                const char *selectionFilename,  const char *templateFilename,
-               Intervals &intervals, vector<int> &counts);
+               Intervals &intervals, std::vector<int> &counts);
                
 int EvalGasMap(AgileMap &gasMap, AgileMap &expMap, const char* loresdiffuseFilename,
                const char* hiresdiffuseFilename);
