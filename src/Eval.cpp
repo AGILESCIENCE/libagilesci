@@ -1330,6 +1330,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         double baa = ba;// * DEG2RAD;
         double laa = la;// * DEG2RAD;
         double timec, energyc, ph_earthc, thetac, phasec;
+        cout << "time  l  b  energy  theta  ph_earth  phasec dist " << endl;
         for (long k = 0; k<nrows; k++) {
             fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
             fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
