@@ -3029,7 +3029,7 @@ for (int i=0; i<m_srcCount; ++i) {
 }
 
 
-void RoiMulti::LogSources(const char* fileName, int iterNum) const
+void RoiMulti::LogSources(const char* fileName, int iterNum, AgileMap* simArr, int block, int last) const
 {
 for (int i=0; i<m_srcCount; ++i) {
 	if (!m_inSrcDataArr[i].fixflag)
@@ -3084,6 +3084,19 @@ for (int i=0; i<m_srcCount; ++i) {
 	count = SingleIsoPar() ? 1 : m_mapCount;
 	for (int map=0; map<count; ++map)
 		srcout << sep[bool(map)] << GetFinalDPM(true, map, i, false);
+
+	srcout << " ";
+	
+	for (int j=0; j<=last; ++j) {
+		for (int b=0; b<block; ++b) {
+        	const AgileMap& map = simArr[j+b];
+        	long counts = 0;
+            for (int y=0; y<map.Dim(0); ++y)
+                for (int x=0; x<map.Dim(1); ++x)
+                    counts += map(y, x);
+                    srcout << sep[bool(map)] << counts;
+    	}
+	}
 
 	srcout << endl;
 

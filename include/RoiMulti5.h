@@ -419,7 +419,7 @@ public:	/// Main operations
 public:	/// Collecting the results
 	void Write(const char* fileName, bool skipFitInfo=true) const;
 	void WriteSources(const char* fileName, bool skipFixed=false, bool skipEllipses=false) const;
-	void LogSources(const char* fileName, int iterNum) const;
+	void LogSources(const char* fileName, int iterNum, AgileMap* simArr, int block, int last) const;
 	void WriteHtml(const char* fileName, const char* suffix=".html") const;
 	SourceDataArray GetFitData() const { return m_outSrcDataArr; }
 
