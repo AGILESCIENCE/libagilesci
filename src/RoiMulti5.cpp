@@ -3029,7 +3029,7 @@ for (int i=0; i<m_srcCount; ++i) {
 }
 
 
-void RoiMulti::LogSources(const char* fileName, int iterNum, AgileMap* simArr, int block, int last) const
+void RoiMulti::LogSources(const char* fileName, int iterNum, AgileMap* simArr, int simArraySize) const
 {
 for (int i=0; i<m_srcCount; ++i) {
 	if (!m_inSrcDataArr[i].fixflag)
@@ -3087,16 +3087,16 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	srcout << " ";
 	
-	for (int j=0; j<=last; ++j) {
-		for (int b=0; b<block; ++b) {
-        	const AgileMap& map = simArr[j+b];
-        	long counts = 0;
-            for (int y=0; y<map.Dim(0); ++y)
-                for (int x=0; x<map.Dim(1); ++x)
-                    counts += map(y, x);
-                    srcout << sep[bool(map)] << counts;
-    	}
+	
+	for (int b=0; b<simArraySize; ++b) {
+		const AgileMap& map = simArr[b];
+		long counts = 0;
+		for (int y=0; y<map.Dim(0); ++y)
+			for (int x=0; x<map.Dim(1); ++x)
+				counts += map(y, x);
+				srcout << sep[bool(b)] << counts;
 	}
+	
 
 	srcout << endl;
 
