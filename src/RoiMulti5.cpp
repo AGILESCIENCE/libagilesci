@@ -2371,7 +2371,7 @@ Fit(fitOpt, -source-1, true, 1, &amin0);
 SetExtPar(source);
 ReleaseExtPar(source);
 
-for (int map=0; map<=m_mapCount; ++map)
+for (int map=0; map<m_mapCount; ++map)
 	m_extSrcArr[ExtIndex(map, source)].SetTS(amin0 - amin1);
 m_extSrcArr[ExtIndex(0, source)].PrintSqrtTS();
 }
@@ -3036,7 +3036,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 
 
-/// NUMIT L B TS FLUX FLUXERR FLUXUL SPECTRAL_INDEX FIXFLAG MINTS R EXP CTS CTSERROR CTSUL TOTEXP TOTNCOUNTS FCN0 FCN1 EDM0 EDM1 ITER0 ITER1 GAL ISO
+/// NUMIT L B TS FLUX FLUXERR FLUXUL SPECTRAL_INDEX FIXFLAG MINTS R EXP CTS CTSERROR CTSUL TOTEXP TOTNCOUNTS FCN0 FCN1 EDM0 EDM1 ITER0 ITER1 GAL ISO COUNTS
 
 
 
