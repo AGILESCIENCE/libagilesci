@@ -2703,7 +2703,10 @@ if (ExtCount()) {
 	output << "! ExtSrcName, sqrt(TS), Flux, Err, +Err, -Err" << endl;
 	for (int i=0; i<ExtCount(); ++i) {
 		const AlikeExtMap& extMap = m_extSrcArr[ExtIndex(0, i)];
-		double BaryExposure = EvalExposure(extMap.GetBaryL(), extMap.GetBaryB(), m_expMaps[0]);
+		//double BaryExposure = EvalExposure(extMap.GetBaryL(), extMap.GetBaryB(), m_expMaps[0]);
+		double BaryExposure = 0;
+		for (int map=0; map<m_mapCount; ++map)
+			BaryExposure += EvalExposure(extMap.GetBaryL(), extMap.GetBaryB(), m_expMaps[map])*extMap.GetNormFactor();
 		output << m_extData.Name(i) << " " << sqrt(extMap.GetTS());
 		output << " " << extMap.GetCoeff()/BaryExposure;
 		output << " " << extMap.GetCoefferr()/BaryExposure;
@@ -3411,7 +3414,10 @@ if (ExtCount()) {
 	for (int i=0; i<ExtCount(); ++i) {
 		htmlout << "<tr><td>" << m_extData.Name(i) << "</td>";
 		const AlikeExtMap& extSrc = m_extSrcArr[ExtIndex(0, i)];
-		double BaryExposure = EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[0]);
+		//double BaryExposure = EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[0]);
+		double BaryExposure = 0;
+                for (int map=0; map<m_mapCount; ++map)
+                        BaryExposure += EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[map])*extSrc.GetNormFactor();
 		htmlout << "<td>" << sqrt(extSrc.GetTS()) << "</td>";
 		htmlout << "<td>" << extSrc.GetCoeff()/BaryExposure << "</td>";
 		htmlout << "<td>" << extSrc.GetCoefferr()/BaryExposure << "</td>";
