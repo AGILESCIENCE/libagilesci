@@ -7,6 +7,7 @@
  * Any information contained in this software
  * is property of the AGILE TEAM and is strictly
  * private and confidential.
+ * GPL License
 */
 
 #ifndef LIBAGILESCI_EVAL_H
