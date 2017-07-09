@@ -1,4 +1,11 @@
-
+/*
+ * Copyright (c) 2005-2017 
+ *     AGILE Team
+ *
+ * Any information contained in this software
+ * is property of the AGILE TEAM and is strictly
+ * private and confidential.
+*/
 
 
 #ifndef _ALIKE_PSF_
