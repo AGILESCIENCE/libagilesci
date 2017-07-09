@@ -1,4 +1,11 @@
-
+/*
+ * Copyright (c) 2005-2016
+ *     AGILE Team
+ *
+ * Any information contained in this software
+ * is property of the AGILE TEAM and is strictly
+ * private and confidential.
+*/
 
 
 
