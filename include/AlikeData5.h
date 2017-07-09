@@ -1,14 +1,12 @@
-//
-// C++ Interface: %{MODULE}
-//
-// Description: Accessing disk files for RoiMulti class
-//
-//
-// Author: Tomaso Contessi, (C) 2011
-//
-// Copyright: See COPYING file that comes with this distribution
-//
-//
+/*
+ * Copyright (c) 2011
+ *     Tomaso Contessi (Nuove Idee sas)
+ *
+ * Any information contained in this software
+ * is property of the AGILE TEAM and is strictly
+ * private and confidential.
+*/
+
 #ifndef _ALIKE_DATA5_
 #define _ALIKE_DATA5_
 
