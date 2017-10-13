@@ -433,9 +433,16 @@ int ExpRatioEvaluator::writeMatrixDataInAgileMapFile(const char * appendToFilena
 	
 	
 	/// Computes new filename
-	const char * newFileNameC = computeNewFileName(appendToFilename).c_str(); // TO FIX 
- 
-	remove(newFileNameC);
+	const char * newFileNameC;
+
+	string cleanedFilename = computeNewFileName(appendToFilename); // TO FIX 
+ 	//cout << "cleanedFilename: " << cleanedFilename << endl;
+
+
+	newFileNameC = cleanedFilename.c_str();
+	//cout << "new file name c_str= " << newFileNameC << endl;
+
+        remove(newFileNameC);
 
  	FitsFile f;
 
@@ -518,17 +525,26 @@ int ExpRatioEvaluator::writeMatrixDataInAgileMapFile(const char * appendToFilena
 }
 
 string ExpRatioEvaluator::computeNewFileName(const char * appendToFilename){
+
+	//cout << "append: " << appendToFilename << endl;
 	
-	const char * imageName = agileMap->GetFileName(); // e.g.    MAP1000s.exp
+  	const char * imageName = agileMap->GetFileName(); // e.g.    MAP1000s.exp
+	
+	//cout << "imageName_cstr: " << imageName << endl;
+
 	string imageName_string(imageName);
 	
+
+	//cout << "imageName_str: " << imageName << endl;
+
 	string newFileName = "";
 
 	// tolgo tutto quello che c'è prima di tutti gli slash	
 	size_t foundPatternSlash = imageName_string.find("/");
 	while(foundPatternSlash != string::npos)
-	{
+	{ 
 		imageName_string = imageName_string.substr(foundPatternSlash+1);
+		//cout << "imageName senza /: " << imageName_string << endl;
 		foundPatternSlash = imageName_string.find("/");
 	}
 
@@ -537,18 +553,25 @@ string ExpRatioEvaluator::computeNewFileName(const char * appendToFilename){
 	
 	
     size_t foundPatternExp = imageName_string.find(".exp");
-	size_t foundPatternCts = imageName_string.find(".cts");
+    size_t foundPatternCts = imageName_string.find(".cts");
 
     if(foundPatternExp != string::npos)
-		newFileName = imageName_string.substr(0,foundPatternExp);
-	else if(foundPatternCts != string::npos)
-		newFileName = imageName_string.substr(0,foundPatternCts);
+	newFileName = imageName_string.substr(0,foundPatternExp);
+    else if(foundPatternCts != string::npos)
+	newFileName = imageName_string.substr(0,foundPatternCts);
     else
-		newFileName = imageName_string;
+ 	newFileName = imageName_string;
 
-	string appendToFilenameString(appendToFilename);
-	newFileName +="_"+appendToFilenameString+".gz";
-	cout << "NewFileName: " << newFileName << endl;
+    //cout << "new file name = " << newFileName << endl;
+
+    string appendToFilenameString(appendToFilename);
+
+    newFileName +="_"+appendToFilenameString+".gz";
+   
+    //cout << "newFileName: " << newFileName << endl;  
+
+  //replace( newFileName.begin(), newFileName.end()-7, '.', '_');
+   // cout << "NewFileName: " << newFileName << endl;
 
 
 
