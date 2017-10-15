@@ -37,8 +37,11 @@ ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap
 		exit (EXIT_FAILURE);
 	}
 		
-	//1 crate normalized image 
-	normalizedImage = createNormalizedImage();
+	//1 create normalized image 
+	if(onNormalizedMap==true)
+		normalizedImage = createNormalizedImage();
+	
+		
 	
 	
 	//2 create expRatioImage
@@ -46,7 +49,8 @@ ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap
 	
 
 	//4 Writing of normalizedImage
-	writeMatrixDataInAgileMapFile("norm.exp", normalizedImage);
+	if(onNormalizedMap==true)
+		writeMatrixDataInAgileMapFile("norm.exp", normalizedImage);
 	
 
 
