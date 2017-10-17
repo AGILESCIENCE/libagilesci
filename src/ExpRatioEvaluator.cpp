@@ -585,20 +585,30 @@ string ExpRatioEvaluator::computeNewFileName(const char * appendToFilename){
 
     string appendToFilenameString(appendToFilename);
     
-   	string min_str = to_string(minThreshold);
+	// convert double to string
+	ostringstream minThresholdStringStream;
+	minThresholdStringStream << minThreshold;
+	string min_str = minThresholdStringStream.str();
 	size_t foundPatternDotMin = min_str.find(".");
 	min_str = min_str.substr(0,foundPatternDotMin);		
 	
-	
-	string max_str = to_string(maxThreshold);
+
+	// convert double to string
+	ostringstream maxThresholdStringStream;
+	maxThresholdStringStream << maxThreshold;
+	string max_str = maxThresholdStringStream.str();
 	size_t foundPatternDotMax = max_str.find(".");
 	max_str = max_str.substr(0,foundPatternDotMax);		
+
+	//string max_str = to_string(maxThreshold);
+	//size_t foundPatternDotMax = max_str.find(".");
+	//max_str = max_str.substr(0,foundPatternDotMax);		
 	
 	
-    string sqrSize_str = to_string(squareSize);
-    size_t foundPatternDotsqrSize = sqrSize_str.find(".");
-	sqrSize_str = sqrSize_str.substr(0,foundPatternDotsqrSize);		
-	
+	ostringstream sqrSizeStringStream;
+	sqrSizeStringStream<<squareSize;
+	string sqrSize_str = sqrSizeStringStream.str();
+    
     
 	   
 
