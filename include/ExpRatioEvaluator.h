@@ -17,6 +17,7 @@
 #include <fstream>
 #include <cmath>
 #include <string>
+#include <algorithm>
 
 #include "AgileMap.h"
 #include "FitsUtils.h"
@@ -35,15 +36,32 @@ class ExpRatioEvaluator
 		ExpRatioEvaluator(const char * expPath,bool onNormalizedMap, double minThreshold, double maxThreshold, int squareSize);
 
 		/*
+			Constructor used in multi5 project
+			Creates image extracting pixel values from expPath.
+			Creates normalizedImage and expRatioImage, and writes them on file .exp.gz
+		*/
+		ExpRatioEvaluator(const char * expPath,bool onNormalizedMap);
+
+		/*
 			Computes and returns the output array. 
 			If the rectangle is not entirely inside the image, it returns -1 -1 -1 -1.
 		*/	
 		double computeExpRatioValues(double l, double b);	
 		double computeExpRatioValues(int x, int y, string type);
 
+		
+		// Getting Map
+		double ** getImage();
+		double ** getExpRatioMap();
+		double ** getNormalizedMap();
 
+		// Get filename
+		const char* getExpPath();
 
-
+		// Get ExpRatio Parameters
+		double getMinThreshold();
+		double getMaxThreshold();
+		int getSquareSize();
 
 	private:
 

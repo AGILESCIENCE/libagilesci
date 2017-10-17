@@ -13,7 +13,6 @@
 
 
 
-
 ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap, double _minThreshold, double _maxThreshold, int _squareSize) 
 {
 	expPath=_expPath;
@@ -41,11 +40,9 @@ ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap
 	if(onNormalizedMap==true)
 		normalizedImage = createNormalizedImage();
 	
-		
-	
-	
+			
 	//2 create expRatioImage
-	expRatioImage = createExpRatioPixelMap(minThreshold,maxThreshold);		//inserito true per compilazione
+	expRatioImage = createExpRatioPixelMap(minThreshold,maxThreshold);		
 	
 
 	//4 Writing of normalizedImage
@@ -53,12 +50,41 @@ ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap
 		writeMatrixDataInAgileMapFile("norm.exp", normalizedImage);
 	
 
-
 	// Writing of expRatioImage
 	writeMatrixDataInAgileMapFile("exp_norm.exp", expRatioImage);	
 	
 } 
 
+ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap) : 
+	ExpRatioEvaluator(_expPath,_onNormalizedMap,_onNormalizedMap?120:0,_onNormalizedMap?140:100,10)
+{
+			
+}
+
+double ** ExpRatioEvaluator::getImage() {
+	return image;
+}
+
+double ** ExpRatioEvaluator::getExpRatioMap(){
+	return expRatioImage;
+}
+
+double ** ExpRatioEvaluator::getNormalizedMap(){
+	return normalizedImage;
+}
+
+const char* ExpRatioEvaluator::getExpPath(){
+	return expPath;
+}
+double ExpRatioEvaluator::getMinThreshold(){
+	return minThreshold;
+}
+double ExpRatioEvaluator::getMaxThreshold(){
+	return maxThreshold;
+}
+int ExpRatioEvaluator::getSquareSize(){
+	return squareSize;
+}
 
 bool ExpRatioEvaluator::convertFitsDataToMatrix()
 {
@@ -284,28 +310,17 @@ double ** ExpRatioEvaluator::createExpRatioPixelMap(double minThreshold, double 
 		for(int i=0; i<rows; i++) {
 			expRatioMap[i] = new double[cols];
 		}
-					
-		
+				
 		// calcola i valori e inseriscili nella nuova mappa
 		for(int i = 0; i < rows ; i++ ) {
 			for(int j = 0; j < cols; j++) {
  
 				expRatioMap[i][j] = computeExpRatioValues(i,j,"PIXEL");
-;								
+								
 			}
 			
 		}
-
-		/*
-		for(int i = 0; i < rows ; i++ ) {
-			for(int j = 0; j < cols; j++) {
- 
- 
-				cout << expRatioMap[i][j] << " ";
- 
-			}
-			cout << "\n";
-		}*/
+		
 		
 		return expRatioMap;
 
@@ -421,7 +436,7 @@ double ** ExpRatioEvaluator::createNormalizedImage(){
 			for(int i = 0; i < rows; ++i) {
 				normalizedImage[i] = new double[cols];
 			}
-	
+			
 	for(int i = 0 ; i < rows; ++i) {
 		for(int j = 0 ; j < cols; ++ j) {
 			normalizedImage[i][j] = image[i][j]/ (  timeFactor * normalizationFactorMatrix[i][j] );
@@ -569,8 +584,25 @@ string ExpRatioEvaluator::computeNewFileName(const char * appendToFilename){
     //cout << "new file name = " << newFileName << endl;
 
     string appendToFilenameString(appendToFilename);
+    
+   	string min_str = to_string(minThreshold);
+	size_t foundPatternDotMin = min_str.find(".");
+	min_str = min_str.substr(0,foundPatternDotMin);		
+	
+	
+	string max_str = to_string(maxThreshold);
+	size_t foundPatternDotMax = max_str.find(".");
+	max_str = max_str.substr(0,foundPatternDotMax);		
+	
+	
+    string sqrSize_str = to_string(squareSize);
+    size_t foundPatternDotsqrSize = sqrSize_str.find(".");
+	sqrSize_str = sqrSize_str.substr(0,foundPatternDotsqrSize);		
+	
+    
+	   
 
-    newFileName +="_"+appendToFilenameString+".gz";
+    newFileName +="_"+min_str+"_"+max_str+"_"+sqrSize_str+"_"+appendToFilenameString+".gz";		
    
     //cout << "newFileName: " << newFileName << endl;  
 
