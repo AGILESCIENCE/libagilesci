@@ -66,7 +66,7 @@ ICON_DIR = ui
 ifneq (, $(findstring mpi, $(LINKERENV)))
 CXX = mpic++
 else
-CXX = g++
+CXXFLAGS += -std=c++11
 endif
 
 CXXFLAGS = -g -O2 -pipe -I $(INCLUDE_DIR)
