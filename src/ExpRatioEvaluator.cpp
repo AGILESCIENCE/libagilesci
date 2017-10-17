@@ -55,10 +55,9 @@ ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap
 	
 } 
 
-ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap) : 
-	ExpRatioEvaluator(_expPath,_onNormalizedMap,_onNormalizedMap?120:0,_onNormalizedMap?140:100,10)
+ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap) 
 {
-			
+	ExpRatioEvaluator(_expPath,_onNormalizedMap,_onNormalizedMap?120:0,_onNormalizedMap?140:100,10);			
 }
 
 double ** ExpRatioEvaluator::getImage() {
