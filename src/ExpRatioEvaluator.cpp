@@ -11,53 +11,121 @@
 
 #include "ExpRatioEvaluator.h"
 
+ExpRatioEvaluator::ExpRatioEvaluator(bool _onNormalizedMap, bool _createExpRatioMap, double _minThreshold, double _maxThreshold){
 
-
-ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap, double _minThreshold, double _maxThreshold, int _squareSize) 
-{
-	expPath=_expPath;
-	
-	agileMap=new AgileMap(expPath);
-	
-	cdelt2 = agileMap->GetYbin();
-	
-	squareSize = _squareSize/cdelt2;
-	
 	onNormalizedMap = _onNormalizedMap;
 	
 	minThreshold = _minThreshold;
 	
 	maxThreshold = _maxThreshold;
 
+	createExpRatioMap = _createExpRatioMap;
+
+}
+
+ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap, bool _createExpRatioMap, double _minThreshold, double _maxThreshold, int _squareSize) :
+	ExpRatioEvaluator(_onNormalizedMap, _createExpRatioMap, _minThreshold, _maxThreshold)
+{	
+
+	expPath=_expPath;
+	agileMap=new AgileMap(expPath);
+	cdelt2 = agileMap->GetYbin();
+	squareSize = _squareSize/cdelt2;
+
+	/*
+		Reading from file .exp
+	*/
+		
 	// Computes double ** image -> FORSE SI PUO' FARE ANCHE QUESTO CON AGILE MAP? CI GUARDO IO, PER ADESSO LASCIALO COSI'
 	if(! convertFitsDataToMatrix() )
 	{
 		fprintf( stderr, "[ExpRatioEvaluator] ERROR!! convertFitsDataToMatrix(): error reading fits file\n");
 		exit (EXIT_FAILURE);
 	}
-		
-	//1 create normalized image 
-	if(onNormalizedMap==true)
-		normalizedImage = createNormalizedImage();
 	
-			
-	//2 create expRatioImage
-	expRatioImage = createExpRatioPixelMap(minThreshold,maxThreshold);		
-	
-
-	//4 Writing of normalizedImage
-	if(onNormalizedMap==true)
-		writeMatrixDataInAgileMapFile("norm.exp", normalizedImage);
-	
-
-	// Writing of expRatioImage
-	writeMatrixDataInAgileMapFile("exp_norm.exp", expRatioImage);	
+	createAndWriteImages();
 	
 } 
 
-ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap) 
+
+
+ExpRatioEvaluator::ExpRatioEvaluator(AgileMap _agileMap, bool _onNormalizedMap, bool _createExpRatioMap, double _minThreshold, double _maxThreshold, int _squareSize) :
+	ExpRatioEvaluator(_onNormalizedMap, _createExpRatioMap, _minThreshold, _maxThreshold)
 {
-	ExpRatioEvaluator(_expPath,_onNormalizedMap,_onNormalizedMap?120:0,_onNormalizedMap?140:100,10);			
+
+	/*
+		Reading from AgileMap object 
+	*/
+
+	agileMap=&_agileMap;
+
+	cdelt2 = agileMap->GetYbin();	
+	squareSize = _squareSize/cdelt2;
+
+	expPath = agileMap->GetFileName();
+	rows = agileMap->Rows(); 
+	cols = agileMap->Cols();
+
+
+
+	image = new double*[rows];
+ 
+
+
+	for (int i = 0; i < rows; ++i){
+		image[i] = new double[cols];
+ 
+	}
+	
+	double * data = agileMap->Buffer();
+
+ 
+ 
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols ; j++){
+			image[cols-1-j][i] = data[i*cols+j]; // il problema dell'altra volta è che nell'array 
+		}
+	}
+	 
+
+	createAndWriteImages();
+	
+
+	
+}
+
+ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _onNormalizedMap, bool _createExpRatioMap) : 
+	ExpRatioEvaluator(_expPath, _onNormalizedMap, _createExpRatioMap, _onNormalizedMap? 120:0 , _onNormalizedMap? 140:100 , 10)
+		
+{
+			
+}
+ExpRatioEvaluator::ExpRatioEvaluator(AgileMap _agileMap ,bool _onNormalizedMap, bool _createExpRatioMap) : 
+	ExpRatioEvaluator(_agileMap, _onNormalizedMap,_createExpRatioMap, _onNormalizedMap? 120:0 , _onNormalizedMap? 140:100 , 10)
+{ 
+			
+}
+
+
+
+void ExpRatioEvaluator::createAndWriteImages(){
+
+
+	//normalized image 
+	if(onNormalizedMap){
+		normalizedImage = createNormalizedImage();
+		writeMatrixDataInAgileMapFile("norm.exp", normalizedImage);
+	 }
+		
+	
+
+	//expRatio image
+	if(createExpRatioMap){
+		expRatioImage = createExpRatioPixelMap();	
+		writeMatrixDataInAgileMapFile("exp_norm.exp", expRatioImage);
+	}
+		
+
 }
 
 double ** ExpRatioEvaluator::getImage() {
@@ -95,7 +163,8 @@ bool ExpRatioEvaluator::convertFitsDataToMatrix()
 	long naxes[2] = { 1, 1 }, fpixel[2] = { 1, 1 };
 	double *pixels;
 	char format[20], hdformat[20];
-			
+		
+ 
 
 	if (!fits_open_file(&fptr, expPath, READONLY, &status))
 	{									// 16   , 2     , {166,166}
@@ -139,7 +208,11 @@ bool ExpRatioEvaluator::convertFitsDataToMatrix()
 						{
 							
 							image[row_index][col_index] = (double)pixels[ii];
+
+
+
 							col_index++;
+ 
 						}
 						col_index = 0;
 						row_index++;
@@ -159,6 +232,8 @@ bool ExpRatioEvaluator::convertFitsDataToMatrix()
 		printf("Can't open fits file - Press any key to exit\n");
 		return false;	
 	}
+
+ 
 
 	return true;
 
@@ -278,7 +353,7 @@ double ExpRatioEvaluator::computeExpRatio(int x, int y){
 
 
 
-double ** ExpRatioEvaluator::createExpRatioPixelMap(double minThreshold, double maxThreshold){
+double ** ExpRatioEvaluator::createExpRatioPixelMap(){
 
 
 

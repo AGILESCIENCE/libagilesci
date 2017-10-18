@@ -30,27 +30,36 @@ class ExpRatioEvaluator
 {
 	public: 
 	
-		/*
-			Creates image extracting pixel values from expPath.
-			Creates normalizedImage and expRatioImage, and writes them on file .exp.gz 
+		/*	PUBLIC CONSTRUCTORS
+
+			If onNormalizedMap == true -> creates normalizedImage and writes it on file .exp.gz
+			If createExpRatioMap == true -> creates createExpRatioMap and writes it on file .exp.gz
 		*/
-		ExpRatioEvaluator(const char * expPath,bool onNormalizedMap, double minThreshold, double maxThreshold, int squareSize);
+
+		
+		// Creates image extracting pixel values from expPath.
+		ExpRatioEvaluator(const char * expPath,bool onNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
+		
+		// Creates image extracting pixel values from expPath. Default paramteres.
+		ExpRatioEvaluator(const char * expPath, bool onNormalizedMap, bool createExpRatioMap);
+		 
+		// Creates image extracting pixel values from AgileMap.
+		ExpRatioEvaluator(AgileMap agileMap, bool onNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
+
+		//  Creates image extracting pixel values from AgileMap. Default paramteres.
+		ExpRatioEvaluator(AgileMap agileMap, bool onNormalizedMap, bool createExpRatioMap);
+		
+
+	
 
 		/*
-			Constructor used in multi5 project
-			Creates image extracting pixel values from expPath.
-			Creates normalizedImage and expRatioImage, and writes them on file .exp.gz
+			PUBLIC METHODS
 		*/
-		ExpRatioEvaluator(const char * expPath,bool onNormalizedMap);
 
-		/*
-			Computes and returns the output array. 
-			If the rectangle is not entirely inside the image, it returns -1 -1 -1 -1.
-		*/	
+		// Computes and returns the output array. If the rectangle is not entirely inside the image, it returns -1 -1 -1 -1.
 		double computeExpRatioValues(double l, double b);	
 		double computeExpRatioValues(int x, int y, string type);
 
-		
 		// Getting Map
 		double ** getImage();
 		double ** getExpRatioMap();
@@ -67,8 +76,18 @@ class ExpRatioEvaluator
 	private:
 
 		/*
+			PRIVATE CONSTRUCTOR: sets the parameters 
+		*/
+		ExpRatioEvaluator(bool onNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold);
+
+
+
+
+
+		/*
 			**************** ATTRIBUTES ****************
 		*/
+
 
 		// Utility class	
 		AgileMap* agileMap;
@@ -87,6 +106,9 @@ class ExpRatioEvaluator
 
 		// If true, the expratio evaluation is done on the normalizedImage 
 		bool onNormalizedMap;
+	
+		// If true, creates the expRatio map
+		bool createExpRatioMap;
 
 		// Lenght of fits data axes
 		int rows;
@@ -98,6 +120,7 @@ class ExpRatioEvaluator
 
 		// The images 	
 		double ** image;
+
 		double ** normalizedImage;
 		double ** expRatioImage;
 		double ** normalizationFactorMatrix;
@@ -112,7 +135,7 @@ class ExpRatioEvaluator
 		/*
 			**************** METHODS ****************
 		*/
-	
+		void createAndWriteImages();
 
 		// Open the exp image and extract the pixel values and store them in the double** image
 		bool convertFitsDataToMatrix();
@@ -161,7 +184,7 @@ class ExpRatioEvaluator
 		/*
 			Computes expRatioImage in which the value of each pixel is the exp-ratio value centered in the same pixel. 
 		*/
-		double ** createExpRatioPixelMap(double minThreshold, double maxThreshold);
+		double ** createExpRatioPixelMap();
 
 		
 
