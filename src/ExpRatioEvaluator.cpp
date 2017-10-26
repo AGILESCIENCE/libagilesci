@@ -11,6 +11,7 @@
 
 #include "ExpRatioEvaluator.h"
 
+/*DELEGATE CONSTRUCTOR NOT COMPATIBLE WITH GCC 4.7
 ExpRatioEvaluator::ExpRatioEvaluator(bool _isExpMapNormalized, bool _createExpNormalizedMap, bool _createExpRatioMap, double _minThreshold, double _maxThreshold, int _squareSize){
 
 	isExpMapNormalized = _isExpMapNormalized;
@@ -28,14 +29,36 @@ ExpRatioEvaluator::ExpRatioEvaluator(bool _isExpMapNormalized, bool _createExpNo
 
 
 }
+*/
 
-ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _isExpMapNormalized, bool _createExpNormalizedMap,bool _createExpRatioMap, double _minThreshold, double _maxThreshold, int _squareSize) :
-	ExpRatioEvaluator(_isExpMapNormalized, _createExpNormalizedMap,_createExpRatioMap, _minThreshold, _maxThreshold, _squareSize)
+
+ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _isExpMapNormalized, bool _createExpNormalizedMap,bool _createExpRatioMap, double _minThreshold, double _maxThreshold, double _squareSize) /*:
+	ExpRatioEvaluator(_isExpMapNormalized, _createExpNormalizedMap,_createExpRatioMap, _minThreshold, _maxThreshold, _squareSize)*/
 {	
+	isExpMapNormalized = _isExpMapNormalized;
+	
+	createExpNormalizedMap = _createExpNormalizedMap;
+
+	createExpRatioMap = _createExpRatioMap;
+	
+	minThreshold = _minThreshold;
+	
+	maxThreshold = _maxThreshold;
+
+	
+
+
+
+
 
 	expPath=_expPath;
+
 	agileMap=new AgileMap(expPath);
 	cdelt2 = agileMap->GetYbin();	
+
+	squareSize = _squareSize/cdelt2;
+
+
 	/*
 		Reading from file .exp
 	*/
@@ -53,18 +76,31 @@ ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _isExpMapNormali
 
 
 
-ExpRatioEvaluator::ExpRatioEvaluator(AgileMap _agileMap, bool _isExpMapNormalized, bool _createExpNormalizedMap, bool _createExpRatioMap, double _minThreshold, double _maxThreshold, int _squareSize) :
-	ExpRatioEvaluator(_isExpMapNormalized, _createExpNormalizedMap, _createExpRatioMap, _minThreshold, _maxThreshold, _squareSize)
+ExpRatioEvaluator::ExpRatioEvaluator(AgileMap _agileMap, bool _isExpMapNormalized, bool _createExpNormalizedMap, bool _createExpRatioMap, double _minThreshold, double _maxThreshold, double _squareSize) /*:
+	ExpRatioEvaluator(_isExpMapNormalized, _createExpNormalizedMap, _createExpRatioMap, _minThreshold, _maxThreshold, _squareSize)*/
 {
+	isExpMapNormalized = _isExpMapNormalized;
+	
+	createExpNormalizedMap = _createExpNormalizedMap;
+
+	createExpRatioMap = _createExpRatioMap;
+	
+	minThreshold = _minThreshold;
+	
+	maxThreshold = _maxThreshold;
+
+ 
+
+
 
 	/*
 		Reading from AgileMap object 
 	*/
 
 	agileMap=&_agileMap;
-
 	cdelt2 = agileMap->GetYbin();	
 
+	squareSize = _squareSize/cdelt2;
 
 	expPath = agileMap->GetFileName();
 	rows = agileMap->Rows(); 
@@ -98,18 +134,7 @@ ExpRatioEvaluator::ExpRatioEvaluator(AgileMap _agileMap, bool _isExpMapNormalize
 	
 }
 
-ExpRatioEvaluator::ExpRatioEvaluator(const char * _expPath,bool _isExpMapNormalized,bool _createExpNormalizedMap, bool _createExpRatioMap) : 
-	ExpRatioEvaluator(_expPath, _isExpMapNormalized,_createExpNormalizedMap, _createExpRatioMap, 120, 140, 10)
-		
-{
-			
-}
-ExpRatioEvaluator::ExpRatioEvaluator(AgileMap _agileMap ,bool _isExpMapNormalized, bool _createExpNormalizedMap, bool _createExpRatioMap) : 
-	ExpRatioEvaluator(_agileMap, _isExpMapNormalized, _createExpNormalizedMap, _createExpRatioMap, 120, 140, 10)
-{ 
-			
-}
- 
+
 
 
 void ExpRatioEvaluator::createAndWriteImages(){
@@ -158,7 +183,7 @@ double ExpRatioEvaluator::getMinThreshold(){
 double ExpRatioEvaluator::getMaxThreshold(){
 	return maxThreshold;
 }
-int ExpRatioEvaluator::getSquareSize(){
+double ExpRatioEvaluator::getSquareSize(){
 	return squareSize;
 }
 

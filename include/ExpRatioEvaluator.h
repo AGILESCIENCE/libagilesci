@@ -38,17 +38,13 @@ class ExpRatioEvaluator
 
 		
 		// Creates image extracting pixel values from expPath.
-		ExpRatioEvaluator(const char * expPath,bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
+		ExpRatioEvaluator(const char * expPath,bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, double squareSize);
 		
-		// Creates image extracting pixel values from expPath. Default paramteres.
-		ExpRatioEvaluator(const char * expPath, bool isExpMapNormalized,bool createExpNormalizedMap, bool createExpRatioMap);
 		 
 		// Creates image extracting pixel values from AgileMap.
-		ExpRatioEvaluator(AgileMap agileMap, bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
+		ExpRatioEvaluator(AgileMap agileMap, bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, double squareSize);
 
-		//  Creates image extracting pixel values from AgileMap. Default paramteres.
-		ExpRatioEvaluator(AgileMap agileMap, bool isExpMapNormalized, bool createExpNormalizedMap,bool createExpRatioMap);
-		
+		 
 
 	
 
@@ -71,14 +67,14 @@ class ExpRatioEvaluator
 		// Get ExpRatio Parameters
 		double getMinThreshold();
 		double getMaxThreshold();
-		int getSquareSize();
+		double getSquareSize();
 
 	private:
 
 		/*
 			PRIVATE CONSTRUCTOR: sets the parameters 
 		*/
-		ExpRatioEvaluator(bool isExpMapAlreadyNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
+		//ExpRatioEvaluator(bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
 
 
 
@@ -102,7 +98,7 @@ class ExpRatioEvaluator
 		double maxThreshold;
 	
 		// The size of the rectangle (x-size , x+size, y-size, y+size)
-		float squareSize;
+		double squareSize;
 
 		// If false, the exp map given in input must be normalized
 		bool isExpMapNormalized;
