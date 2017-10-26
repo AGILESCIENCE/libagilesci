@@ -10,7 +10,9 @@
 
 #include "BinEvaluator.h"
 
-BinEvaluator::BinEvaluator(const char *_fitsFilePath, double _l, double _b, double _radius) {
+BinEvaluator::BinEvaluator(const char *_fitsFilePath,double ** _image, double _l, double _b, double _radius)
+{	
+	image = _image;
 	fitsFilePath=_fitsFilePath;
 	l=_l;
 	b=_b;
@@ -22,12 +24,34 @@ BinEvaluator::BinEvaluator(const char *_fitsFilePath, double _l, double _b, doub
 	x=0;
 	y=0;
 	agileMapUtils->GetRowCol(l,b,&x,&y);
- 
+	rows = agileMapUtils->Rows();
+	cols = agileMapUtils->Cols();
+
 }
 
-bool BinEvaluator::convertFitsDataToMatrix() {
+BinEvaluator::BinEvaluator(const char * _fitsFilePath, double _l, double _b, double _radius){
+	fitsFilePath=_fitsFilePath;	
+	l=_l;
+	b=_b;
+	radius=_radius;
+	binSum=0;
+	agileMapUtils = new AgileMap(_fitsFilePath);
+	tmin = agileMapUtils->GetTstart();
+	tmax = agileMapUtils->GetTstop();
+	x=0;
+	y=0;
+	agileMapUtils->GetRowCol(l,b,&x,&y);
+	rows = agileMapUtils->Rows();
+	cols = agileMapUtils->Cols();
+	if(! convertFitsDataToMatrix() )
+	{
+		fprintf( stderr, "expT0 convertFitsDataToMatrix() Error reading fits file\n");
+		exit (EXIT_FAILURE);
+	}
 	
-//CFITSIO
+}
+
+bool BinEvaluator::convertFitsDataToMatrix(){
 	fitsfile *fptr;   /* FITS file pointer, defined in fitsio.h */
 	int status = 0;   /* CFITSIO status value MUST be initialized to zero! */
 	int bitpix, naxis, ii, anynul;
@@ -47,8 +71,6 @@ bool BinEvaluator::convertFitsDataToMatrix() {
 			}			
 			else
 			{	 
-				rows = (int)naxes[0]; 
-				cols = (int)naxes[1];
 				image = new double*[rows];
 				for (int i = 0; i < rows; ++i){
 					image[i] = new double[cols];
@@ -100,33 +122,34 @@ bool BinEvaluator::convertFitsDataToMatrix() {
 		return false;	
 	}	
 
-	return true;	
+return true; 
 }
 
-
-
-int BinEvaluator::sumBin() {
+int BinEvaluator::sumBin() 
+{
 	
-	
-	int status,i,j;
+
 	double greyLevel;
+	binSum = 0;
 
-	
 	if(isRadiusInside()) { 
 		for(int i = 0; i < rows; i++){
 			for(int j=0; j < cols; j++){
 					greyLevel = image[i][j];
-					if(greyLevel>0 && agileMapUtils->SrcDist(i,j,l,b)<=radius){
+					if(greyLevel>0 && agileMapUtils->SrcDist(i,j,l,b) < radius){
 						binSum+=greyLevel;
 
 				}
 			}
 		}
+
 	}else{
 		return -1;
 	}
 	return 0;
 }
+
+
 
 bool BinEvaluator::isRadiusInside() {
 	
@@ -139,10 +162,11 @@ bool BinEvaluator::isRadiusInside() {
 	distDx =  sqrt(pow(double(cols-1-x),2));
 	distUp =  sqrt(pow(double(0-y),2));
 	distDown = sqrt(pow(double(rows-1-y),2));
-	if(distSx < radius || distDx < radius || distUp < radius || distDown < radius)
+	if(distSx < radius || distDx < radius || distUp < radius || distDown < radius) 
 		return false;
 	else
 		return true;
+	
 
 /*	
 	for(int i = 0; i < rows; i++){

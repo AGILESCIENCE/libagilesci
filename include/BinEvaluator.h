@@ -14,13 +14,18 @@
 
 #include <AgileMap.h>
 #include <fitsio.h>
+#include <stdio.h>
+#include <iostream>
 
  
 using namespace std;
 
 class BinEvaluator {
 	public:
+ 
+		BinEvaluator(const char * fitsFilePath, double ** image, double l, double b, double radius);
 		BinEvaluator(const char * fitsFilePath, double l, double b, double radius);
+
 		int sumBin();
 		bool isRadiusInside();
 
@@ -32,12 +37,15 @@ class BinEvaluator {
 		double tmax;
 		AgileMap * agileMapUtils;
 
-		// We convert fits data into a matrix of double
+ 
 
-		bool convertFitsDataToMatrix(); 		
+ 		bool convertFitsDataToMatrix(); 
 		int rows;
 		int cols;
 		double ** image;
+ 
+
+	 
 
 		
 		
