@@ -1,3 +1,8 @@
+2016-04-19 Nicolo Parmiggiani <parmiggiani@iasfbo.inaf.it>
+TAG v1.5.0
+ExpRatioEvaluator's constructor
+
+
 2016-04-19 Andrea Zoli <bulgarelli@iasfbo.inaf.it>
 TAG v1.3.0
 SphDistDeg function reworked using another more compact math solution (MathUtils.cpp).
