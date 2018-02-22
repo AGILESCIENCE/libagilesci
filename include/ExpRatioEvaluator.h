@@ -9,9 +9,9 @@
  * https://github.com/Leofaber/ExpRatioEvaluator
 */
 
-
+/*
 #include <iostream>
-#include <sstream>
+
 #include <stdlib.h> 
 #include <stdio.h>
 #include <iomanip>
@@ -19,10 +19,13 @@
 #include <cmath>
 #include <string>
 #include <algorithm>
-
+*/
+#include <string>
+#include <sstream>
 #include "AgileMap.h"
 #include "FitsUtils.h"
 #include "AlikeData5.h"
+
 
 using namespace std;
 
@@ -36,7 +39,9 @@ class ExpRatioEvaluator
 			If createExpRatioMap == true -> creates createExpRatioMap and writes it on file .exp.gz
 		*/
 
-		
+ 
+
+
 		// Creates image extracting pixel values from expPath.
 		ExpRatioEvaluator(const char * expPath,bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, double squareSize);
 		
@@ -45,8 +50,9 @@ class ExpRatioEvaluator
 		ExpRatioEvaluator(AgileMap agileMap, bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, double squareSize);
 
 		 
+		
+		void clearHeap();
 
-	
 
 		/*
 			PUBLIC METHODS
@@ -56,7 +62,7 @@ class ExpRatioEvaluator
 		double computeExpRatioValues(double l, double b);	
 		double computeExpRatioValues(int x, int y, string type);
 
-		// Getting Map
+		// Getters
 		double ** getImage();
 		double ** getExpRatioMap();
 		double ** getNormalizedMap();
@@ -72,21 +78,12 @@ class ExpRatioEvaluator
 	private:
 
 		/*
-			PRIVATE CONSTRUCTOR: sets the parameters 
-		*/
-		//ExpRatioEvaluator(bool isExpMapNormalized, bool createExpNormalizedMap, bool createExpRatioMap, double minThreshold, double maxThreshold, int squareSize);
-
-
-
-
-
-		/*
 			**************** ATTRIBUTES ****************
 		*/
 
 
 		// Utility class	
-		AgileMap* agileMap;
+		AgileMap agileMap;
 
 		const char* expPath;
 	
