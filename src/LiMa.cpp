@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017
- *     Leonardo Baroncelli, Giancarlo Zollino
+ *     Leonardo Baroncelli, Giancarlo Zollino, Andrea Bulgarelli
  *
  * Any information contained in this software
  * is property of the AGILE TEAM and is strictly

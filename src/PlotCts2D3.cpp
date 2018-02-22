@@ -106,8 +106,8 @@ void convolve(float* kernel, float* src, float* dest,
 			{
 				if (nn>=0 && nn<height)
 				{
-					register int nd = nn*width;
-					register int qd = qq*rr;
+					int nd = nn*width;
+					int qd = qq*rr;
 					for (int mm=ii-r, pp=0; mm<=ii+r; mm++, pp++)
 					{
 						if (mm>=0 && mm<width)
