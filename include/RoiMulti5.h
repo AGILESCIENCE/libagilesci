@@ -529,6 +529,20 @@ private:	/// Internal operations
 	void SetSrcIndex(int source) { SetSrcIndex(source, m_sources[source].GetIndex()); }
 	void FixSrcIndex(int source, double index) { m_model.FixParameter(SrcIdxPar(source), index); }
 	void FixSrcIndex(int source) { FixSrcIndex(source, m_sources[source].GetIndex()); }
+	
+	/// Par2 parameter
+	void ReleaseSrcPar2(int source) { m_model.SetParLimits(SrcPar2Par(source), m_par2LimitMin, m_par2LimitMax); }
+	void SetSrcPar2(int source, double par2) { m_model.SetParameter(SrcPar2Par(source), par2); }
+	void SetSrcPar2(int source) { SetSrcPar2(source, m_sources[source].GetPar2()); }
+	void FixSrcPar2(int source, double par2) { m_model.FixParameter(SrcPar2Par(source), par2); }
+	void FixSrcPar2(int source) { FixSrcPar2(source, m_sources[source].GetPar2()); }
+	
+	/// Par3 parameter
+	void ReleaseSrcPar3(int source) { m_model.SetParLimits(SrcPar3Par(source), m_par3LimitMin, m_par3LimitMax); }
+	void SetSrcPar3(int source, double par3) { m_model.SetParameter(SrcPar3Par(source), par3); }
+	void SetSrcPar3(int source) { SetSrcPar3(source, m_sources[source].GetPar3()); }
+	void FixSrcPar3(int source, double par3) { m_model.FixParameter(SrcPar3Par(source), par3); }
+	void FixSrcPar3(int source) { FixSrcPar3(source, m_sources[source].GetPar3()); }
 
 	/// Reading the Model and setting up diff and source components
 	double PeekSrcFluxPar(int source) const { return m_model.GetParameter(SrcFluxPar(source))*m_fluxScaleFactorMulInv; }

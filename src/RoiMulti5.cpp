@@ -1160,6 +1160,8 @@ m_model.FixParameter(SrcFluxPar(source), 0);
 m_model.FixParameter(SrcLPar(source), m_model.GetParameter(SrcLPar(source)));
 m_model.FixParameter(SrcBPar(source), m_model.GetParameter(SrcBPar(source)));
 m_model.FixParameter(SrcIdxPar(source), m_model.GetParameter(SrcIdxPar(source)));
+m_model.FixParameter(SrcPar2Par(source), m_model.GetParameter(SrcPar2Par(source)));
+m_model.FixParameter(SrcPar3Par(source), m_model.GetParameter(SrcPar3Par(source)));
 } 
 
 
@@ -1169,6 +1171,8 @@ SetSrcFlux(source);
 m_model.SetParameter(SrcLPar(source), m_sources[source].GetSrcL());
 m_model.SetParameter(SrcBPar(source), m_sources[source].GetSrcB());
 m_model.SetParameter(SrcIdxPar(source), m_sources[source].GetIndex());
+m_model.SetParameter(SrcPar2Par(source), m_sources[source].GetPar2());
+m_model.SetParameter(SrcPar3Par(source), m_sources[source].GetPar3());
 }
 
 
@@ -1396,29 +1400,28 @@ for (int i=0; i<m_srcCount; ++i) {
 	sprintf(parname, "%s_2", m_sources[i].GetLabel().c_str());
 	m_model.SetParName(SrcPar2Par(i), parname);
 	cout << SrcPar2Par(i)+1 << " - " << parname << ": " << m_sources[i].GetPar2();
-	/*
-	if (m_sources[i].GetFixflag() & IndexFree) {
-		ReleaseSrcIndex(i);
+	
+	if (m_sources[i].GetFixflag() & Par2Free) {
+		ReleaseSrcPar2(i);
 		cout << " free" << endl;
 	}
 	else {
-		FixSrcIndex(i);
+		FixSrcPar2(i);
 		cout << " fixed" << endl;
-	}*/
-	cout << endl;
+	}
 	
 	sprintf(parname, "%s_3", m_sources[i].GetLabel().c_str());
 	m_model.SetParName(SrcPar3Par(i), parname);
 	cout << SrcPar3Par(i)+1 << " - " << parname << ": " << m_sources[i].GetPar3();
-	/*
-	 if (m_sources[i].GetFixflag() & IndexFree) {
-	 ReleaseSrcIndex(i);
-	 cout << " free" << endl;
-	 }
-	 else {
-	 FixSrcIndex(i);
-	 cout << " fixed" << endl;
-	 }*/
+	
+	if (m_sources[i].GetFixflag() & Par3Free) {
+			ReleaseSrcPar3(i);
+			cout << " free" << endl;
+	}
+	else {
+		FixSrcPar3(i);
+		cout << " fixed" << endl;
+	}
 	
 	}
 
