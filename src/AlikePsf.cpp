@@ -1,11 +1,11 @@
 
 
-/** zzz Debug
+ //zzz Debug
 #include <iostream>
 using std::cout;
 using std::cerr;
 using std::endl;
-*/
+
 
 #include "wcstrig.h"
 
@@ -240,7 +240,7 @@ if (inside) {
 /// Class AlikeNorm
 ///
 
-
+//AB
 void AlikeNorm::UpdateNorm(double eMin, double eMax, double index)
 {
 index = 1.0-index;
@@ -300,12 +300,16 @@ void AlikePsfSource::Set(
 	double theta,
 	double srcL,
 	double srcB,
-	double index)
+	double index,
+	int typefun,
+	double par2,
+	double par3)
 {
 m_psfTab = psfTab;
 AgileMap::operator=(map);
 SetEnergyRange(eInf, eSup);
 m_theta = theta;
+m_typefun = typefun;
 
 int rhoCount = m_psfTab->RhoCount();
 int psfeCount = m_psfTab->PsfeCount();
@@ -323,10 +327,12 @@ m_specwt = 0.0;
 m_psfArr = 0.0;
 
 /// Calcolo della dispersione energetica totale per ogni canale di energia
-for (int etrue=0; etrue<psfeCount; etrue++)
-	for (int eobs=lowetrue;  eobs<=highetrue; eobs++)
-		m_edpArr[etrue] += m_psfTab->EdpVal(psfEnergies[etrue], psfEnergies[eobs], m_theta, 0.0);
 
+	for (int etrue=0; etrue<psfeCount; etrue++)
+		for (int eobs=lowetrue;  eobs<=highetrue; eobs++)
+			m_edpArr[etrue] += m_psfTab->EdpVal(psfEnergies[etrue], psfEnergies[eobs], m_theta, 0.0);
+
+	
 /** zzz Debug
 cout << "rhoCount: " << rhoCount << endl;
 cout << "psfeCount: " << psfeCount << endl;
@@ -342,35 +348,46 @@ cout << "srcL: " << srcL << endl;
 cout << "srcB: " << srcB << endl;
 */
 
-SetSrcData(srcL, srcB, index, true);
+SetSrcData(srcL, srcB, index, par2, par3, true);
 }
 
 
 
 
-AlikePsfSource::Changes AlikePsfSource::SetSrcData(double srcL, double srcB, double index, bool force)
+AlikePsfSource::Changes AlikePsfSource::SetSrcData(double srcL, double srcB, double index, double par2, double par3, bool force)
 {
+//check parameters
 if (index<0)
 	index = -index;
-if (!force && index==m_index && srcL==m_srcL && srcB==m_srcB)
+	
+if (!force && index==m_index && srcL==m_srcL && srcB==m_srcB && par2 == m_par2 && par3 == m_par3)
 	return NoChanges;
 
 Changes changes = NoChanges;
-if (index!=m_index || force) {
+if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 	changes = IndexChanged;
 
 	m_index = index;
-	UpdateNorm(GetEmin(), GetEmax(), m_index);
+	m_par2 = par2;
+	m_par3 = par3;
 	
 	int rhoCount = m_psfTab->RhoCount();
 	int psfeCount = m_psfTab->PsfeCount();
 
 	/// Calcolo del peso di ogni energia in base all'indice spettrale
 	const VecF& psfEnergies = m_psfTab->PsfEnerges();
-	for (int i=0; i<psfeCount-1; ++i)
-		m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
-	m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
-
+	if(m_typefun == 0) {
+		UpdateNorm(GetEmin(), GetEmax(), m_index);
+		for (int i=0; i<psfeCount-1; ++i)
+			m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
+		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+	}
+	if(m_typefun == 1) {
+		//HERE TO BE IMPLEMENTED
+	}
+	if(m_typefun == 2) {
+		//HERE TO BE IMPLEMENTED
+	}
 	/// Calcolo della psf da normalizzare
 	m_psfArr = 0.0;
 	for (int etrue=0; etrue<psfeCount; ++etrue) {
@@ -419,15 +436,7 @@ if (changes!=NoChanges) {
     double deltaRhoMultInv = 1.0 / deltaRho;
 	for (int c=0; c<count; ++c) {
 		int bin = circle[c];
-/*
-		if (bin>28552) {
-			cerr << "bin=" << bin;
-			cerr << ", i(bin)=" << i(bin);
-			cerr << ", j(bin)=" << j(bin);
-			cerr << ", l(bin)=" << l(bin);
-			cerr << ", b(bin)=" << b(bin);
-			}
-*/
+
 		double srcdist = SphDistDeg(m_srcL, m_srcB, l(bin), b(bin));
 		int psfind = srcdist * deltaRhoMultInv;
 		double resid = (srcdist - rhoArr[psfind]) * deltaRhoMultInv;

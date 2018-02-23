@@ -31,6 +31,8 @@ const FixFlag AllFixed  = 0;
 const FixFlag FluxFree  = 1;
 const FixFlag PosFree   = 2;
 const FixFlag IndexFree = 4;
+const FixFlag Par2Free =  8;
+const FixFlag Par3Free = 16;
 /// typedef enum { AllFixed=0, FluxFree = 1, PosFree = 2, IndexFree = 4 } FixFlag;
 
 
@@ -80,6 +82,11 @@ struct SourceData
 	double srcL;
 	double srcB;
 	double index;
+	//0 - PL (k E^-{\index})
+	//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
+	double typefun; //0 PowerLaw - 1 PLExpCutoff - 2 LogParabola
+	double par2;
+	double par3;
 
 /// Output data
 	double TS;

@@ -140,14 +140,14 @@ private:	/// Data
 class AlikePsfSource: public AgileMap, public AlikeNorm
 {
 public:	/// Construction
-	AlikePsfSource(): AgileMap(), AlikeNorm(), m_psfTab(0), m_theta(0), m_srcL(0), m_srcB(0), m_index(2.1), m_psfArr(0), m_edpArr(0), m_specwt(0) {}
+	AlikePsfSource(): AgileMap(), AlikeNorm(), m_psfTab(0), m_theta(0), m_srcL(0), m_srcB(0), m_index(2.1), m_typefun(0), m_par2(3000.0), m_par3(2.0), m_psfArr(0), m_edpArr(0), m_specwt(0) {}
 	~AlikePsfSource() {}
 	void Set(
 		const AlikePsfTables* psfTab,
 		const AgileMap &inmap,
 		double eInf, double eSup,
 		double theta,
-		double srcL, double srcB, double index);
+		double srcL, double srcB, double index, int typefun, double par2, double par3);
 
 public:	/// Getting info
 	const AlikePsfTables* PsfTab() const { return m_psfTab; }
@@ -155,6 +155,9 @@ public:	/// Getting info
 	double GetSrcL() const { return m_srcL; }
 	double GetSrcB() const { return m_srcB; }
 	double GetIndex() const { return m_index; }
+	double GetTypeFun() const { return m_typefun; }
+	double GetPar2() const { return m_par2; }
+	double GetPar3() const { return m_par3; }
 
 	double DegDistance(double l, double b) const { return SphDistDeg(m_srcL, m_srcB, l, b); }
 
@@ -163,7 +166,7 @@ public:	/// Getting info
 
 public:	/// Operations
 	enum Changes { NoChanges=0, IndexChanged=1, PositionChanged=2, IndexPositionChanged=3 };
-	Changes SetSrcData(double srcL, double srcB, double index, bool force=false);
+	Changes SetSrcData(double srcL, double srcB, double index, double par2, double par3, bool force=false);
 
 private:	/// Data
 	const AlikePsfTables* m_psfTab;
@@ -172,6 +175,9 @@ private:	/// Data
 	double m_srcL;
 	double m_srcB;
 	double m_index;
+	int m_typefun;
+	double m_par2;
+	double m_par3;
 
 	VecD   m_psfArr;
 

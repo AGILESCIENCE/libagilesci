@@ -12,6 +12,8 @@
 #ifndef _ROI_MULTI_
 #define _ROI_MULTI_
 
+#define PARNUM 6
+
 /// #include <iomanip>
 #include <fstream>
 
@@ -135,10 +137,11 @@ public: /// Construction
 		const AgileMap &map,
 		double eInf, double eSup, double theta,
 		double srcL, double srcB, double index,
+		int typefun, double par2, double par3,
 		Double_t flux,
 		Double_t exposure)
 		{
-		AlikePsfSource::Set(psfTab, map, eInf, eSup, theta, srcL, srcB, index);
+		AlikePsfSource::Set(psfTab, map, eInf, eSup, theta, srcL, srcB, index, typefun, par2, par3);
 		m_flux = flux;
 		m_exposure = exposure;
 		}
@@ -465,10 +468,12 @@ private:	/// Internal operations
 	int ExtCoeffPar(int index) const { return m_diffParCount+index; }
 
 	/// src in [0..m_srcCount-1]
-	int SrcFluxPar(int src) const { return m_sourceParOffset + src*4; }
-	int SrcIdxPar(int src) const  { return m_sourceParOffset + src*4 + 1; }
-	int SrcLPar(int src) const    { return m_sourceParOffset + src*4 + 2; }
-	int SrcBPar(int src) const    { return m_sourceParOffset + src*4 + 3; }
+	int SrcFluxPar(int src) const { return m_sourceParOffset + src*6; }
+	int SrcIdxPar(int src) const  { return m_sourceParOffset + src*6 + 1; }
+	int SrcLPar(int src) const    { return m_sourceParOffset + src*6 + 2; }
+	int SrcBPar(int src) const    { return m_sourceParOffset + src*6 + 3; }
+	int SrcPar2Par(int src) const  { return m_sourceParOffset + src*6 + 4; }
+	int SrcPar3Par(int src) const  { return m_sourceParOffset + src*6 + 5; }
 
 	/// Fitting
 	Double_t FitFunction(Double_t *x, Double_t *par);
@@ -646,6 +651,10 @@ private:	/// Data
     double m_fluxLimitMax;
     double m_indexLimitMin;
     double m_indexLimitMax;
+	double m_par2LimitMin;
+	double m_par2LimitMax;
+	double m_par3LimitMin;
+	double m_par3LimitMax;
 
 private:		/// Forbidden functions
 	RoiMulti(const RoiMulti& another);					/// Singleton class, copy constructor not allowed

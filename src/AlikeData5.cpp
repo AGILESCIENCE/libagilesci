@@ -197,13 +197,14 @@ for (int i=0; i<count; ++i)
 // Return false otherwise
 static bool AppendDefault(char* buff, stringstream& str)
 {
-while (*buff && *buff<=32)
-	++buff;
-if (!*buff)
-	return false;
-strcat(buff, " 0.0");
-str.str(buff);
-return true;
+	while (*buff && *buff<=32) {
+		++buff;
+	}
+	if (!*buff)
+		return false;
+	strcat(buff, " 0.0 0 0 0");
+	str.str(buff);
+	return true;
 }
 
 extern SourceDataArray ReadSourceFile(const char* srcfilename)
@@ -219,10 +220,11 @@ while (!infile.eof()) {
 	infile.getline(buffer, 1024);
 	if (buffer[0]!='!') {
 		stringstream str(ios_base::in);
+		cout << "## " << buffer << endl;
 		if (AppendDefault(buffer, str)) {
 			SourceData srcData;
 			str >> srcData.flux >> srcData.srcL >> srcData.srcB >> srcData.index
-				 >> srcData.fixflag >> srcData.minTS >> srcData.label >> srcData.loclimit;
+			>> srcData.fixflag >> srcData.minTS >> srcData.label >> srcData.loclimit >> srcData.typefun >> srcData.par2 >> srcData.par3;
 			srcData.minTS = srcData.minTS * srcData.minTS;
 			srcArr.Append(srcData);
 			}

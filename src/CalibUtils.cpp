@@ -264,62 +264,6 @@ if (!error)
 return error;
 }
 
-/*
-static float WeightedAvg(const VecD& eneArr, const float* aeffArr, double index)
-{
-if (index < 0)
-	index = -index;
-double result = aeffArr[0];
-if (eneArr.Size()>1) {
-	double specwt = 1.0;
-	double coeff = 0;
-	for (int i=0; i<eneArr.Size(); i++) {
-		if (i+1==eneArr.Size())
-			specwt *= pow(eneArr[i-1] / eneArr[i], 1.0-index);
-		else
-			specwt = pow(eneArr[i], 1.0-index) - pow(eneArr[i+1], 1.0-index) ;
-		if (i==0)
-			result = specwt * aeffArr[i];
-		else
-			result += specwt * aeffArr[i];
-		coeff += specwt;
-		}
-	result /= coeff;
-	}
-return result;
-}
-
-int AeffGridAverage::MakeGridAverage()
-{
-int resultMask = 0;
-
-int iMin = m_energy.GeomIndex(m_emin);
-if (m_emin!=m_energy[iMin])
-	resultMask = resultMask | 1;	/// Using different energy lower bound
-
-int iMax = m_energy.Size()-1;
-if (m_emax<=m_energy[iMax]) {
-	iMax = m_energy.GeomIndex(m_emax);
-	if (m_emax!=m_energy[iMax])
-		resultMask = resultMask | 2;	/// Using different energy upper bound
-	if (iMax>iMin)
-		--iMax;
-	}
-else
-	resultMask = resultMask | 4;	/// Upper bound treated as infinity
-
-VecD evect(iMax-iMin+1);
-for (int l=iMin ; l <= iMax; ++l)
-	evect[l-iMin] = m_energy[l];
-
-for (int i=0; i<m_avgValues.Dim(0); i++)
-	for (int j=0; j<m_avgValues.Dim(1); j++)
-		m_avgValues(i,j) = WeightedAvg(evect, &m_aeffgrid(i,j,iMin), m_index);
-return resultMask;
-}
-*/
-
-
 
 int AeffGridAverage::MakeGridAverage()
 {
