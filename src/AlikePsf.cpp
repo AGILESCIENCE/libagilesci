@@ -245,28 +245,16 @@ if (inside) {
 /// Class AlikeNorm
 ///
 
-Double_t powerlaw(Double_t *x, Double_t *par)
-{
-	//Prefactor = $N_0$ par[0]
-	//Index = $\gamma$ par[1]
-	//Scale = $E_0$ par[2]
-	//dN / dE = N_0 * ( E / E_0 ) ^ \gamma
-	Double_t gamma = -par[0]; //ATTENZIONE!!!!!!!!!
-	Double_t f = pow((x[0]), gamma);
-	return f;
-}
-
 
 void AlikeNorm::UpdateNorm(double eMin, double eMax, double index)
 {
 	
 	//0 - PL -> (k E^-{\index})
 	//Analytical expression
-	/*
 	index = 1.0-index;
 	m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
-	*/
-	
+
+	/*
 	// cout << "NUMINT PL" << endl;
 	TF1 f("PowerLaw", "x^(-[0])", m_eInf, m_eSup);
 	f.SetParameter(0, index);
@@ -275,15 +263,13 @@ void AlikeNorm::UpdateNorm(double eMin, double eMax, double index)
 	ig.SetFunction(wf1);
 	ig.SetRelTolerance(0.001);
 	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
-	
+	*/
 	
 }
 
 void AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2)
 {
 	//1 - PLExpCutoff -> k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
-	//index = 1.0-index;
-	//m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
 	TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
@@ -296,8 +282,15 @@ void AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, do
 
 void AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, double m_par2, double m_par3)
 {
-	//index = 1.0-index;
-	//m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
+	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	f.SetParameter(0, index);
+	f.SetParameter(1, m_par2);
+	f.SetParameter(2, m_par3);
+	ROOT::Math::WrappedTF1 wf1(f);
+	ROOT::Math::GaussIntegrator ig;
+	ig.SetFunction(wf1);
+	ig.SetRelTolerance(0.001);
+	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
 }
 
 
@@ -433,8 +426,8 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		//0 - PL (k E^-{\index})
 		UpdateNorm(GetEmin(), GetEmax(), m_index);
 		for (int i=0; i<psfeCount-1; ++i) {
-			//m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
-			
+			m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
+			/*
 			TF1 f("PowerLaw", "x^(-[0])", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			ROOT::Math::WrappedTF1 wf1(f);
@@ -448,6 +441,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			ig.SetRelTolerance(0.001);
 			ig.SetNumberPoints(80);
 			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			*/
 			
 		}
 		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
@@ -457,9 +451,8 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
 		UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
 		for (int i=0; i<psfeCount-1; ++i) {
-			//m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
 			TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", GetEmin(), GetEmax());
-			f.SetParameter(0, index);
+			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
 			ROOT::Math::WrappedTF1 wf1(f);
 			ROOT::Math::GaussIntegrator ig;
@@ -472,7 +465,17 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 	if(m_typefun == 2) {
 		//HERE TO BE IMPLEMENTED
 		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
-		//
+		for (int i=0; i<psfeCount-1; ++i) {
+			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
+			f.SetParameter(0, m_index);
+			f.SetParameter(1, m_par2);
+			f.SetParameter(2, m_par3);
+			ROOT::Math::WrappedTF1 wf1(f);
+			ROOT::Math::GaussIntegrator ig;
+			ig.SetFunction(wf1);
+			ig.SetRelTolerance(0.001);
+			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+		}
 	}
 	/// Calcolo della psf da normalizzare
 	m_psfArr = 0.0;

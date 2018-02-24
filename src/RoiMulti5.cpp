@@ -11,6 +11,7 @@
 //
 
 #include <TGraph.h>
+#include "Math/MinimizerOptions.h"
 #include <TMatrixDEigen.h>
 #include <TRandom3.h>
 #ifndef ROOT_TROOT
@@ -856,6 +857,12 @@ else if (chatter!=1) {
 	}
 
 /// m_countsHist.SetDirectory(0);
+	/*
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Migrad");
+	ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+	ROOT::Math::MinimizerOptions opt;
+	opt.Print();
+	 */
 
 SetSources(srcDataArr, ranal, ulcl, loccl);
 InitParams();
@@ -1452,7 +1459,7 @@ double par2 = m_model.GetParameter(SrcPar2Par(source));
 double par3 = m_model.GetParameter(SrcPar3Par(source));
 for (int cts=0; cts<m_mapCount; ++cts) {
 	m_sources[m_srcCount*cts+source].SetFlux(flux>0?flux:0);
-	m_sources[m_srcCount*cts+source].SetSrcData(l, b, idx>0?idx:0, par2>0?par2:0, par3>0?par2:0);
+	m_sources[m_srcCount*cts+source].SetSrcData(l, b, idx>0?idx:0, par2>0?par2:0, par3>0?par3:0);
 	}
 }
 
@@ -1558,21 +1565,33 @@ for (int cts=0; cts<m_mapCount; ++cts) {
 
 void RoiMulti::FitIndex(int source)
 {
-ReleaseSrcIndex(source);
-SetSrcPars(source);
-cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Finding best index" << endl;
-if (gROOT->GetVersionInt() < 53000) {
-	Fit("LLONEM", source, false, 1);
-} else {
-	Fit("LONEM", source, false, 1);
-}
-TVirtualFitter* fitter = TVirtualFitter::GetFitter();
-Double_t index_plus, index_minus, index_parab, globcc;
-fitter->GetErrors(SrcIdxPar(source), index_plus, index_minus, index_parab, globcc);
-for (int cts=0; cts<m_mapCount; ++cts)
-	m_sources[m_srcCount*cts+source].SetIndexerr(index_parab);
-GetSrcPars(source);
-FixSrcIndex(source);
+	if(m_sources[source].GetFixflag() & IndexFree)
+		ReleaseSrcIndex(source);
+	if(m_sources[source].GetFixflag() & Par2Free)
+		ReleaseSrcPar2(source);
+	if(m_sources[source].GetFixflag() & Par3Free)
+		ReleaseSrcPar3(source);
+	
+	SetSrcPars(source);
+	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Finding best indexes" << endl;
+	if (gROOT->GetVersionInt() < 53000) {
+		Fit("LLONEM", source, false, 1);
+	} else {
+		Fit("LONEM", source, false, 1);
+	}
+	TVirtualFitter* fitter = TVirtualFitter::GetFitter();
+	Double_t index_plus, index_minus, index_parab, globcc;
+	fitter->GetErrors(SrcIdxPar(source), index_plus, index_minus, index_parab, globcc);
+	for (int cts=0; cts<m_mapCount; ++cts)
+		m_sources[m_srcCount*cts+source].SetIndexerr(index_parab);
+	GetSrcPars(source);
+	
+	if(m_sources[source].GetFixflag() & IndexFree)
+		FixSrcIndex(source);
+	if(m_sources[source].GetFixflag() & Par2Free)
+		FixSrcPar2(source);
+	if(m_sources[source].GetFixflag() & Par3Free)
+		FixSrcPar3(source);
 }
 
 
@@ -1874,7 +1893,9 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	cout << "S3: Source " << source+1 << ": " << m_sources[source].GetLabel();
 	SetSrcPars(source);
 	ReleaseSrcFlux(source);
+	cout << ": Flux free";
 	int fitFlags = m_sources[source].GetFixflag();
+	/*
 	if ((fitFlags & PosFree) && (fitFlags & IndexFree)) {
 		ReleaseSrcIndex(source);
 		ReleaseSrcPos(source);
@@ -1890,6 +1911,24 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 		}
 	else
 		cout << ": Flux free" << endl;
+	*/
+	if (fitFlags & PosFree) {
+		ReleaseSrcPos(source);
+		cout << ", Position free";
+	}
+	if (fitFlags & IndexFree) {
+		ReleaseSrcIndex(source);
+		cout << ", Index(par1) free";
+	}
+	if (fitFlags & Par2Free) {
+		ReleaseSrcPar2(source);
+		cout << ", Par2 free";
+	}
+	if (fitFlags & Par3Free) {
+		ReleaseSrcPar3(source);
+		cout << ", Par3 free";
+	}
+	cout << endl;
 	double oldL = m_sources[source].GetSrcL();
 	double oldB = m_sources[source].GetSrcB();
 	double newL = oldL;
@@ -1910,8 +1949,8 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 			Move(newL, newB);
 			oldL = newL;
 			oldB = newB;
-			}
-		} while (++loopcount<1000 && !centergood);
+		}
+	} while (++loopcount<1000 && !centergood);
 	if (loopcount>1000)
 		cout << "Location search failed to converge after " << loopcount << " iterations" << endl;
 	Int_t result = GetCovarStat();
@@ -1919,13 +1958,18 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	if (amin2<amin1) {
 		for (int i=0; i<=source; ++i)
 			GetSrcPars(i);
-		cout << "S4: Source " << source+1 << ": " << m_sources[source].GetLabel() << " best position found in (l,b) = (";
+		if (fitFlags & PosFree)
+			cout << "S4: Source " << source+1 << ": " << m_sources[source].GetLabel() << " best position found in (l,b) = (";
+		else
+			cout << "S4: Source " << source+1 << ": " << m_sources[source].GetLabel() << " position fixed in (l,b) = (";
 		cout << m_sources[source].GetSrcL() << "," << m_sources[source].GetSrcB() << ")" << endl;
-		}
+	}
 	for (int i=0; i<=source; ++i) {
 		FixSrcPos(i);
 		FixSrcIndex(i);
-		}
+		FixSrcPar2(i);
+		FixSrcPar3(i);
+	}
 	GetDiffPars();
 
 	cout << "S5: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
@@ -1950,17 +1994,19 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	*/
 
 	}
-if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || m_sources[source].GetFlux()<0) {
-	Nullify(source);
-	for (int i=0; i<=source; ++i)
-		GetSrcPars(i);
-	m_sources[source].SetFixflag(AllFixed);
-	}
-else {
-	ReleaseSrcFlux(source);
-	SetSrcFlux(source);
-	FixSrcPos(source);
-	FixSrcIndex(source);
+	if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || m_sources[source].GetFlux()<0) {
+		Nullify(source);
+		for (int i=0; i<=source; ++i)
+			GetSrcPars(i);
+			m_sources[source].SetFixflag(AllFixed);
+		}
+	else {
+		ReleaseSrcFlux(source);
+		SetSrcFlux(source);
+		FixSrcPos(source);
+		FixSrcIndex(source);
+		FixSrcPar2(source);
+		FixSrcPar3(source);
 	}
 }
 
@@ -2135,7 +2181,7 @@ for (int source=0; source<SrcCount(); ++source) {
         m_sources[source].SetCts(3, m_cts);
 
         ResetFitStatus();
-		if (m_sources[source].GetFixflag() & IndexFree) {
+		if (m_sources[source].GetFixflag() & (IndexFree|Par2Free|Par3Free)) {
 			FitIndex(source);
             m_sources[source].SetStatus(5, m_status);
             m_sources[source].SetCts(5, m_cts);
@@ -2529,7 +2575,7 @@ for (int source=0; source<SrcCount(); ++source) {
 		Move(circL, circB);
 		cout << "##AB: FixDistantSources" << endl;
 		FixDistantSources(circL, circB, source, false);
-		if (m_sources[source].GetFixflag() & (PosFree|IndexFree)) {
+		if (m_sources[source].GetFixflag() & (PosFree|IndexFree|Par2Free|Par3Free)) {
 			cout << "##AB: FitPositionIndex" << endl;
 			FitPositionIndex(source, fitOpt);
 		}
