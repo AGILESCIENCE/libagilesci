@@ -84,7 +84,7 @@ struct SourceData
 	double index;
 	//0 - PL (k E^-{\index})
 	//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
-	double typefun; //0 PowerLaw - 1 PLExpCutoff - 2 LogParabola
+	int typefun; //0 PowerLaw - 1 PLExpCutoff - 2 LogParabola
 	double par2;
 	double par3;
 
@@ -94,9 +94,9 @@ struct SourceData
 	double iso;
 	double fluxul;
 
-	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), TS(0), gal(0), iso(0), fluxul(0) {}
+	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), typefun(0), par2(0), par3(0), TS(0), gal(0), iso(0), fluxul(0) {}
 	SourceData(const SourceData& another):
-		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul) {}
+		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), typefun(another.typefun), par2(another.par2), par3(another.par3), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul) {}
 	
 	/// void GetResultsFrom(const AlikeSourceMap& map);
 	

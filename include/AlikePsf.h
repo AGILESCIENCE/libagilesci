@@ -84,6 +84,8 @@ protected:
 	/// WARNING: After calling SetEnergyRange the user should call UpdateNorm()
 	void SetEnergyRange(double eInf, double eSup) { m_eInf = eInf; m_eSup = eSup; }
 	void UpdateNorm(double eMin, double eMax, double index);
+	void UpdateNormPLExpCutOff(double eMin, double eMax, double index, double par2);
+	void UpdateNormLogParabola(double eMin, double eMax, double index, double par2, double par3);
 
 private:
 	double m_eInf;

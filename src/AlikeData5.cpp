@@ -126,18 +126,21 @@ return m_corrArr[i]+deltaCorr*fraction;
 
 void SourceData::Print(ostream& oFile) const
 {
-oFile <<flux << " " << srcL << " " << srcB << " " << index << " " << fixflag << " " << sqrt(minTS) << " " << label;
-if (loclimit!=0.0)
+	oFile << "#Source: " << label << " ";
+	oFile << flux << " " << srcL << " " << srcB << " " << index << " " << fixflag << " " << sqrt(minTS) << " " << label;
 	oFile << " " << loclimit;
-oFile << endl;
+	oFile << " " << typefun;
+	oFile << " " << par2 << " " << par3 << endl;
+	oFile << endl;
 }
 
 void SourceData::VerbosePrint(ostream& oFile) const
 {
-oFile << label << ": Flux = " << flux << ", L = " << srcL << ", B = " << srcB << ", Index = " << index << ", FixFlag = " << fixflag << ", sqrt(minTS) = " << sqrt(minTS);
-if (loclimit!=0.0)
+	oFile << label << ": Flux = " << flux << ", L = " << srcL << ", B = " << srcB << ", Index = " << index << ", FixFlag = " << fixflag << ", sqrt(minTS) = " << sqrt(minTS);
 	oFile << ", loclimit = " << loclimit;
-oFile << endl;
+	oFile << ", typefun= " << typefun;
+	oFile << ", par2= " << par2 << ", par3= " << par3 << endl;
+	oFile << endl;
 }
 
 
@@ -202,7 +205,8 @@ static bool AppendDefault(char* buff, stringstream& str)
 	}
 	if (!*buff)
 		return false;
-	strcat(buff, " 0.0 0 0 0");
+	//strcat(buff, " 0.0 0 0 0");
+	//TODOAB -> appendere i valori di default quando la stringa di input non ha in nuovi
 	str.str(buff);
 	return true;
 }
@@ -220,13 +224,20 @@ while (!infile.eof()) {
 	infile.getline(buffer, 1024);
 	if (buffer[0]!='!') {
 		stringstream str(ios_base::in);
-		cout << "## " << buffer << endl;
+		//cout << "## " << buffer << endl;
 		if (AppendDefault(buffer, str)) {
 			SourceData srcData;
+			cout << "### " << str.str() << endl;
 			str >> srcData.flux >> srcData.srcL >> srcData.srcB >> srcData.index
 			>> srcData.fixflag >> srcData.minTS >> srcData.label >> srcData.loclimit >> srcData.typefun >> srcData.par2 >> srcData.par3;
+			//cout << "#### " << srcData.typefun << " " << srcData.par2 << " " << srcData.par3 << endl;
 			srcData.minTS = srcData.minTS * srcData.minTS;
+			//cout << "before" << endl;
+			//srcData.Print(cout);
 			srcArr.Append(srcData);
+			//cout << "after" << endl;
+			srcArr.Print(cout);
+			
 			}
 		}
 	}

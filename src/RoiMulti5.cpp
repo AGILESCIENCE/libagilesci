@@ -916,7 +916,7 @@ m_fitInfo = new FitInfo[m_srcCount];
 
 /// Correcting and printing the source input values
 if (m_srcCount)
-	cout << endl << "Sources [name sqrt(minTS) flux index position(l, b) par2 par3]" << endl;
+	cout << endl << "Sources [name sqrt(minTS) flux index position(l, b) typefun par2 par3]" << endl;
 else
 	cout << endl << "No point sources considered" << endl;
 for (int i=0; i<m_srcCount; ++i) {
@@ -951,25 +951,35 @@ for (int i=0; i<m_srcCount; ++i) {
 	cout << "(" << m_inSrcDataArr[i].srcL << ", " << m_inSrcDataArr[i].srcB << ")";
 	if (fixFlag & PosFree) {
 		if (!m_srcLimits[i].lLim && !m_srcLimits[i].bLim)
-			cout << " free";
+			cout << " free ";
 		else {
 			if (m_srcLimits[i].lLim)
 				cout << ", l free in [" << m_srcLimits[i].lMin << ".." << m_srcLimits[i].lMax << "]";
 			else
-				cout << ", l free";
+				cout << ", l free ";
 			if (m_srcLimits[i].bLim)
 				cout << ", b free in [" << m_srcLimits[i].bMin << ".." << m_srcLimits[i].bMax << "]";
 			else
-				cout << ", b free";
+				cout << ", b free ";
 			}
 		}
 	else
-		cout << " fixed";
+		cout << " fixed ";
 	
+	cout <<  m_inSrcDataArr[i].typefun;
+	if(m_inSrcDataArr[i].typefun == 0)
+		cout << " PowerLaw(1) ";
+	if(m_inSrcDataArr[i].typefun == 1)
+		cout << " PLExpCutOff(1,2) ";
+	if(m_inSrcDataArr[i].typefun == 2)
+		cout << " LogParabola(1,2,3) ";
+	
+	cout <<  m_inSrcDataArr[i].par2;
 	if(fixFlag & Par2Free)
 		cout << " free ";
 	else
 		cout << " fixed ";
+	cout <<  m_inSrcDataArr[i].par3;
 	if(fixFlag & Par3Free)
 		cout << " free ";
 	else
@@ -1409,6 +1419,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		FixSrcPar2(i);
 		cout << " fixed" << endl;
 	}
+
 	
 	sprintf(parname, "%s_3", m_sources[i].GetLabel().c_str());
 	m_model.SetParName(SrcPar3Par(i), parname);
@@ -1838,7 +1849,7 @@ for (int i=0; i<SrcCount(); ++i) {
 		}
 	}
 SetSrcPars(source);
-cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position and index fixed " << endl;
+	cout << endl << "S1: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position and index fixed " << endl;
 Double_t amin1;
 Fit(fitOpt, source, false, 1, &amin1);
 
@@ -1846,7 +1857,7 @@ Fit(fitOpt, source, false, 1, &amin1);
 
 GetSrcPars(source);
 Nullify(source);
-cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0 " << endl;
+	cout << "S2: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0 " << endl;
 Double_t amin0;
 Fit(fitOpt, source, true, 1, &amin0);
 
@@ -1860,7 +1871,7 @@ cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, li
 */
 
 if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].GetFlux()>0) {
-	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel();
+	cout << "S3: Source " << source+1 << ": " << m_sources[source].GetLabel();
 	SetSrcPars(source);
 	ReleaseSrcFlux(source);
 	int fitFlags = m_sources[source].GetFixflag();
@@ -1908,7 +1919,7 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	if (amin2<amin1) {
 		for (int i=0; i<=source; ++i)
 			GetSrcPars(i);
-		cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << " best position found in (l,b) = (";
+		cout << "S4: Source " << source+1 << ": " << m_sources[source].GetLabel() << " best position found in (l,b) = (";
 		cout << m_sources[source].GetSrcL() << "," << m_sources[source].GetSrcB() << ")" << endl;
 		}
 	for (int i=0; i<=source; ++i) {
@@ -1917,7 +1928,7 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 		}
 	GetDiffPars();
 
-	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
+	cout << "S5: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
 	Double_t amin1;
 	Fit(fitOpt, source, false, 1, &amin1);
 
@@ -1925,7 +1936,7 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 
 	GetSrcPars(source);
 	Nullify(source);
-	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
+	cout << "S6: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
 	Double_t amin0;
 	Fit(fitOpt, source, true, 0, &amin0);
 
@@ -2514,13 +2525,19 @@ for (int source=0; source<SrcCount(); ++source) {
 		cout << "Considering source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
 		double circL = m_sources[source].GetSrcL();
 		double circB = m_sources[source].GetSrcB();
+		cout << "##AB: Move"<<endl;
 		Move(circL, circB);
+		cout << "##AB: FixDistantSources" << endl;
 		FixDistantSources(circL, circB, source, false);
-		if (m_sources[source].GetFixflag() & (PosFree|IndexFree))
+		if (m_sources[source].GetFixflag() & (PosFree|IndexFree)) {
+			cout << "##AB: FitPositionIndex" << endl;
 			FitPositionIndex(source, fitOpt);
-		else if (m_sources[source].GetFixflag() & FluxFree)
+		}
+		else if (m_sources[source].GetFixflag() & FluxFree) {
+			cout << "##AB: FitFlux" << endl;
 			FitFlux(source, fitOpt);
 		}
+	}
 	else
 		cout << "Skipping source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
         m_sources[source].SetStatus(1, m_status);
