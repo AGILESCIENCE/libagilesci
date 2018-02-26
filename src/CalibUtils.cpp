@@ -125,6 +125,7 @@ VecL naxes;
 if (GetImageSize(reffFile, naxes)) {
 	int anynul = 0;
 	m_aeffgrid.ResizeTo(naxes[2], naxes[1], naxes[0]);
+	cout << "Dimension of m_aeffgrid: " <<m_aeffgrid.Dim(0) << " " << m_aeffgrid.Dim(1) << " " << m_aeffgrid.Dim(2) << endl;
 	fits_read_3d_flt(reffFile, 0, 0, naxes[2], naxes[1], naxes[2], naxes[1], naxes[0], m_aeffgrid/*.Buffer()*/, &anynul, reffFile);
 	
 	reffFile.MoveAbsHDU(3);
@@ -230,6 +231,7 @@ AeffGridAverage::AeffGridAverage(const char* aeffFileName)
 {
 m_emax = m_energy.Last();
 m_avgValues.ResizeTo(m_aeffgrid.Dim(0), m_aeffgrid.Dim(1));
+	cout << "Dimension of m_avgValues: " << m_avgValues.Dim(0) << " " << m_avgValues.Dim(1) << endl;
 MakeGridAverage();
 }
 
@@ -237,6 +239,7 @@ AeffGridAverage::AeffGridAverage(const char* aeffFileName, float emin, float ema
  : AeffGrid(aeffFileName), m_hasEdp(false), m_emin(emin), m_emax(emax), m_index(index)
 {
 m_avgValues.ResizeTo(m_aeffgrid.Dim(0), m_aeffgrid.Dim(1));
+	cout << "Dimension of m_avgValues: " << m_avgValues.Dim(0) << " " << m_avgValues.Dim(1) << endl;
 MakeGridAverage();
 }
 
@@ -245,6 +248,7 @@ int AeffGridAverage::Read(const char* aeffFileName, float emin, float emax, floa
 int error = AeffGrid::Read(aeffFileName);
 if (!error) {
 	m_avgValues.ResizeTo(m_aeffgrid.Dim(0), m_aeffgrid.Dim(1));
+	cout << "Dimension of m_avgValues: " << m_avgValues.Dim(0) << " " << m_avgValues.Dim(1) << endl;
 	SetEIndex(emin, emax, index);
 	}
 return error;
@@ -543,6 +547,7 @@ psfFile.MoveAbsHDU(1);
 VecL naxes;
 if (GetImageSize(psfFile, naxes)) {
 	m_psfgrid.ResizeTo(naxes[4], naxes[3], naxes[2], naxes[1], naxes[0]);
+	cout << "dimension of m_psfgrid " << m_psfgrid.Dim(0) << " " << m_psfgrid.Dim(1) << " " << m_psfgrid.Dim(2) << " " << m_psfgrid.Dim(3) << " " << m_psfgrid.Dim(4) << endl;
 	long nelements = m_psfgrid.Size();
 	int anynul = 0;
 	fits_read_img_flt(psfFile, 0, 1, nelements, 0, m_psfgrid/*.Buffer()*/, &anynul, psfFile);
@@ -848,6 +853,7 @@ edpFile.MoveAbsHDU(1);
 VecL naxes;
 if (GetImageSize(edpFile, naxes)) {
 	m_edpgrid.ResizeTo(naxes[3], naxes[2], naxes[1], naxes[0]);
+	cout << "Dimension of m_edpgrid: " <<m_edpgrid.Dim(0) << " " << m_edpgrid.Dim(1) << " " << m_edpgrid.Dim(2) << " " << m_edpgrid.Dim(3)  << endl;
 	long nelements = m_edpgrid.Size();
 	int anynul = 0;
 	fits_read_img_flt(edpFile, 0, 1, nelements, 0, m_edpgrid/*.Buffer()*/, &anynul, edpFile);
