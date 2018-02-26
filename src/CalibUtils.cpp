@@ -303,8 +303,8 @@ for (int eobs = iMin; eobs <= iMax; eobs++)
 
 int numtheta = m_avgValues.Dim(1);
 int numphi = m_avgValues.Dim(0);
-cout << "NUMTHETA: " << numtheta << endl;
-cout << "NUMPHI: " << numphi << endl;
+//cout << "NUMTHETA: " << numtheta << endl;
+//cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 	for (int phiind = 0; phiind < numphi; phiind++) {
 		/// Calcolo della aeff da normalizzare
@@ -315,10 +315,10 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 			if (m_hasEdp) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
 				for (int eobs = iMin;  eobs <= iMax; eobs++) {
-					edpArr[etrue] += m_edp.Val(m_energy[eobs], m_energy[etrue], m_theta[thetaind], m_phi[phiind]);
-					cout << "EDP: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiind << " " << m_phi[phiind] << " " << edpArr[etrue] << endl;
+					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiind]);
+					//cout << "EDP: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiind << " " << m_phi[phiind] << " " << edpArr[etrue] << endl;
 				}
-				cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
+				//cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
 			} else
 				edpArr[etrue] = (etrue<iMin || etrue>iMax) ? 0.0f : 1.0f;
 			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(phiind, thetaind, etrue);
@@ -326,10 +326,12 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 		m_avgValues(phiind, thetaind) = avgValue/normsum;
 	}
 }
+	/*
 	cout << "AVGVALUES" << endl;
 	for (int thetaind = 0; thetaind < numtheta; thetaind++)
 		for (int phiind = 0; phiind < numphi; phiind++)
 			cout << "TH " << thetaind << " " << m_theta[thetaind] << " - PH " << phiind << " " << m_phi[phiind] << " " << m_avgValues(phiind, thetaind) << endl;
+	*/
 return resultMask;
 }
 
@@ -832,10 +834,11 @@ return psi;
 
 double EdpGrid::Val(double trueE, double obsE, double theta, double phi) const
 {
-int l = m_edptrueenergy.GeomIndex(trueE);
-int m = m_edpobsenergy.GeomIndex(obsE);
-int n = m_edptheta.LinearIndex(theta);
-int p = m_edpphi.LinearIndex(phi);
+int l = m_edptrueenergy.GeomIndex(trueE);//16
+int m = m_edpobsenergy.GeomIndex(obsE);//16
+int n = m_edptheta.LinearIndex(theta);//19
+int p = m_edpphi.LinearIndex(phi);//8
+//8 19 16 16
 return m_edpgrid(p,n,m,l);
 }
 
