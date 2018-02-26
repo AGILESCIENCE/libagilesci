@@ -120,7 +120,7 @@ class AlikeSourceMap: public AlikePsfSource
 public: /// Construction
 	AlikeSourceMap(): AlikePsfSource(),
 		m_flux(0), m_fluxerr(0), m_fluxlo(0), m_fluxhi(0), m_fluxul(0),
-		m_idxErr(0), m_exposure(0), m_ts(0), m_minTS(3),
+		m_idxErr(0), m_par2Err(0), m_par3Err(0), m_exposure(0), m_ts(0), m_minTS(3),
 		m_ulcl(0.95), m_loccl(0.95), m_fixflag(0), /// m_covar(),
 		m_polygon(), m_ellipse(), m_radius(0), m_label()
         {
@@ -167,6 +167,12 @@ public:	/// Data Access
 */
 	void SetIndexerr(double idxErr) { m_idxErr = idxErr; }
 	double GetIndexerr() const { return m_idxErr; }
+	
+	void SetPar2err(double idxErr) { m_par2Err = idxErr; }
+	double GetPar2err() const { return m_par2Err; }
+	
+	void SetPar3err(double idxErr) { m_par3Err = idxErr; }
+	double GetPar3err() const { return m_par3Err; }
 
 	Double_t GetExp() const { return m_exposure; }
 	void SetExp(Double_t exposure) { m_exposure = exposure; }
@@ -217,6 +223,8 @@ private: /// Data
 	Double_t m_fluxul;
 
 	double m_idxErr;
+	double m_par2Err;
+	double m_par3Err;
 
 	Double_t m_exposure;
 

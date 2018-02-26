@@ -1582,8 +1582,15 @@ void RoiMulti::FitIndex(int source)
 	TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 	Double_t index_plus, index_minus, index_parab, globcc;
 	fitter->GetErrors(SrcIdxPar(source), index_plus, index_minus, index_parab, globcc);
-	for (int cts=0; cts<m_mapCount; ++cts)
+	Double_t par2_plus, par2_minus, par2_parab, p2globcc;
+	fitter->GetErrors(SrcPar2Par(source), par2_plus, par2_minus, par2_parab, p2globcc);
+	Double_t par3_plus, par3_minus, par3_parab, p3globcc;
+	fitter->GetErrors(SrcPar3Par(source), par3_plus, par3_minus, par3_parab, p3globcc);
+	for (int cts=0; cts<m_mapCount; ++cts) {
 		m_sources[m_srcCount*cts+source].SetIndexerr(index_parab);
+		m_sources[m_srcCount*cts+source].SetPar2err(par2_parab);
+		m_sources[m_srcCount*cts+source].SetPar3err(par3_parab);
+	}
 	GetSrcPars(source);
 	
 	if(m_sources[source].GetFixflag() & IndexFree)
@@ -2067,6 +2074,34 @@ for(int i=0; i<m_mapCount*2; i++) // Release gal and iso parameters
 void RoiMulti::Loop2(const char* fitOpt)
 {
 cout << endl << "Begin second loop" << endl << endl;
+	//galMap.SetFixflag(AllFixed);
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(false, m, i, true);
+		cout << endl;
+	}
+	cout << endl;
+	
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(false, m, i, false);
+		cout << endl;
+	}
+	cout << endl;
+	
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(true, m, i, true);
+		cout << endl;
+	}
+	cout << endl;
+	
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(true, m, i, false);
+		cout << endl;
+	}
+	cout << endl;
 
 ResetFitStatus();
 ResetFitCts();
@@ -2095,6 +2130,18 @@ for (int source=0; source<SrcCount(); ++source) {
 		Nullify(source);
 		cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
 		Double_t amin0;
+		
+		//fix gal0 and iso0
+		for (int m=0; m<m_mapCount; ++m) {
+			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, true));
+			m_galSrc[m].SetFixflag(AllFixed);
+			m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, true));
+			m_isoSrc[m].SetFixflag(AllFixed);
+			FixGalPar(m);
+			FixIsoPar(m);
+		}
+		
+		
 		Fit(fitOpt, source, true, 0, &amin0);
 		if (!diffParsStored) {
 			GetDiffPars();
@@ -2109,6 +2156,16 @@ for (int source=0; source<SrcCount(); ++source) {
 		SetSrcPars(source);
 		cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
 		Double_t amin1;
+		
+		//fix gal and iso1
+		for (int m=0; m<m_mapCount; ++m) {
+			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, false));
+			m_galSrc[m].SetFixflag(AllFixed);
+			m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, false));
+			m_isoSrc[m].SetFixflag(AllFixed);
+			FixGalPar(m);
+			FixIsoPar(m);
+		}
 		Fit(fitOpt, source, false, 1, &amin1);
 
 		m_sources[source].SetTS(amin0 - amin1);
@@ -2280,6 +2337,8 @@ Int_t RoiMulti::Fit(const char* opt, int source, bool zero, int flags, Double_t*
     std::cout << "### pre-fitting parameters" << std::endl;
     m_model.Print("V");
 #endif
+	std::cout << "### pre-fitting parameters" << std::endl;
+	m_model.Print("V");
 
 /// zzz
 for (int i=0; i<SrcCount(); ++i) {
@@ -2831,7 +2890,7 @@ if (ExtCount()) {
 
 
 if (m_srcCount) {
-	output << "! SrcName, sqrt(TS), L_peak, B_peak, Counts, Err, Flux, Err, Index, Err";
+	output << "! SrcName, sqrt(TS), L_peak, B_peak, Counts, Err, Flux, Err, Index, Err, Par2, Par2Err, Par3, Par3Err, TypeFun";
 	if (!skipFitInfo)
 		output << " [fcn0 fcn1 edm0 edm1 iter0 iter1]";
 	output << endl;
@@ -2854,7 +2913,12 @@ if (m_srcCount) {
 					<< " " << m_sources[i].GetFlux()
 					<< " " << m_sources[i].GetFluxerr()
 					<< " " << m_sources[i].GetIndex()
-					<< " " << m_sources[i].GetIndexerr();
+					<< " " << m_sources[i].GetIndexerr()
+					<< " " << m_sources[i].GetPar2()
+					<< " " << m_sources[i].GetPar2err()
+					<< " " << m_sources[i].GetPar3()
+					<< " " << m_sources[i].GetPar3err()
+					<< " " << m_sources[i].GetTypeFun();
 		if (m_sources[i].GetFixflag() && !skipFitInfo)
 			output << " " << m_fitInfo[i].fcn0
 					<< " " << m_fitInfo[i].fcn1
@@ -2920,16 +2984,14 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ]" << endl;
+	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ] typefun par2 par3" << endl;
 	srcout << "! sqrt(TS)" << endl ;
 	srcout << "! L_peak, B_peak, Dist from initial position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L, B, Dist from initial position, r, a, b, phi" << endl;
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
 	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp" << endl;
-	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Err" << endl;
-	srcout << "! Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "], Err" << endl;
-	srcout << "! Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "], Err" << endl;
+	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Index Err" << ", Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "], Par2 Err, Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "], Par3 Err" << endl;
 	srcout << "! cts, fcn0, fcn1, edm0, edm1, iter0, iter1" << endl;
 	
 	//if (m_inSrcDataArr[i].fixflag) {
@@ -2952,6 +3014,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << m_inSrcDataArr[i].srcB
 	<< " " << m_inSrcDataArr[i].flux;
 	
+	
 	if (m_srcLimits[i].lLim)
 		srcout <<  " [ " << m_srcLimits[i].lMin << " , " << m_srcLimits[i].lMax << " ] ";
 	else
@@ -2962,7 +3025,11 @@ for (int i=0; i<m_srcCount; ++i) {
 	else
 		srcout << " [ -1 , -1 ] ";
 	
-		srcout	<< endl;
+	srcout << " " << m_inSrcDataArr[i].typefun;
+	srcout << " " << m_inSrcDataArr[i].par2;
+	srcout << " " << m_inSrcDataArr[i].par3;
+	
+	srcout	<< endl;
 	/// zzz m_sources[i].PrintAbphi();
 	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 	
@@ -2997,8 +3064,8 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << m_sources[i].GetFluxul()
 				<< " " << exposure /// m_sources[i].GetExp()
 				<< endl;
-	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << endl;
 	
+	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;
 	//AB
 	
 	srcout << m_fitInfo[i].counts;
@@ -3432,7 +3499,7 @@ if (ExtCount()) {
 
 if (SrcCount()) {
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td></tr>" << endl;
+	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td><td>Par2</td><td>Par3</td><td>TypeFun</td></tr>" << endl;
 	for (int i=0; i<SrcCount(); ++i) {
 		const SourceData& srcData = m_inSrcDataArr[i];
 		htmlout << "<tr><td>" << srcData.label
@@ -3448,7 +3515,14 @@ if (SrcCount()) {
 		if (m_srcLimits[i].bLim)
 			htmlout << " in [" << m_srcLimits[i].bMin << ", " << m_srcLimits[i].bMax << "]";
 	
-		htmlout << "</td><td>" << sqrt(srcData.minTS) << "</td><td>" << srcData.fixflag << "</td><td>" << sqrt(m_sources[i].GetULCL()) << "</td><td>" << m_sources[i].GetLocCL() << "</td></tr>" << endl;
+		htmlout << "</td><td>" << sqrt(srcData.minTS) << "</td><td>" << srcData.fixflag << "</td><td>" << sqrt(m_sources[i].GetULCL()) << "</td><td>" << m_sources[i].GetLocCL(); //
+		
+		
+		htmlout << "</td><td>" << m_inSrcDataArr[i].par2;
+		htmlout << "</td><td>" << m_inSrcDataArr[i].par3;
+		htmlout << "</td><td>" << m_inSrcDataArr[i].typefun;
+		
+		htmlout << "</td></tr>" << endl;
 	
 		}
 	htmlout << "</table>" << endl;
@@ -3531,8 +3605,8 @@ if (ExtCount()) {
 		const AlikeExtMap& extSrc = m_extSrcArr[ExtIndex(0, i)];
 		//double BaryExposure = EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[0]);
 		double BaryExposure = 0;
-                for (int map=0; map<m_mapCount; ++map)
-                        BaryExposure += EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[map])*extSrc.GetNormFactor();
+		for (int map=0; map<m_mapCount; ++map)
+			BaryExposure += EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[map])*extSrc.GetNormFactor();
 		htmlout << "<td>" << sqrt(extSrc.GetTS()) << "</td>";
 		htmlout << "<td>" << extSrc.GetCoeff()/BaryExposure << "</td>";
 		htmlout << "<td>" << extSrc.GetCoefferr()/BaryExposure << "</td>";
@@ -3550,7 +3624,7 @@ if (ExtCount()) {
 if (SrcCount()) {
 	
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>dist</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Err</td><td>L</td><td>B</td><td>distE</td><td>Radius</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo (cts fcn0 fcn1 edm0 edm1 iter0 iter1)</td></tr>" << endl;
+	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>dist</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Index Err</td><td>Par2</td><td>Par2 Err</td><td>Par3</td><td>Par3 Err</td><td>L</td><td>B</td><td>distE</td><td>Radius</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo (cts fcn0 fcn1 edm0 edm1 iter0 iter1)</td></tr>" << endl;
 	
 	for (int i=0; i<m_srcCount; ++i) {
 		const Ellipse& ellipse = m_sources[i].GetEllipse();
@@ -3586,7 +3660,11 @@ if (SrcCount()) {
 					<< "</td><td>" << m_sources[i].GetFluxerr()
 					<< "</td><td>" << m_sources[i].GetFluxul()
 					<< "</td><td>" << m_sources[i].GetIndex()
-		            << "</td><td>" << m_sources[i].GetIndexerr();
+		            << "</td><td>" << m_sources[i].GetIndexerr()
+		<< "</td><td>" << m_sources[i].GetPar2()
+		<< "</td><td>" << m_sources[i].GetPar2err()
+		<< "</td><td>" << m_sources[i].GetPar3()
+		<< "</td><td>" << m_sources[i].GetPar3err();
 		
 		
 		if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {

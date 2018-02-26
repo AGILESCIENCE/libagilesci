@@ -230,6 +230,10 @@ while (!infile.eof()) {
 			cout << "### " << str.str() << endl;
 			str >> srcData.flux >> srcData.srcL >> srcData.srcB >> srcData.index
 			>> srcData.fixflag >> srcData.minTS >> srcData.label >> srcData.loclimit >> srcData.typefun >> srcData.par2 >> srcData.par3;
+			if(srcData.typefun == 0)
+				srcData.par2 = srcData.par3 = 0.0;
+			if(srcData.typefun == 1)
+				srcData.par3 = 0.0;
 			//cout << "#### " << srcData.typefun << " " << srcData.par2 << " " << srcData.par3 << endl;
 			srcData.minTS = srcData.minTS * srcData.minTS;
 			//cout << "before" << endl;

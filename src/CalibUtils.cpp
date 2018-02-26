@@ -297,8 +297,10 @@ float normsum = 0;
 for (int eobs = iMin; eobs <= iMax; eobs++)
 	normsum += specwt[eobs];
 
-int numtheta = m_avgValues.Dim(0);
-int numphi = m_avgValues.Dim(1);
+int numtheta = m_avgValues.Dim(1);
+int numphi = m_avgValues.Dim(0);
+cout << "NUMTHETA: " << numtheta << endl;
+cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 	for (int phiind = 0; phiind < numphi; phiind++) {
 		/// Calcolo della aeff da normalizzare
@@ -321,8 +323,8 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 }
 	cout << "AVGVALUES" << endl;
 	for (int thetaind = 0; thetaind < numtheta; thetaind++)
-		for (int phiind = 0; phiind < numphi; phiind++) 
-			cout << thetaind << " " << phiind << " " << m_avgValues(thetaind, phiind) << endl;
+		for (int phiind = 0; phiind < numphi; phiind++)
+			cout << "TH " << thetaind << " " << m_theta[thetaind] << " - PH " << phiind << " " << m_phi[phiind] << " " << m_avgValues(thetaind, phiind) << endl;
 return resultMask;
 }
 
