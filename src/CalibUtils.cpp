@@ -297,8 +297,8 @@ float normsum = 0;
 for (int eobs = iMin; eobs <= iMax; eobs++)
 	normsum += specwt[eobs];
 
-int numtheta = m_avgValues.Dim(1);
-int numphi = m_avgValues.Dim(0);
+int numtheta = m_avgValues.Dim(0);
+int numphi = m_avgValues.Dim(1);
 cout << "NUMTHETA: " << numtheta << endl;
 cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
