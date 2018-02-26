@@ -301,8 +301,8 @@ float normsum = 0;
 for (int eobs = iMin; eobs <= iMax; eobs++)
 	normsum += specwt[eobs];
 
-int numtheta = m_avgValues.Dim(0);
-int numphi = m_avgValues.Dim(1);
+int numtheta = m_avgValues.Dim(1);
+int numphi = m_avgValues.Dim(2);
 cout << "NUMTHETA: " << numtheta << endl;
 cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
@@ -321,15 +321,15 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 				cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
 			} else
 				edpArr[etrue] = (etrue<iMin || etrue>iMax) ? 0.0f : 1.0f;
-			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(thetaind, phiind, etrue);
+			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(phiind, thetaind, etrue);
 		}
-		m_avgValues(thetaind, phiind) = avgValue/normsum;
+		m_avgValues(phiind, thetaind) = avgValue/normsum;
 	}
 }
 	cout << "AVGVALUES" << endl;
 	for (int thetaind = 0; thetaind < numtheta; thetaind++)
 		for (int phiind = 0; phiind < numphi; phiind++)
-			cout << "TH " << thetaind << " " << m_theta[thetaind] << " - PH " << phiind << " " << m_phi[phiind] << " " << m_avgValues(thetaind, phiind) << endl;
+			cout << "TH " << thetaind << " " << m_theta[thetaind] << " - PH " << phiind << " " << m_phi[phiind] << " " << m_avgValues(phiind, thetaind) << endl;
 return resultMask;
 }
 
