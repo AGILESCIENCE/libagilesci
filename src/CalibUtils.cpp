@@ -285,7 +285,7 @@ if (m_emax<=m_energy[iMax]) {
 else
 	resultMask = resultMask | 4;	/// Upper bound treated as infinity
 
-cout << "MakeGridAverage: " << iMin <<  " " << iMax << endl;
+cout << "MakeGridAverage: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl;
 /// Calcolo del peso di ogni energia in base all'indice spettrale
 VecF specwt(eneChanCount);
 for (int i=0; i<eneChanCount-1; i++)
@@ -297,8 +297,8 @@ float normsum = 0;
 for (int eobs = iMin; eobs <= iMax; eobs++)
 	normsum += specwt[eobs];
 
-int numtheta = m_avgValues.Dim(1);
-int numphi = m_avgValues.Dim(0);
+int numtheta = m_avgValues.Dim(0);
+int numphi = m_avgValues.Dim(1);
 cout << "NUMTHETA: " << numtheta << endl;
 cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
@@ -308,13 +308,14 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 		edpArr = 0.0f;
 		float avgValue = 0.0f;
 		for (int etrue = 0; etrue < eneChanCount; etrue++) {
-			if (m_hasEdp)
+			if (m_hasEdp) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
 				for (int eobs = iMin;  eobs <= iMax; eobs++) {
 					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiind]);
-					cout << "EDP: " << etrue << " " << eobs << " " << thetaind << " " << phiind << " " << edpArr[etrue] << endl;
+					cout << "EDP: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiind << " " << m_phi[phiind] << " " << edpArr[etrue] << endl;
 				}
-			else
+				cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
+			} else
 				edpArr[etrue] = (etrue<iMin || etrue>iMax) ? 0.0f : 1.0f;
 			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(thetaind, phiind, etrue);
 		}
