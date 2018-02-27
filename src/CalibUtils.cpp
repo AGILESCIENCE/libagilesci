@@ -316,7 +316,7 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
 				for (int eobs = iMin;  eobs <= iMax; eobs++) {
 					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiind]);
-					cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiind << " " << m_phi[phiind] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiind]); << endl;
+					cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiind << " " << m_phi[phiind] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiind]) << endl;
 				}
 				//cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
 			} else
