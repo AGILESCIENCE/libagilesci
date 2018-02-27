@@ -2444,19 +2444,19 @@ if (source>=0) { /// Exclude extended sources
 		s_fitterChanges[i] = 0;
 
 	cout << "FIT HISTO " << opt << endl;
-	m_model.Print();
+	//m_model.Print();
 	Int_t fitResult = m_countsHist.Fit(&m_model, opt ,"", 0, m_binCount);
 	//ROOT::Fit::FitResult fitres;
 	//cout <<"CHI2: " <<fitres.Chi2() << endl;
 	
-	ROOT::Fit::DataOptions optf;
+	/*ROOT::Fit::DataOptions optf;
 	optf.fIntegral = true;
 	ROOT::Fit::Fitter fitterf1;
 	ROOT::Fit::DataRange rangef(-0.5, m_binCount-0.5);
 	ROOT::Fit::BinData dataf(optf,rangef);
 	ROOT::Fit::FillData(dataf, &m_countsHist);
 	//m_countsHist.Print();m_binCount, -0.5, m_binCount-0.5
-
+	 */
 	if(fitResult >= 4000) fitResult -= 4000;
 	SetFitStatus(fitResult);
 	/// Evaluate the exposure again if the position was free
