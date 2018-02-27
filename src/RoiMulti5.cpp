@@ -355,7 +355,7 @@ RoiMulti::RoiMulti():
     m_indexLimitMin(0.5),
     m_indexLimitMax(5.0),
 	m_par2LimitMin(20.0),
-	m_par2LimitMax(30000.0),
+	m_par2LimitMax(10000.0),
 	m_par3LimitMin(0.0),
 	m_par3LimitMax(10.0)
 
