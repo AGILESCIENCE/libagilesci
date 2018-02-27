@@ -280,13 +280,24 @@ const DiffMode DiffTogether   = 3;
 
 struct FitInfo
 {
-	FitInfo(): fcn0(0), fcn1(0), edm0(0), edm1(0), iter0(0), iter1(0), counts(0) {}
+	//amin or fcn : chisquare
+	//edm : estimated distance to minimum
+	//errdef
+	//nvpar : number of variable parameters
+	//nparx : total number of parameters
+	FitInfo(): fcn0(0), fcn1(0), edm0(0), edm1(0), iter0(0), iter1(0), counts(0), fitstatus0(0), fitstatus1(0), nvpar0(0), nvpar1(0), nparx0(0), nparx1(0) {}
 	double fcn0;
 	double fcn1;
 	double edm0;
 	double edm1;
 	int    iter0;
 	int    iter1;
+	int fitstatus0;
+	int fitstatus1;
+	int nvpar0;
+	int nvpar1;
+	int nparx0;
+	int nparx1;
 	int    counts;
 };
 
@@ -398,6 +409,7 @@ public:	/// Getting the singleton object
 public:	/// Main operations
 	bool SetPsf(const char* psfFileName, const char* raeffFileName, const char* edpFileName);
 	bool SetMaps(const MapData& mapData, int galMode=DiffDefault, int isoMode=DiffDefault);
+	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy);
 
 	/// Add the Extended Sources for analysis
 	bool SetExtendedSources(const ExtData& extData);

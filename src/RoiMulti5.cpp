@@ -11,7 +11,10 @@
 //
 
 #include <TGraph.h>
-#include "Math/MinimizerOptions.h"
+#include <Math/MinimizerOptions.h>
+#include <Fit/FitResult.h>
+#include <Fit/Fitter.h>
+#include <TKDTreeBinning.h>
 #include <TMatrixDEigen.h>
 #include <TRandom3.h>
 #ifndef ROOT_TROOT
@@ -404,6 +407,9 @@ m_galCoeffs = m_isoCoeffs = m_thetaArr = 0;
 m_mapCount = 0;
 m_diffParCount = 0;
 m_sourceParOffset = 0;
+	
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad");
+ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 }
 
 void RoiMulti::CleanSources()
@@ -824,6 +830,59 @@ if (m_logFile)
 }
 */
 
+bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy) {
+	/*
+	 
+	 * Minuit (library libMinuit). Old version of Minuit, based on the TMinuit class. The list of possible algorithms are:
+	 Migrad (default one)
+	 Simplex
+	 Minimize (it is a combination of Migrad and Simplex)
+	 MigradImproved
+	 Scan
+	 Seek
+	 
+	 * Minuit2 (library libMinuit2). New C++ version of Minuit. The list of possible algorithm is :
+	 Migrad (default)
+	 Simplex
+	 Minimize
+	 Scan
+	 
+	 *Fumili . This is the same algorithm of TFumili, but implemented in the Minuit2 library.
+	 
+	 * GSLMultiMin (library libMathMore). Minimizer based on the Multidimensional Minimization routines of the Gnu Scientific Library (GSL). The list of available algorithms is
+	 BFGS2 (default) : second version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm;
+	 BFGS : old version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm;
+	 ConjugateFR : Fletcher-Reeves conjugate gradient algorithm;
+	 ConjugatePR : Polak-Ribiere conjugate gradient algorithm;
+	 SteepestDescent: steepest descent algorithm;
+	 
+	 * GSLMultiFit (library libMathMore). Minimizer based on the Non-Linear Least-Square routines of GSL. This minimizer can be used only for least-square fits.
+	 
+	 * GSLSimAn (library libMathMore). Minimizer based on simulated annealing.
+	 
+	 * Genetic (library libGenetic). Genetic minimizer based on an algorithm implemented in the TMVA package.
+	 */
+	
+	/*
+	 Each minimizer can be configured using the ROOT::Math::MinimizerOptions class. The list of possible option that can be set are:
+	 
+	 * Minimizer type (MinimizerOptions::SetMinimizerType(const char *)) .
+	 * Minimizer algorithm (MinimizerOptions::SetMinimizerAlgorithm(const char *)).
+	 * Print Level (MinimizerOptions::SetPrintLevel(int )) to set the verbose printing level (default is 0).
+	 * Tolerance (MinimizerOptions::SetTolerance(double )) tolerance used to control the iterations.
+	 * Maximum number of function calls (MinimizerOptions::SetMaxFunctionCalls(int )).
+	 * Maximum number of iterations (MinimizerOptions::SetMaxIterations(int )). Note that this is not used by Minuit
+	 FCN Upper value for Error Definition (MinimizerOptions::SetMaxIterations(int )). Value in the minimization function used to compute the parameter errors. The default is to get the uncertainties at the 68% CL is a value of 1 for a chi-squared function minimization and 0.5 for a log-likelihood function.
+	 * Strategy (MinimizerOptions::SetStrategy(int )), minimization strategy used. For each minimization strategy Minuit uses different configuration parameters (e.g. different requirements in computing derivatives, computing full Hessian (strategy = 2) or an approximate version. The default is a value of 1. In this case the full Hessian matrix is computed only after the minimization.
+	 * Precision (MinimizerOptions::SetTolerance(double )). Precision value in the evaluation of the minimization function. Default is numerical double precision.
+	 */
+	
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizertype, minimizeralg);
+	ROOT::Math::MinimizerOptions::SetDefaultStrategy(minimizerdefstrategy);
+	//ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.001);
+	//ROOT::Math::MinimizerOptions::SetDefaultPrecision(0.01);
+
+}
 
 int RoiMulti::DoFit(
 	const SourceDataArray& srcDataArr,
@@ -838,14 +897,21 @@ if (!m_mapCount) {
 	cerr << "No maps loaded: Fitting not possible" << endl;
 	return 2;
 	}
+	
+	
+	//ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.001);
+	//ROOT::Math::MinimizerOptions::SetDefaultPrecision(0.01);
+	ROOT::Math::MinimizerOptions opt;
+	opt.Print();
+	
 char option1[8];
 char option2[8];
 if (gROOT->GetVersionInt() < 53000) {
 	strcpy(option1,"LLNM");
 	strcpy(option2,"LLNEM");
 } else {
-	strcpy(option1,"LNM");
-	strcpy(option2,"LNEM");
+	strcpy(option1,"LN"); //ADD M to activate Minuit
+	strcpy(option2,"LNE");//ADD EM to activate Minuit
 }	
 if (chatter==0) {
 	strcat(option1, "Q");
@@ -1577,7 +1643,7 @@ void RoiMulti::FitIndex(int source)
 	if (gROOT->GetVersionInt() < 53000) {
 		Fit("LLONEM", source, false, 1);
 	} else {
-		Fit("LONEM", source, false, 1);
+		Fit("LONE", source, false, 1);
 	}
 	TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 	Double_t index_plus, index_minus, index_parab, globcc;
@@ -1635,7 +1701,7 @@ cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Find
 if (gROOT->GetVersionInt() < 53000) {
 	Fit("LLONEM", source, false, 1);
 } else {
-	Fit("LONEM", source, false, 1);
+	Fit("LONE", source, false, 1);
 }
 TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 Double_t flux = PeekSrcFluxPar(source);
@@ -1689,10 +1755,9 @@ return -1;
 
 
 
-static void GetTsStat(Double_t& amin, Double_t& edm, int& iter)
+static void GetTsStat(Double_t& amin, Double_t& edm, int& iter, int& nvpar, int& nparx)
 {
 Double_t errdef;
-Int_t nvpar, nparx;
 TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 fitter->GetStats(amin, edm, errdef, nvpar, nparx);
 iter = RoiMulti::GetFitterIterations();
@@ -2373,28 +2438,39 @@ if (source>=0) { /// Exclude extended sources
 		m_fitInfo[source].counts += m_ctsMaps[m_binAddr[i]](m_binList[i]);
 	}
 
-s_fitterIterations = 0;
-s_fitterChanges = new unsigned[m_srcCount*2];
-for (int i=0; i<m_srcCount*2; ++i)
-	s_fitterChanges[i] = 0;
+	s_fitterIterations = 0;
+	s_fitterChanges = new unsigned[m_srcCount*2];
+	for (int i=0; i<m_srcCount*2; ++i)
+		s_fitterChanges[i] = 0;
 
-Int_t fitResult = m_countsHist.Fit(&m_model, opt ,"", 0, m_binCount);
-if(fitResult >= 4000) fitResult -= 4000;
-SetFitStatus(fitResult);
-/// Evaluate the exposure again if the position was free
+	cout << "FIT HISTO " << opt << endl;
+	m_model.Print();
+	Int_t fitResult = m_countsHist.Fit(&m_model, opt ,"", 0, m_binCount);
+	//ROOT::Fit::FitResult fitres;
+	//cout <<"CHI2: " <<fitres.Chi2() << endl;
+	
+	ROOT::Fit::DataOptions optf;
+	optf.fIntegral = true;
+	ROOT::Fit::Fitter fitterf1;
+	ROOT::Fit::DataRange rangef(-0.5, m_binCount-0.5);
+	ROOT::Fit::BinData dataf(optf,rangef);
+	ROOT::Fit::FillData(dataf, &m_countsHist);
+	//m_countsHist.Print();m_binCount, -0.5, m_binCount-0.5
 
-
-/// zzz
+	if(fitResult >= 4000) fitResult -= 4000;
+	SetFitStatus(fitResult);
+	/// Evaluate the exposure again if the position was free
+	/// zzz
 #define ADJUST_EXPOSURE
 #ifdef ADJUST_EXPOSURE
-if (source>=0) { /// Exclude extended sources
-	if (flags&2) {
-		for (int exp=0; exp<m_mapCount; ++exp) {
-			double exposure = EvalExposure(m_sources[source].GetSrcL(), m_sources[source].GetSrcB(), m_expMaps[exp]);
-			m_sources[exp*m_srcCount+source].SetExp(exposure);
+	if (source>=0) { /// Exclude extended sources
+		if (flags&2) {
+			for (int exp=0; exp<m_mapCount; ++exp) {
+				double exposure = EvalExposure(m_sources[source].GetSrcL(), m_sources[source].GetSrcB(), m_expMaps[exp]);
+				m_sources[exp*m_srcCount+source].SetExp(exposure);
+				}
 			}
 		}
-	}
 #endif
 
 TVirtualFitter* fitter = TVirtualFitter::GetFitter();
@@ -2452,8 +2528,8 @@ delete[] s_fitterChanges;
 s_fitterChanges = 0;
 
 Double_t fcn, edm;
-int iter;
-GetTsStat(fcn, edm, iter);
+int iter, nvpar, nparx;
+GetTsStat(fcn, edm, iter, nvpar, nparx);
 
 if (amin) {
 	*amin = fcn;
@@ -2462,11 +2538,17 @@ if (amin) {
 			m_fitInfo[source].fcn0 = fcn;
 			m_fitInfo[source].edm0 = edm;
 			m_fitInfo[source].iter0 = iter;
+			m_fitInfo[source].nvpar0 = nvpar;
+			m_fitInfo[source].nparx0 = nparx;
+			m_fitInfo[source].fitstatus0 = fitResult;
 			}
 		else {
 			m_fitInfo[source].fcn1 = fcn;
 			m_fitInfo[source].edm1 = edm;
 			m_fitInfo[source].iter1 = iter;
+			m_fitInfo[source].nvpar1 = nvpar;
+			m_fitInfo[source].nparx1 = nparx;
+			m_fitInfo[source].fitstatus1 = fitResult;
 			}
 		}
 	}
@@ -2892,7 +2974,7 @@ if (ExtCount()) {
 if (m_srcCount) {
 	output << "! SrcName, sqrt(TS), L_peak, B_peak, Counts, Err, Flux, Err, Index, Err, Par2, Par2Err, Par3, Par3Err, TypeFun";
 	if (!skipFitInfo)
-		output << " [fcn0 fcn1 edm0 edm1 iter0 iter1]";
+		output << " [fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1]";
 	output << endl;
 	
 	for (int i=0; i<m_srcCount; ++i) {
@@ -2920,12 +3002,18 @@ if (m_srcCount) {
 					<< " " << m_sources[i].GetPar3err()
 					<< " " << m_sources[i].GetTypeFun();
 		if (m_sources[i].GetFixflag() && !skipFitInfo)
-			output << " " << m_fitInfo[i].fcn0
-					<< " " << m_fitInfo[i].fcn1
+			output << " " << m_fitInfo[i].fitstatus0
+					<< " " << m_fitInfo[i].fcn0
 					<< " " << m_fitInfo[i].edm0
-					<< " " << m_fitInfo[i].edm1
+					<< " " << m_fitInfo[i].nvpar0
+					<< " " << m_fitInfo[i].nparx0
 					<< " " << m_fitInfo[i].iter0
-					<< " " << m_fitInfo[i].iter1;
+			<< " " << m_fitInfo[i].fitstatus1
+			<< " " << m_fitInfo[i].fcn1
+			<< " " << m_fitInfo[i].edm1
+			<< " " << m_fitInfo[i].nvpar1
+			<< " " << m_fitInfo[i].nparx1
+			<< " " << m_fitInfo[i].iter0;
 		output << endl;
 		}
 	}
@@ -2992,7 +3080,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
 	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp" << endl;
 	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Index Err" << ", Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "], Par2 Err, Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "], Par3 Err" << endl;
-	srcout << "! cts, fcn0, fcn1, edm0, edm1, iter0, iter1" << endl;
+	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1" << endl;
 	
 	//if (m_inSrcDataArr[i].fixflag) {
 		srcout << "! Gal coeffs [" << m_galLimitMin << " , " << m_galLimitMax << "] and errs" << endl;
@@ -3070,12 +3158,19 @@ for (int i=0; i<m_srcCount; ++i) {
 	
 	srcout << m_fitInfo[i].counts;
 	
-	srcout << " " << m_fitInfo[i].fcn0;
-	srcout << " " << m_fitInfo[i].fcn1;
-	srcout << " " << m_fitInfo[i].edm0;
-	srcout << " " << m_fitInfo[i].edm1;
-	srcout << " " << m_fitInfo[i].iter0;
-	srcout << " " << m_fitInfo[i].iter1 << endl;
+	srcout << " " << m_fitInfo[i].fitstatus0
+	<< " " << m_fitInfo[i].fcn0
+	<< " " << m_fitInfo[i].edm0
+	<< " " << m_fitInfo[i].nvpar0
+	<< " " << m_fitInfo[i].nparx0
+	<< " " << m_fitInfo[i].iter0
+	<< " " << m_fitInfo[i].fitstatus1
+	<< " " << m_fitInfo[i].fcn1
+	<< " " << m_fitInfo[i].edm1
+	<< " " << m_fitInfo[i].nvpar1
+	<< " " << m_fitInfo[i].nparx1
+	<< " " << m_fitInfo[i].iter0
+	<< endl;
 
 	if (m_inSrcDataArr[i].fixflag) {
 		const char* sep[2] = {"", ","};
