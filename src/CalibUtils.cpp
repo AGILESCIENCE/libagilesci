@@ -839,7 +839,7 @@ int m = m_edpobsenergy.GeomIndex(obsE);//16
 int n = m_edptheta.LinearIndex(theta);//19
 int p = m_edpphi.LinearIndex(phi);//8
 //8 19 16 16
-return m_edpgrid(p,n,m,l);
+return m_edpgrid(p,n,l,m);
 }
 
 
