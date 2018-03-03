@@ -839,7 +839,8 @@ int m = m_edpobsenergy.GeomIndex(obsE);//16
 int n = m_edptheta.LinearIndex(theta);//19
 int p = m_edpphi.LinearIndex(phi);//8
 //8 19 16 16
-return m_edpgrid(p,n,l,m);
+//phi, theta, obs en, true en
+return m_edpgrid(p,n,m,l);
 }
 
 
@@ -863,6 +864,7 @@ if (GetImageSize(edpFile, naxes)) {
 	edpFile.MoveAbsHDU(3);
 	ReadFloatArray(edpFile, "TRUE_ENERGY", m_edptrueenergy);
 	ReadFloatArray(edpFile, "OBS_ENERGY_CHANNEL", m_edpobsenergy);
+	m_edpobsenergy[0] = 10; //PATCH AB TO EDP
 	ReadFloatArray(edpFile, "POLAR_ANGLE", m_edptheta);
 	ReadFloatArray(edpFile, "AZIMUTH_ANGLE", m_edpphi);
 	}

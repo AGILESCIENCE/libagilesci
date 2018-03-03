@@ -17,6 +17,7 @@
 // Date: 2012-07-21
 
 #include <stdarg.h>
+#include <iostream>
 
 
 template<int N, class T> class ArrayOf
@@ -423,10 +424,12 @@ template<int N, class T> int ArrayOf<N, T>::LeftIndex(const T value) const
 int first = OutIndex(value);
 if (first>-2)
 	return first;
+//std::cout << "OK " <<std::endl;
 first = 0;
 int last = m_size-1;
 int mid = last/2;
 while (true) {
+	//std::cout << "mid " << mid <<std::endl;
 	if (value<m_values[mid])
 		if (mid==first+1)
 			return first;
@@ -468,6 +471,7 @@ return (value-m_values[index]<=m_values[index+1]-value) ? index : index+1;
 template<int N, class T> int ArrayOf<N, T>::GeomIndex(T value) const
 {
 int index = LeftIndex(value);
+	//std::cout << "LV@@ " << value << " of index " << index << std::endl;
 if (index<0)
 	return 0;
 else if (index==m_size-1)
