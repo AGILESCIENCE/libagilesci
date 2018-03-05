@@ -315,18 +315,19 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 		for (int etrue = 0; etrue < eneChanCount; etrue++) {
 			if (m_hasEdp) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
-				cout << "EOBS " << iMin << " " << m_energy[iMin] << " " << iMax << " " << m_energy[iMax] << endl;
+				//cout << "EOBS " << iMin << " " << m_energy[iMin] << " " << iMax << " " << m_energy[iMax] << endl;
 				for (int eobs = iMin;  eobs <= iMax; eobs++) { //(B) qui perche' non prendo da 0 a eneChanCount?
 					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]);
-					cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiindcor << " " << m_phi[phiindcor] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]) << endl;
+					//cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiindcor << " " << m_phi[phiindcor] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]) << endl;
 				}
 				//cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
 			} else
 				edpArr[etrue] = (etrue<iMin || etrue>iMax) ? 0.0f : 1.0f;
 			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(phiind, thetaind, etrue);
-			cout << "m_aeffgrid " << phiind << " " << thetaind << " " << etrue << "  - " << m_aeffgrid(phiind, thetaind, etrue) << endl;
+			/*cout << "m_aeffgrid " << (int) m_phi[phiind] << " " << (int) m_theta[thetaind] << " " << (int) m_energy[etrue] << "  - " << m_aeffgrid(phiind, thetaind, etrue) << endl;
 			if(m_aeffgrid(phiind, thetaind, etrue) == 0)
 				cout << "ERROR#################" << endl;
+			 */
 		}
 		m_avgValues(phiind, thetaind) = avgValue/normsum;
 	}
