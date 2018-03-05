@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		DD1CDBAE204CC0AD00F4D21F /* BinEvaluator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinEvaluator.h; sourceTree = "<group>"; };
+		DD1CDBAF204CC0AD00F4D21F /* Selection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Selection.h; sourceTree = "<group>"; };
+		DD1CDBB0204CC0AD00F4D21F /* ExpRatioEvaluator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExpRatioEvaluator.h; sourceTree = "<group>"; };
+		DD1CDBB1204CC0AD00F4D21F /* Eval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Eval.h; sourceTree = "<group>"; };
+		DD1CDBB2204CC0AD00F4D21F /* LiMa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LiMa.h; sourceTree = "<group>"; };
+		DD1CDBB3204CC0BD00F4D21F /* Eval.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Eval.cpp; sourceTree = "<group>"; };
+		DD1CDBB4204CC0BD00F4D21F /* BinEvaluator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BinEvaluator.cpp; sourceTree = "<group>"; };
+		DD1CDBB5204CC0BD00F4D21F /* Selection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Selection.cpp; sourceTree = "<group>"; };
+		DD1CDBB6204CC0BD00F4D21F /* ExpRatioEvaluator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExpRatioEvaluator.cpp; sourceTree = "<group>"; };
+		DD1CDBB7204CC0BD00F4D21F /* LiMa.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LiMa.cpp; sourceTree = "<group>"; };
 		DDDD7798190E7CD4001F55F0 /* AgileMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgileMap.h; sourceTree = "<group>"; };
 		DDDD7799190E7CD4001F55F0 /* AlikeData5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlikeData5.h; sourceTree = "<group>"; };
 		DDDD779A190E7CD4001F55F0 /* AlikePsf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlikePsf.h; sourceTree = "<group>"; };
@@ -61,6 +71,11 @@
 		DDDD7797190E7CD4001F55F0 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				DD1CDBAE204CC0AD00F4D21F /* BinEvaluator.h */,
+				DD1CDBB1204CC0AD00F4D21F /* Eval.h */,
+				DD1CDBB0204CC0AD00F4D21F /* ExpRatioEvaluator.h */,
+				DD1CDBB2204CC0AD00F4D21F /* LiMa.h */,
+				DD1CDBAF204CC0AD00F4D21F /* Selection.h */,
 				DDDD7798190E7CD4001F55F0 /* AgileMap.h */,
 				DDDD7799190E7CD4001F55F0 /* AlikeData5.h */,
 				DDDD779A190E7CD4001F55F0 /* AlikePsf.h */,
@@ -89,6 +104,11 @@
 		DDDD77AD190E7CDB001F55F0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				DD1CDBB4204CC0BD00F4D21F /* BinEvaluator.cpp */,
+				DD1CDBB3204CC0BD00F4D21F /* Eval.cpp */,
+				DD1CDBB6204CC0BD00F4D21F /* ExpRatioEvaluator.cpp */,
+				DD1CDBB7204CC0BD00F4D21F /* LiMa.cpp */,
+				DD1CDBB5204CC0BD00F4D21F /* Selection.cpp */,
 				DDDD77AE190E7CDB001F55F0 /* AgileMap.cpp */,
 				DDDD77AF190E7CDB001F55F0 /* AlikeData5.cpp */,
 				DDDD77B0190E7CDB001F55F0 /* AlikePsf.cpp */,
