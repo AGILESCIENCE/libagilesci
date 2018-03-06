@@ -290,7 +290,7 @@ if (m_emax<=m_energy[iMax]) {
 else
 	resultMask = resultMask | 4;	/// Upper bound treated as infinity
 
-cout << "MakeGridAverage: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl;
+cout << "MakeGridAverage2: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl;
 /// Calcolo del peso di ogni energia in base all'indice spettrale
 VecF specwt(eneChanCount);
 for (int i=0; i<eneChanCount-1; i++)
