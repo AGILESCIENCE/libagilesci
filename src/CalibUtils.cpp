@@ -308,7 +308,7 @@ int numphi = m_avgValues.Dim(0);
 //cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 	//for (int phiind = 0; phiind < numphi; phiind++) {
-		phiind = 0;
+		int phiind = 0;
 		int phiindcor = phiind%2?phiind-1:phiind;
 		/// Calcolo della aeff da normalizzare
 		VecF edpArr(eneChanCount);
