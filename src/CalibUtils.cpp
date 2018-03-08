@@ -290,6 +290,9 @@ if (m_emax<=m_energy[iMax]) {
 else
 	resultMask = resultMask | 4;	/// Upper bound treated as infinity
 
+iMin=0;
+iMax = eneChanCount-1;
+	
 cout << "MakeGridAverage2: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl;
 /// Calcolo del peso di ogni energia in base all'indice spettrale
 VecF specwt(eneChanCount);
@@ -307,8 +310,7 @@ int numphi = m_avgValues.Dim(0);
 //cout << "NUMTHETA: " << numtheta << endl;
 //cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
-	//for (int phiind = 0; phiind < numphi; phiind++) {
-		int phiind = 0;
+	for (int phiind = 0; phiind < numphi; phiind++) {
 		int phiindcor = phiind%2?phiind-1:phiind;
 		/// Calcolo della aeff da normalizzare
 		VecF edpArr(eneChanCount);
@@ -332,7 +334,7 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 			 */
 		}
 		m_avgValues(phiind, thetaind) = avgValue/normsum;
-	//}
+	}
 }
 	/*
 	cout << "AVGVALUES" << endl;
