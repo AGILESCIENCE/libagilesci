@@ -444,13 +444,13 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			*/
 			
 		}
-		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index) - pow(50000, 1.0-m_index);;
 	}
 	if(m_typefun == 1) {
 		//cout << "PLExpCutOff"<< endl;
 		//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
 		UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
-		for (int i=0; i<psfeCount-1; ++i) {
+		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
@@ -459,13 +459,13 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			ig.SetFunction(wf1);
 			ig.SetRelTolerance(0.001);
 			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			if(i == psfeCount-1) m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
 		}
-		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index); //questo sarebbe da calcolare in modo analitico. Da varificare AB
+		
 	}
 	if(m_typefun == 2) {
-		//HERE TO BE IMPLEMENTED
 		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
-		for (int i=0; i<psfeCount-1; ++i) {
+		for (int i=0; i<= psfeCount-1; ++i) {
 			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
@@ -475,7 +475,9 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			ig.SetFunction(wf1);
 			ig.SetRelTolerance(0.001);
 			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			if(i == psfeCount-1) m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
 		}
+		
 	}
 	/// Calcolo della psf da normalizzare
 	m_psfArr = 0.0;
