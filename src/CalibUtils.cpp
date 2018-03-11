@@ -284,8 +284,8 @@ if (m_emax<=m_energy[iMax]) {
 	if (m_emax!=m_energy[iMax])
 		resultMask = resultMask | 2;	/// Using different energy upper bound
 	if (iMax>iMin)
-		//--iMax; //non capisco perche' bisogna sottrarre 1 !!!!!!!!!!!!!!!!!!!!!!	(A)
-		iMax;
+		--iMax; //non capisco perche' bisogna sottrarre 1 !!!!!!!!!!!!!!!!!!!!!!	(A)
+		//iMax;
 	}
 else
 	resultMask = resultMask | 4;	/// Upper bound treated as infinity
