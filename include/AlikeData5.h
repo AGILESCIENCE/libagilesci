@@ -84,7 +84,7 @@ struct SourceData
 	double index;
 	//0 - PL (k E^-{\index})
 	//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
-	int typefun; //0 PowerLaw - 1 PLExpCutoff - 2 LogParabola
+	int typefun; //0 PowerLaw - 1 PLExpCutoff - 2 LogParabola - 3 PLSuperExpCutoff
 	double par2;
 	double par3;
 

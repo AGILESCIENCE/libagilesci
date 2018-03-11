@@ -317,7 +317,7 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 			if (m_hasEdp) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
 				//cout << "EOBS " << iMin << " " << m_energy[iMin] << " " << iMax << " " << m_energy[iMax] << endl;
-				for (int eobs = iMin;  eobs <= iMax; eobs++) { //(B) qui perche' non prendo da 0 a eneChanCount?
+				for (int eobs = iMin;  eobs <= iMax; eobs++) {
 					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]);
 					//cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiindcor << " " << m_phi[phiindcor] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]) << endl;
 				}

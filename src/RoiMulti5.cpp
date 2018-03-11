@@ -1041,11 +1041,13 @@ for (int i=0; i<m_srcCount; ++i) {
 	
 	cout <<  m_inSrcDataArr[i].typefun;
 	if(m_inSrcDataArr[i].typefun == 0)
-		cout << " PowerLaw(1) ";
+		cout << " PowerLaw(1 - index) ";
 	if(m_inSrcDataArr[i].typefun == 1)
-		cout << " PLExpCutOff(1,2) ";
+		cout << " PLExpCutOff(1 - gamma1, 2 - Ec) ";
 	if(m_inSrcDataArr[i].typefun == 2)
-		cout << " LogParabola(1,2,3) ";
+		cout << " LogParabola(1 - alpha, 2 - Eb, 3 - beta) ";
+	if(m_inSrcDataArr[i].typefun == 3)
+		cout << " PLSuperExpCutOff(1 - gamma1, 2 - Ec, 3 - gamma2) ";
 	
 	cout <<  m_inSrcDataArr[i].par2;
 	if(fixFlag & Par2Free)

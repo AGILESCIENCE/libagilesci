@@ -86,7 +86,7 @@ protected:
 	void UpdateNorm(double eMin, double eMax, double index);
 	void UpdateNormPLExpCutOff(double eMin, double eMax, double index, double par2);
 	void UpdateNormLogParabola(double eMin, double eMax, double index, double par2, double par3);
-
+	void UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double par2, double par3);
 private:
 	double m_eInf;
 	double m_eSup;

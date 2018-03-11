@@ -293,6 +293,19 @@ void AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, do
 	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
 }
 
+void AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3)
+{
+	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
+	TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	f.SetParameter(0, index);
+	f.SetParameter(1, m_par2);
+	f.SetParameter(2, m_par3);
+	ROOT::Math::WrappedTF1 wf1(f);
+	ROOT::Math::GaussIntegrator ig;
+	ig.SetFunction(wf1);
+	ig.SetRelTolerance(0.001);
+	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+}
 
 
 
@@ -444,7 +457,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			*/
 			
 		}
-		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index) - pow(50000, 1.0-m_index);;
+		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);// - pow(50000, 1.0-m_index);
 	}
 	if(m_typefun == 1) {
 		//cout << "PLExpCutOff"<< endl;
@@ -458,14 +471,16 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			ROOT::Math::GaussIntegrator ig;
 			ig.SetFunction(wf1);
 			ig.SetRelTolerance(0.001);
-			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
-			if(i == psfeCount-1) m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			else
+				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
 		}
-		
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
 	if(m_typefun == 2) {
 		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
-		for (int i=0; i<= psfeCount-1; ++i) {
+		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
@@ -474,10 +489,32 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			ROOT::Math::GaussIntegrator ig;
 			ig.SetFunction(wf1);
 			ig.SetRelTolerance(0.001);
-			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
-			if(i == psfeCount-1) m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			else
+				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
 		}
-		
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+	}
+	if(m_typefun == 3) {
+		//cout << "PLSuperExpCutOff"<< endl;
+		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
+		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
+		for (int i=0; i<=psfeCount-1; ++i) {
+			TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", GetEmin(), GetEmax());
+			f.SetParameter(0, m_index);
+			f.SetParameter(1, m_par2);
+			f.SetParameter(1, m_par3);
+			ROOT::Math::WrappedTF1 wf1(f);
+			ROOT::Math::GaussIntegrator ig;
+			ig.SetFunction(wf1);
+			ig.SetRelTolerance(0.001);
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			else
+				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+		}
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
 	/// Calcolo della psf da normalizzare
 	m_psfArr = 0.0;
