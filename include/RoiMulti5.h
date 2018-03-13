@@ -56,6 +56,7 @@ public:	/// Get Functions
 	Double_t GetCoefflo() const { return m_coefflo; }
 	Double_t GetCoeffhi() const { return m_coeffhi; }
 	Int_t    GetFixflag() const { return m_fixflag; }
+	
 
 public:	/// Set Functions
 	void SetIndex(Double_t index) { m_index = index>0?index:-index; UpdateNorm(); }
@@ -121,7 +122,7 @@ public: /// Construction
 	AlikeSourceMap(): AlikePsfSource(),
 		m_flux(0), m_fluxerr(0), m_fluxlo(0), m_fluxhi(0), m_fluxul(0),
 		m_idxErr(0), m_par2Err(0), m_par3Err(0), m_exposure(0), m_ts(0), m_minTS(3),
-		m_ulcl(0.95), m_loccl(0.95), m_fixflag(0), /// m_covar(),
+		m_ulcl(0.95), m_loccl(0.95), m_fixflag(0), m_forceposfree(0), /// m_covar(),
 		m_polygon(), m_ellipse(), m_radius(0), m_label()
         {
             for(int i=0; i<7; i++) {
@@ -181,7 +182,8 @@ public:	/// Data Access
 	void SetMinTS(Double_t minTS) { m_minTS = minTS; }
 
 	Int_t GetFixflag() const { return m_fixflag; }
-	void SetFixflag(Int_t fixflag) { m_fixflag = fixflag; }
+	void SetFixflag(Int_t fixflag) { m_fixflag = fixflag; if(fixflag & ForcePosFree) m_forceposfree = 1; }
+	Int_t   GetForcePosFree() const { return m_forceposfree; }
 
 	Double_t GetTS() const { return m_ts; }
 	void SetTS(Double_t inTS) ;
@@ -234,6 +236,7 @@ private: /// Data
 	Double_t m_ulcl;
 	Double_t m_loccl;
 	FixFlag  m_fixflag;
+	Int_t m_forceposfree;
 	/// TMatrixD m_covar;
 
 	Polygon  m_polygon;	/// Source coutour if available, empty otherwise
@@ -409,7 +412,7 @@ public:	/// Getting the singleton object
 public:	/// Main operations
 	bool SetPsf(const char* psfFileName, const char* raeffFileName, const char* edpFileName);
 	bool SetMaps(const MapData& mapData, int galMode=DiffDefault, int isoMode=DiffDefault);
-	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy);
+	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol);
 
 	/// Add the Extended Sources for analysis
 	bool SetExtendedSources(const ExtData& extData);

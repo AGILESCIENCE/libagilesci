@@ -33,6 +33,7 @@ const FixFlag PosFree   = 2;
 const FixFlag IndexFree = 4;
 const FixFlag Par2Free =  8;
 const FixFlag Par3Free = 16;
+const FixFlag ForcePosFree = 32;
 /// typedef enum { AllFixed=0, FluxFree = 1, PosFree = 2, IndexFree = 4 } FixFlag;
 
 

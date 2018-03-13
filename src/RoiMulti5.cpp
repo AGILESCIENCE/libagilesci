@@ -408,7 +408,7 @@ m_mapCount = 0;
 m_diffParCount = 0;
 m_sourceParOffset = 0;
 	
-ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad");
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Migrad");
 ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 }
 
@@ -830,7 +830,7 @@ if (m_logFile)
 }
 */
 
-bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy) {
+bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol) {
 	/*
 	 
 	 * Minuit (library libMinuit). Old version of Minuit, based on the TMinuit class. The list of possible algorithms are:
@@ -877,9 +877,11 @@ bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg,
 	 * Precision (MinimizerOptions::SetTolerance(double )). Precision value in the evaluation of the minimization function. Default is numerical double precision.
 	 */
 	
+	cout << "Set user choice: " << minimizertype << " " << minimizeralg << " " << minimizerdefstrategy << endl;
 	ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizertype, minimizeralg);
 	ROOT::Math::MinimizerOptions::SetDefaultStrategy(minimizerdefstrategy);
-	//ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.001);
+	
+	ROOT::Math::MinimizerOptions::SetDefaultTolerance(deftol);
 	//ROOT::Math::MinimizerOptions::SetDefaultPrecision(0.01);
 
 }
@@ -1018,7 +1020,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		cout << " fixed ";
 	cout << index;
 	if (fixFlag & IndexFree)
-		cout << " free ";
+		cout << " free (" << m_indexLimitMin << ", " << m_indexLimitMax << ") ";
 	else
 		cout << " fixed ";
 	cout << "(" << m_inSrcDataArr[i].srcL << ", " << m_inSrcDataArr[i].srcB << ")";
@@ -1051,12 +1053,12 @@ for (int i=0; i<m_srcCount; ++i) {
 	
 	cout <<  m_inSrcDataArr[i].par2;
 	if(fixFlag & Par2Free)
-		cout << " free ";
+		cout << " free (" << m_par2LimitMin << ", " << m_par2LimitMax << ") ";
 	else
 		cout << " fixed ";
 	cout <<  m_inSrcDataArr[i].par3;
 	if(fixFlag & Par3Free)
-		cout << " free ";
+		cout << " free (" << m_par3LimitMin << ", " << m_par3LimitMax << ") ";
 	else
 		cout << " fixed ";
 	
@@ -2199,6 +2201,7 @@ for (int source=0; source<SrcCount(); ++source) {
 		Double_t amin0;
 		
 		//fix gal0 and iso0
+		/* AB AB AB
 		for (int m=0; m<m_mapCount; ++m) {
 			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, true));
 			m_galSrc[m].SetFixflag(AllFixed);
@@ -2207,7 +2210,7 @@ for (int source=0; source<SrcCount(); ++source) {
 			FixGalPar(m);
 			FixIsoPar(m);
 		}
-		
+		*/
 		
 		Fit(fitOpt, source, true, 0, &amin0);
 		if (!diffParsStored) {
@@ -2225,6 +2228,7 @@ for (int source=0; source<SrcCount(); ++source) {
 		Double_t amin1;
 		
 		//fix gal and iso1
+		/* AB AB AB
 		for (int m=0; m<m_mapCount; ++m) {
 			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, false));
 			m_galSrc[m].SetFixflag(AllFixed);
@@ -2233,21 +2237,23 @@ for (int source=0; source<SrcCount(); ++source) {
 			FixGalPar(m);
 			FixIsoPar(m);
 		}
+		*/
 		Fit(fitOpt, source, false, 1, &amin1);
 
 		m_sources[source].SetTS(amin0 - amin1);
 		m_sources[source].PrintSqrtTS();
 
-		/**
+		/*
 		double like1 = Likelihood();
 		cerr << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
 		cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-		*/
+		 */
+		cout << "#### Source# " << source <<  " " << m_sources[source].GetFixflag() << " " << m_sources[source].GetTS() << " force " << m_sources[source].GetForcePosFree() << endl;
 
-		if (m_sources[source].GetFixflag() > FluxFree && m_sources[source].GetTS() > m_sources[source].GetLocCL()) {
+		if ((m_sources[source].GetFixflag() > FluxFree && m_sources[source].GetTS() > m_sources[source].GetLocCL()) || m_sources[source].GetForcePosFree() ) {
 			Double_t olderrdef = GetErrorDef();
 			ReleaseSrcFlux(source);
-			if (m_sources[source].GetFixflag() & PosFree) {
+			if (m_sources[source].GetFixflag() & PosFree || m_sources[source].GetForcePosFree()) {
 				ReleaseSrcPos(source);
 				Double_t newerrdef = m_sources[source].GetLocCL();
 				if (gROOT->GetVersionInt() >= 53000) {newerrdef *= 0.5;}
@@ -2256,10 +2262,11 @@ for (int source=0; source<SrcCount(); ++source) {
 			SetSrcPars(source);
 			cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux and position free, Errordef = " << m_sources[source].GetLocCL() << endl;
 			Double_t amin2 = amin1;
+			//fitOpt
 			Fit(fitOpt, source, false, 3, &amin2);
 			Int_t result = GetCovarStat();
 			cout << "Fit result = " << result << endl;
-			if (m_sources[source].GetFixflag() & PosFree) {
+			if (m_sources[source].GetFixflag() & PosFree || m_sources[source].GetForcePosFree()) {
 				if (amin2 < amin1) {
 					GetSrcPars(source);
 					srcL = m_sources[source].GetSrcL();

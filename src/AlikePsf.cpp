@@ -457,11 +457,15 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			*/
 			
 		}
-		m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);// - pow(50000, 1.0-m_index);
+		if(psfEnergies[psfeCount-1] == 50000)
+			m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);// - pow(50000, 1.0-m_index);
+		else
+			m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index) - pow(50000, 1.0-m_index);
 	}
 	if(m_typefun == 1) {
 		//cout << "PLExpCutOff"<< endl;
 		//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
+		//cout << GetEmax() << endl;
 		UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
 		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", GetEmin(), GetEmax());
@@ -473,6 +477,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			ig.SetRelTolerance(0.001);
 			if(i == psfeCount-1)
 				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+				//m_specwt[psfeCount-1] = 0;
 			else
 				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
 		}
