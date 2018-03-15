@@ -101,12 +101,15 @@ public:
 
 	double GetTS() const { return m_TS; }
 	void SetTS(double ts) ;
+	void SetLikelihood(Double_t lik) { m_likelihood = lik; };
+	double GetLikelihood() { return m_likelihood; };
 	void PrintSqrtTS() const;
 	double GetBaryL() const { return m_baryl; }
 	double GetBaryB() const { return m_baryb; }
 
 private:	/// Data
 	double   m_TS;
+	double	 m_likelihood;
 	double   m_baryl;
 	double   m_baryb;
 	void EvalBarycenter();
@@ -187,6 +190,9 @@ public:	/// Data Access
 
 	Double_t GetTS() const { return m_ts; }
 	void SetTS(Double_t inTS) ;
+	
+	void SetLikelihood(Double_t lik) { m_likelihood = lik; };
+	Double_t GetLikelihood() { return m_likelihood; };
 
 	Double_t GetULCL() const { return m_ulcl; }
 	Double_t GetLocCL() const { return m_loccl; }
@@ -232,6 +238,7 @@ private: /// Data
 
 	Double_t m_ts;
 	Double_t m_minTS;
+	Double_t m_likelihood;
 
 	Double_t m_ulcl;
 	Double_t m_loccl;

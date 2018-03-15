@@ -483,7 +483,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
-	if(m_typefun == 2) {
+	if(m_typefun == 3) {
 		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
 		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
@@ -501,7 +501,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
-	if(m_typefun == 3) {
+	if(m_typefun == 2) {
 		//cout << "PLSuperExpCutOff"<< endl;
 		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
 		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);

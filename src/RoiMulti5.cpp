@@ -180,6 +180,7 @@ if (m_ellipse.horAxis>0 && m_ellipse.verAxis>0) {
 	}
 }
 
+
 void AlikeSourceMap::SetTS(Double_t inTS)
 {
 	m_ts = inTS<0 ? 0 : ( gROOT->GetVersionInt()<53000 ? inTS : 2.0 * inTS);
@@ -1047,9 +1048,10 @@ for (int i=0; i<m_srcCount; ++i) {
 	if(m_inSrcDataArr[i].typefun == 1)
 		cout << " PLExpCutOff(1 - gamma1, 2 - Ec) ";
 	if(m_inSrcDataArr[i].typefun == 2)
-		cout << " LogParabola(1 - alpha, 2 - Eb, 3 - beta) ";
-	if(m_inSrcDataArr[i].typefun == 3)
 		cout << " PLSuperExpCutOff(1 - gamma1, 2 - Ec, 3 - gamma2) ";
+	if(m_inSrcDataArr[i].typefun == 3)
+		cout << " LogParabola(1 - alpha, 2 - Eb, 3 - beta) ";
+	
 	
 	cout <<  m_inSrcDataArr[i].par2;
 	if(fixFlag & Par2Free)
@@ -1903,7 +1905,7 @@ cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() <<
 Double_t amin1;
 Fit(fitOpt, source, false, 1, &amin1);
 
-/// double like1 = Likelihood();
+double like1 = Likelihood();
 
 for (int i=0; i<=source; ++i)
 	GetSrcPars(i);
@@ -1915,11 +1917,11 @@ Fit(fitOpt, source, true, 1, &amin0);
 m_sources[source].SetTS(amin0 - amin1);
 m_sources[source].PrintSqrtTS();
 
-/**
+
 double like0 = Likelihood();
-cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-*/
+cout << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
+cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+
 if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || (m_sources[source].GetFlux() < 0)) {
 	Nullify(source);
 	for (int i=0; i<=source; ++i)
@@ -1948,7 +1950,7 @@ SetSrcPars(source);
 Double_t amin1;
 Fit(fitOpt, source, false, 1, &amin1);
 
-/// double like1 = Likelihood();
+double like1 = Likelihood();
 
 GetSrcPars(source);
 Nullify(source);
@@ -1959,11 +1961,11 @@ Fit(fitOpt, source, true, 1, &amin0);
 m_sources[source].SetTS(amin0 - amin1);
 m_sources[source].PrintSqrtTS();
 
-/**
+
 double like0 = Likelihood();
-cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-*/
+cout << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
+cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+
 
 if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].GetFlux()>0) {
 	cout << "S3: Source " << source+1 << ": " << m_sources[source].GetLabel();
@@ -2052,7 +2054,7 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	Double_t amin1;
 	Fit(fitOpt, source, false, 1, &amin1);
 
-	/// double like1 = Likelihood();
+	double like1 = Likelihood();
 
 	GetSrcPars(source);
 	Nullify(source);
@@ -2063,11 +2065,11 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	m_sources[source].SetTS(amin0 - amin1);
 	m_sources[source].PrintSqrtTS();
 
-	/**
+	
 	double like0 = Likelihood();
 	cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
 	cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-	*/
+
 
 	}
 	if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || m_sources[source].GetFlux()<0) {
@@ -2219,7 +2221,7 @@ for (int source=0; source<SrcCount(); ++source) {
 			/// PrintDiffData();
 			}
 
-		/// double like0 = Likelihood();
+		double like0 = Likelihood();
 
 
 		ReleaseSrcFlux(source);
@@ -2243,11 +2245,11 @@ for (int source=0; source<SrcCount(); ++source) {
 		m_sources[source].SetTS(amin0 - amin1);
 		m_sources[source].PrintSqrtTS();
 
-		/*
+		
 		double like1 = Likelihood();
-		cerr << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
-		cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-		 */
+		cout << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
+		cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+		
 		cout << "#### Source# " << source <<  " " << m_sources[source].GetFixflag() << " " << m_sources[source].GetTS() << " force " << m_sources[source].GetForcePosFree() << endl;
 
 		if ((m_sources[source].GetFixflag() > FluxFree && m_sources[source].GetTS() > m_sources[source].GetLocCL()) || m_sources[source].GetForcePosFree() ) {
@@ -2288,11 +2290,12 @@ for (int source=0; source<SrcCount(); ++source) {
 			m_sources[source].SetTS(amin0 - amin1);
 			m_sources[source].PrintSqrtTS();
 
-			/**
+			
 			double like1 = Likelihood();
 			cerr << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
 			cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-			*/
+			m_sources[source].SetLikelihood(like1);
+			cout << "SET " << like1 << endl;
 
 			}
         else {
@@ -3089,7 +3092,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
 	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp" << endl;
 	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Index Err" << ", Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "], Par2 Err, Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "], Par3 Err" << endl;
-	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1" << endl;
+	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 	
 	//if (m_inSrcDataArr[i].fixflag) {
 		srcout << "! Gal coeffs [" << m_galLimitMin << " , " << m_galLimitMax << "] and errs" << endl;
@@ -3179,6 +3182,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	<< " " << m_fitInfo[i].nvpar1
 	<< " " << m_fitInfo[i].nparx1
 	<< " " << m_fitInfo[i].iter0
+	<< " " << m_sources[i].GetLikelihood() 
 	<< endl;
 
 	if (m_inSrcDataArr[i].fixflag) {
