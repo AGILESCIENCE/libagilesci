@@ -284,8 +284,8 @@ if (m_emax<=m_energy[iMax]) {
 	if (m_emax!=m_energy[iMax])
 		resultMask = resultMask | 2;	/// Using different energy upper bound
 	if (iMax>iMin)
-		//--iMax; //non capisco perche' bisogna sottrarre 1 !!!!!!!!!!!!!!!!!!!!!!	(A)
-		iMax;
+		--iMax; //non capisco perche' bisogna sottrarre 1 !!!!!!!!!!!!!!!!!!!!!!	(A)
+		//iMax;
 	}
 else
 	resultMask = resultMask | 4;	/// Upper bound treated as infinity
@@ -295,7 +295,7 @@ cout << "MakeGridAverage2: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl
 VecF specwt(eneChanCount);
 for (int i=0; i<eneChanCount-1; i++)
 	specwt[i] = pow(double(m_energy[i]), 1.0-m_index) - pow(double(m_energy[i+1]), 1.0-m_index);
-specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index) - pow(double(50000), 1.0-m_index);
+specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index);// - pow(double(50000), 1.0-m_index);
 
 m_avgValues = 0.0f;
 float normsum = 0;
