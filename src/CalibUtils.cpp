@@ -32,6 +32,8 @@
 /// #include "fitsio.h"
 #include "FitsUtils.h"
 
+#include "TH1D.h"
+
 #include "CalibUtils.h"
 
 
@@ -875,22 +877,48 @@ if (GetImageSize(edpFile, naxes)) {
 	ReadFloatArray(edpFile, "POLAR_ANGLE", m_edptheta);
 	ReadFloatArray(edpFile, "AZIMUTH_ANGLE", m_edpphi);
 	}
-/*
+	
+	
+	
+	//Correction factor
 	int numtheta = m_edpgrid.Dim(1);
 	int numphi = m_edpgrid.Dim(0);
 	int eneChanCount = m_edptrueenergy.Dim(0);
+	
 	for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 		for (int phiind = 0; phiind < numphi; phiind++) {
-			//int phiind = 0;
-			for (int etrue = 0; etrue < eneChanCount; etrue++) {
-				for (int eobs = 0;  eobs < eneChanCount; eobs++) {
- 					val3 = m_edpgrid(phiin, thetain, eobs, etrue);//CORRETTO
- 
+		
+		double val3 = 0;
+		
+		for (int etrue = 0; etrue < eneChanCount; etrue++) {
+			TH1D* h1 = new TH1D("title", "title", eneChanCount, 0, eneChanCount);
+			TH1D* h2 = 0;
+			for (int eobs = 0;  eobs < eneChanCount; eobs++) {
+				val3 = m_edpgrid(phiind, thetaind, eobs, etrue);//CORRETTO
+				h1->SetBinContent(eobs+1, val3);
+				if(etrue < 12 && eobs == eneChanCount-2) {
+					h2 = (TH1D*) h1->Clone("edp2");
+					h2->SetBinContent(eobs+1, h2->GetBinContent(eobs+1) / 2.0);
 				}
+				
+				if(etrue < 12 && eobs == eneChanCount-1) {
+					h2->SetBinContent(eobs+1, 0);
+					double scalefactor = h2->Integral();
+					h2->Scale(1.0/scalefactor);
+					
+					for (int eobs2 = 0;  eobs2 < eneChanCount; eobs2++) {
+						m_edpgrid(phiind, thetaind, eobs2, etrue) = h2->GetBinContent(eobs2+1);
+					}
+				}
+				
 			}
+			
+		}
+			
 		}
 	}
-*/
+	
+
 return edpFile.Status();
 }
 
