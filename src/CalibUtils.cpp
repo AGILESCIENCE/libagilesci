@@ -896,13 +896,13 @@ if (GetImageSize(edpFile, naxes)) {
 			for (int eobs = 0;  eobs < eneChanCount; eobs++) {
 				val3 = m_edpgrid(phiind, thetaind, eobs, etrue);//CORRETTO
 				h1->SetBinContent(eobs+1, val3);
-				if(etrue < 12 && eobs == eneChanCount-2) {
+				if(eobs == eneChanCount-2) {
 					h2 = (TH1D*) h1->Clone("edp2");
-					h2->SetBinContent(eobs+1, h2->GetBinContent(eobs+1) / 2.0);
+					h2->SetBinContent(eobs+1, h1->GetBinContent(eneChanCount-3+1) / 2.0);
 				}
 				
-				if(etrue < 12 && eobs == eneChanCount-1) {
-					h2->SetBinContent(eobs+1, 0);
+				if(eobs == eneChanCount-1) {
+					h2->SetBinContent(eobs+1, h1->GetBinContent(eneChanCount-3+1) / 4.0);
 					double scalefactor = h2->Integral();
 					h2->Scale(1.0/scalefactor);
 					
