@@ -457,10 +457,13 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			*/
 			
 		}
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+		
 		if(psfEnergies[psfeCount-1] == 50000)
 			m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);// - pow(50000, 1.0-m_index);
 		else
 			m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index) - pow(50000, 1.0-m_index);
+		
 	}
 	if(m_typefun == 1) {
 		//cout << "PLExpCutOff"<< endl;
@@ -483,13 +486,15 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
-	if(m_typefun == 3) {
-		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
+	if(m_typefun == 2) {
+		//cout << "PLSuperExpCutOff"<< endl;
+		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
+		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
 		for (int i=0; i<=psfeCount-1; ++i) {
-			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
+			TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
-			f.SetParameter(2, m_par3);
+			f.SetParameter(1, m_par3);
 			ROOT::Math::WrappedTF1 wf1(f);
 			ROOT::Math::GaussIntegrator ig;
 			ig.SetFunction(wf1);
@@ -501,15 +506,13 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
-	if(m_typefun == 2) {
-		//cout << "PLSuperExpCutOff"<< endl;
-		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
-		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
+	if(m_typefun == 3) {
+		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
 		for (int i=0; i<=psfeCount-1; ++i) {
-			TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", GetEmin(), GetEmax());
+			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
-			f.SetParameter(1, m_par3);
+			f.SetParameter(2, m_par3);
 			ROOT::Math::WrappedTF1 wf1(f);
 			ROOT::Math::GaussIntegrator ig;
 			ig.SetFunction(wf1);

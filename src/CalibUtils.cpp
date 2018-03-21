@@ -295,7 +295,7 @@ cout << "MakeGridAverage2: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl
 VecF specwt(eneChanCount);
 for (int i=0; i<eneChanCount-1; i++)
 	specwt[i] = pow(double(m_energy[i]), 1.0-m_index) - pow(double(m_energy[i+1]), 1.0-m_index);
-specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index);// - pow(double(50000), 1.0-m_index);
+specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index) - pow(double(50000), 1.0-m_index);
 
 m_avgValues = 0.0f;
 float normsum = 0;
@@ -875,6 +875,22 @@ if (GetImageSize(edpFile, naxes)) {
 	ReadFloatArray(edpFile, "POLAR_ANGLE", m_edptheta);
 	ReadFloatArray(edpFile, "AZIMUTH_ANGLE", m_edpphi);
 	}
+/*
+	int numtheta = m_edpgrid.Dim(1);
+	int numphi = m_edpgrid.Dim(0);
+	int eneChanCount = m_edptrueenergy.Dim(0);
+	for (int thetaind = 0; thetaind < numtheta; thetaind++) {
+		for (int phiind = 0; phiind < numphi; phiind++) {
+			//int phiind = 0;
+			for (int etrue = 0; etrue < eneChanCount; etrue++) {
+				for (int eobs = 0;  eobs < eneChanCount; eobs++) {
+ 					val3 = m_edpgrid(phiin, thetain, eobs, etrue);//CORRETTO
+ 
+				}
+			}
+		}
+	}
+*/
 return edpFile.Status();
 }
 
