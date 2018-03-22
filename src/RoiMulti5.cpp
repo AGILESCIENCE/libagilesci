@@ -3769,7 +3769,7 @@ if (OpenConditionalBin(f, sameValues, row, count))
 }
 
 
-void RoiMulti::WriteHtml(const char* fileName, const char* suffix) const
+void RoiMulti::WriteHtml(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix) const
 {
 if (!m_mapCount || !(m_srcCount+m_extCount)) {
 	cerr << "Not writing file " << fileName << ": No data to write" << endl;
@@ -4193,7 +4193,7 @@ if (SrcCount()) {
 		htmlout << " " << m_fitInfo[i].iter1;
 
 
-	
+
 		htmlout << "</td><td>";
 		const char* sep[2] = {"", ","};
 
