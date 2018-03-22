@@ -1,7 +1,7 @@
 //
 // C++ Interface: %{MODULE}
 //
-// Description:
+// Description: 
 //
 //
 // Author: %{AUTHOR} <%{EMAIL}>, (C) %{YEAR}
@@ -29,8 +29,7 @@
 #define ROIMULTI_VERSION "RoiMulti 2.0"
 #define ROIMULTI_DATE "2012-06-21"
 
-/* 03/2018  -> ExpRatioEvaluator dependency */
-#include "ExpRatioEvaluator.h"
+
 
 
 Double_t EvalExposure(Double_t srcl, Double_t srcb, const AgileMap& expmap);
@@ -108,7 +107,7 @@ private:	/// Data
 	double   m_baryl;
 	double   m_baryb;
 	void EvalBarycenter();
-
+	
 protected:	/// Making a copy
 	void Copy(const AlikeExtMap &another, bool all);
 };
@@ -394,7 +393,7 @@ public:	/// Main operations
 
 	/// Analysis
 	bool SetLogfile(const char* fileName);
-
+	
 	void CloseLogFile();
 	int DoFit(
 		const SourceDataArray& srcDataArr,
@@ -419,9 +418,9 @@ public:	/// Main operations
 
 public:	/// Collecting the results
 	void Write(const char* fileName, bool skipFitInfo=true) const;
-	void WriteSources(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, bool skipFixed=false, bool skipEllipses=false) const;
+	void WriteSources(const char* fileName, bool skipFixed=false, bool skipEllipses=false) const;
 	void LogSources(const char* fileName, int iterNum, AgileMap* simArr, int simArraySize) const;
-	void WriteHtml(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix=".html") const;
+	void WriteHtml(const char* fileName, const char* suffix=".html") const;
 	SourceDataArray GetFitData() const { return m_outSrcDataArr; }
 
 	/// Diffuse components
@@ -438,7 +437,7 @@ public:	/// Collecting the results
 	const AlikeSourceMap& GetSource(int source) const { return m_sources[source%m_srcCount]; }
 	double GetTotalExposure(int source) const;
 	Double_t GetSourceTS(const char* label) const;
-
+	
 private:	/// Internal operations
 	void SetSources(const SourceDataArray& srcDataArr, double ranal, double ulcl, double loccl);
 	Int_t DoFit(const char* fitOpt1, const char* fitOpt2, const char* sourceCheckTS, double minSourceTS);
@@ -540,11 +539,6 @@ private:	/// Internal operations
 
 	double EvalFitFunction(double* params, double* data=0);
 
-
-	// exp ratio evaluation - 03/2018
-	double ExpRatioEvaluation(AgileMap& exp, double l, double b, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize) const;
-
-
 private:	/// Data
 	TH1D   m_countsHist;
 	TF1    m_model;
@@ -576,7 +570,7 @@ private:	/// Data
 	/// Sources
 	SourceDataArray m_inSrcDataArr;	/// Copy of the original input data
 	SourceDataArray m_outSrcDataArr;	/// Input data modified after fitting
-
+	
 	/// Diff components
 	DiffMode        m_galMode;
 	DiffMode        m_isoMode;
