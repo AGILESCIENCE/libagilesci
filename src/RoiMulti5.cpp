@@ -149,6 +149,97 @@ if (m_polygon.Sides()) {
 	}
 }
 
+double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
+	if(fluxcorrection == false)
+		return 1.0;
+	else {
+		//return 0.0;
+	
+		AlikePsfTables* psfTab = (AlikePsfTables*) AlikePsfSource::PsfTab();
+		//psfTab->EdpGrid::Values();
+		VecF  edptrueenergy = psfTab->EdpTrueEnerges();
+		VecF  edpobsenergy = psfTab->EdpObsEnerges();
+		VecF  edptheta = psfTab->EdpTheta();
+		VecF  edpphi = psfTab->EdpPhi();
+		Mat4F edpgrid = psfTab->EdpVal();
+		int eneChanCount = edptrueenergy.Dim(0);
+		int iMin = edptrueenergy.GeomIndex(GetEmin());
+		int iMax = edptrueenergy.GeomIndex(GetEmax()) - 1;
+		cout << edptrueenergy[iMin] << " " << edptrueenergy[iMax] << endl;
+		double normsumpl=0, normsumple = 0;
+		//iMin, iMax
+
+		for (int i=iMin; i<=iMax; i++) {
+			cout << i << " " << edptrueenergy[i] << " " << edptrueenergy[i+1] << endl;
+			double udp1;
+			double lastenergy = edptrueenergy[i+1];
+			if(i == iMax && GetEmax() == 50000)
+				lastenergy = 50000;
+			
+			if(m_typefun == 0) {
+				udp1 = UpdateNorm(edptrueenergy[i], lastenergy, m_index, 0);
+			}
+			if(m_typefun == 1) {
+				udp1 = UpdateNormPLExpCutOff(edptrueenergy[i], lastenergy, m_index, m_par2, 0);
+				
+			}
+			if(m_typefun == 2) {
+				udp1 = UpdateNormPLSuperExpCutOff(edptrueenergy[i], lastenergy, m_index, m_par2, m_par3, 0);
+				
+			}
+			if(m_typefun == 3) {
+				udp1 = UpdateNormLogParabola(edptrueenergy[i], lastenergy, m_index, m_par2, m_par3, 0);
+				
+			}
+			normsumple += udp1;
+			
+			udp1 = UpdateNorm(edptrueenergy[i], lastenergy, 2.1, 0);
+			
+			
+			normsumpl += udp1;
+		}
+		cout << normsumpl << " " << normsumple << endl;
+		VecF edpArr(eneChanCount);
+		edpArr = 0.0f;
+		
+		for(int thetaind=0; thetaind<edptheta.Dim(0); thetaind++) {
+			for(int phiind=0; phiind<edpphi.Dim(0); phiind++){
+				int phiindcor = phiind%2?phiind-1:phiind;
+				float avgValuePL = 0.0f;
+				float avgValuePLE = 0.0f;
+				for (int etrue = 0; etrue < eneChanCount-1; etrue++)  {
+					double lastenergy = edptrueenergy[etrue+1];
+					if(etrue == iMax && GetEmax() == 50000)
+						lastenergy = 50000;
+					
+					for (int eobs = iMin;  eobs <= iMax; eobs++) {
+						edpArr[etrue] += edpgrid( phiind, thetaind, eobs, etrue);
+						//edp.Val(m_edptrueenergy[etrue], m_edpobsenergy[eobs], m_edptheta[thetaind], m_edpphi[phiindcor]); //CORRETTO
+					}
+					avgValuePL += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, 2.1, 0) * 1;
+					//cout << UpdateNormPL(m_edptrueenergy[etrue], m_edptrueenergy[etrue+1], 2.1) << " " << edpArr[etrue] << endl;
+					if(m_typefun == 0)
+						avgValuePLE += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, m_index, 0) * 1;
+					if(m_typefun == 1)
+						avgValuePLE += edpArr[etrue] * UpdateNormPLExpCutOff(edptrueenergy[etrue], lastenergy, m_index, m_par2, 0) * 1;
+					if(m_typefun == 2)
+						avgValuePLE += edpArr[etrue] * UpdateNormPLSuperExpCutOff(edptrueenergy[etrue], lastenergy, m_index, m_par2, m_par3, 0) * 1;
+					if(m_typefun == 3)
+						avgValuePLE += edpArr[etrue] * UpdateNormLogParabola(edptrueenergy[etrue], lastenergy, m_index, m_par2, m_par3, 0) * 1;
+				}
+				double avgpl = 0, avgple = 0;
+				//avgalue dipende da theta e phi
+				avgpl = avgValuePL/normsumpl;
+				avgple = avgValuePLE/normsumple;
+				double corr = avgpl/avgple;
+				cout << "A " << edptheta[thetaind] << " " << edpphi[phiindcor] << " " << avgpl << " " << avgple << " " << avgpl - avgple << " PL/" << avgpl/avgple << endl;
+				return corr;
+			}
+		}
+	}
+	
+}
+
 void AlikeSourceMap::WriteEllipse(string fileprefix) const
 {
 const double numPoints = 40;
@@ -358,7 +449,15 @@ RoiMulti::RoiMulti():
 	m_par2LimitMin(20.0),
 	m_par2LimitMax(10000.0),
 	m_par3LimitMin(0.0),
-	m_par3LimitMax(10.0)
+	m_par3LimitMax(10.0),
+
+	m_galmode2(0),
+	m_galmode2fit(0),
+	m_isomode2(0),
+	m_isomode2fit(0),
+	m_edpcorrection(0),
+	m_fluxcorrection(0),
+	m_minimizerdefstrategy(2)
 
 {
 	m_countsHist.Sumw2();
@@ -832,6 +931,7 @@ if (m_logFile)
 */
 
 bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol) {
+	m_minimizerdefstrategy = minimizerdefstrategy;
 	/*
 	 
 	 * Minuit (library libMinuit). Old version of Minuit, based on the TMinuit class. The list of possible algorithms are:
@@ -880,7 +980,7 @@ bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg,
 	
 	cout << "Set user choice: " << minimizertype << " " << minimizeralg << " " << minimizerdefstrategy << endl;
 	ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizertype, minimizeralg);
-	ROOT::Math::MinimizerOptions::SetDefaultStrategy(minimizerdefstrategy);
+	ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
 	
 	ROOT::Math::MinimizerOptions::SetDefaultTolerance(deftol);
 	//ROOT::Math::MinimizerOptions::SetDefaultPrecision(0.01);
@@ -1100,13 +1200,27 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 
 
 
+
+
+
 double RoiMulti::GetTotalExposure(int source) const
 {
 double exposure = 0;
 if (source<m_srcCount && source>=0)
 	for (int map=0; map<m_mapCount; ++map)
 		exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor();
+	cout << "EXP " << exposure << endl;
 return exposure;
+}
+
+double RoiMulti::GetTotalExposureSpectraCorrected(int source) const
+{
+	double exposure = 0;
+	if (source<m_srcCount && source>=0)
+		for (int map=0; map<m_mapCount; ++map)
+			exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor() / m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection);
+	cout << "EXPC " << exposure << endl;
+	return exposure;
 }
 
 
@@ -2202,17 +2316,135 @@ for (int source=0; source<SrcCount(); ++source) {
 		cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
 		Double_t amin0;
 		
-		//fix gal0 and iso0
-		/* AB AB AB
-		for (int m=0; m<m_mapCount; ++m) {
-			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, true));
-			m_galSrc[m].SetFixflag(AllFixed);
-			m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, true));
-			m_isoSrc[m].SetFixflag(AllFixed);
-			FixGalPar(m);
-			FixIsoPar(m);
+		//fix gal0
+		//true -> L0
+		//false -> L1
+		/*
+		 galmode2
+		 
+		 0 none
+		 1 set gal0(T) for L0 and gal1(F) for L1
+		 2 set gal0(T) for L0 and L1
+		 3 set gal1(F) for L0 and L1
+		 
+		 galmode2fit
+		 0 do not fit
+		 1 pol0 fit
+		 2 powerlaw fit
+		 */
+		if(m_galmode2 > 0) {
+			bool nulhyp;
+			if(m_galmode2 == 1 || m_galmode2 == 2)
+				nulhyp = true;
+			if(m_galmode2 == 3)
+				nulhyp = false;
+			if(m_galmode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, nulhyp));
+			if(m_galmode2fit == 1) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				for (int m=0; m<=m_mapCount; ++m)
+				 cout << edges[m] << endl;
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0]", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			if(m_galmode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				/*for (int m=0; m<=m_mapCount; ++m)
+					cout << edges[m] << endl;
+				*/
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					//cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					//cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_galSrc[m].SetFixflag(AllFixed);
+				FixGalPar(m);
+			}
+			
 		}
-		*/
+		
+		//fix iso0
+		/*
+		 isomode2
+		 
+		 0 none
+		 1 set iso0(T) for L0 and iso1(F) for L1
+		 2 set iso0(T) for L0 and L1
+		 3 set iso1(F) for L0 and L1
+		 
+		 isomode2fit
+		 0 do not fit
+		 1 pol0 fit
+		 2 powerlaw fit
+		 */
+		if(m_isomode2 > 0) {
+			bool nulhyp;
+			if(m_isomode2 == 1 || m_isomode2 == 2)
+				nulhyp = true;
+			if(m_isomode2 == 3)
+				nulhyp = false;
+			if(m_isomode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, nulhyp));
+			if(m_isomode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_isoSrc[m].GetEmin();
+				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
+				for (int m=0; m<=m_mapCount; ++m)
+				 cout << edges[m] << endl;
+				
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(true, m, source, nulhyp));
+					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_isoSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_isoSrc[m].SetFixflag(AllFixed);
+				FixIsoPar(m);
+			}
+		}
+		
 		
 		Fit(fitOpt, source, true, 0, &amin0);
 		if (!diffParsStored) {
@@ -2230,6 +2462,104 @@ for (int source=0; source<SrcCount(); ++source) {
 		Double_t amin1;
 		
 		//fix gal and iso1
+		if(m_galmode2 > 0) {
+			bool nulhyp;
+			if(m_galmode2 == 1 || m_galmode2 == 3)
+				nulhyp = false;
+			if(m_galmode2 == 2)
+				nulhyp = true;
+			if(m_galmode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, nulhyp));
+			if(m_galmode2fit == 1) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				for (int m=0; m<=m_mapCount; ++m)
+					cout << edges[m] << endl;
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0]", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			if(m_galmode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				/*for (int m=0; m<=m_mapCount; ++m)
+				 cout << edges[m] << endl;
+				 */
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					//cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					//cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_galSrc[m].SetFixflag(AllFixed);
+				FixGalPar(m);
+			}
+			
+		}
+		if(m_isomode2 > 0) {
+			bool nulhyp;
+			if(m_isomode2 == 1 || m_isomode2 == 3)
+				nulhyp = false;
+			if(m_isomode2 == 2)
+				nulhyp = true;
+			if(m_isomode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, nulhyp));
+			if(m_isomode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_isoSrc[m].GetEmin();
+				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
+				for (int m=0; m<=m_mapCount; ++m)
+					cout << edges[m] << endl;
+				
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(true, m, source, nulhyp));
+					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_isoSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_isoSrc[m].SetFixflag(AllFixed);
+				FixIsoPar(m);
+			}
+		}
+		
 		/* AB AB AB
 		for (int m=0; m<m_mapCount; ++m) {
 			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, false));
@@ -3142,6 +3472,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "-1 -1 -1 -1 -1 -1 -1 " << endl;
 
 	double exposure = GetTotalExposure(i);
+	double expcor = GetTotalExposureSpectraCorrected(i);
 /**
 	srcout << m_sources[i].GetCounts()
 				<< " " << m_sources[i].GetCountsErr()
@@ -3158,6 +3489,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< endl;
 
 	srcout << m_sources[i].GetFlux()
+				<< " " << exposure*m_sources[i].GetFlux() / expcor
 				<< " " << m_sources[i].GetFluxerr()
 				<< " " << m_sources[i].GetFluxhi()
 				<< " " << m_sources[i].GetFluxlo()

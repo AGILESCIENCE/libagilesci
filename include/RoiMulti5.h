@@ -222,6 +222,10 @@ public:	/// Data Access
 
     void SetCts(int step, int cts) { m_cts[step] = cts; }
     int GetCts(int step) { return m_cts[step]; }
+	
+	double GetSpectraCorrectionFactor(bool fluxcorrection);
+	
+	double GetTotalExposureSpectraCorrected(bool fluxcorrection);
 
 private: /// Data
 	Double_t m_flux;
@@ -420,7 +424,7 @@ public:	/// Main operations
 	bool SetPsf(const char* psfFileName, const char* raeffFileName, const char* edpFileName);
 	bool SetMaps(const MapData& mapData, int galMode=DiffDefault, int isoMode=DiffDefault);
 	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol);
-
+	bool SetCorrections(int galmode2, int galmode2fit, int isomode2, int isomode2fit, int edpcorrection, int fluxcorrection) { m_galmode2 = galmode2; m_galmode2fit = galmode2fit; m_isomode2 = isomode2; m_isomode2fit = isomode2fit; m_edpcorrection = edpcorrection; m_fluxcorrection = fluxcorrection;};
 	/// Add the Extended Sources for analysis
 	bool SetExtendedSources(const ExtData& extData);
 
@@ -615,6 +619,17 @@ private:	/// Data
 	double*   m_isoCoeffs;
 	double    m_energyInf;
 	double    m_energySup;
+	
+	/// Corrections
+	int m_galmode2;
+	int m_galmode2fit;
+	int m_isomode2;
+	int m_isomode2fit;
+	int m_edpcorrection;
+	int m_fluxcorrection;
+	
+	//Fitter
+	int m_minimizerdefstrategy;
 
 	/// Sources
 	SourceDataArray m_inSrcDataArr;	/// Copy of the original input data

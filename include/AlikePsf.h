@@ -83,10 +83,10 @@ public:
 protected:
 	/// WARNING: After calling SetEnergyRange the user should call UpdateNorm()
 	void SetEnergyRange(double eInf, double eSup) { m_eInf = eInf; m_eSup = eSup; }
-	void UpdateNorm(double eMin, double eMax, double index);
-	void UpdateNormPLExpCutOff(double eMin, double eMax, double index, double par2);
-	void UpdateNormLogParabola(double eMin, double eMax, double index, double par2, double par3);
-	void UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double par2, double par3);
+	double UpdateNorm(double eMin, double eMax, double index, bool norm=1);
+	double UpdateNormPLExpCutOff(double eMin, double eMax, double index, double par2, bool norm=1);
+	double UpdateNormLogParabola(double eMin, double eMax, double index, double par2, double par3, bool norm=1);
+	double UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double par2, double par3, bool norm=1);
 private:
 	double m_eInf;
 	double m_eSup;
@@ -127,6 +127,12 @@ public:
 	const VecF& PsfEnerges() const { return PsfGrid::m_psfenergy; }
 	const VecF& Rhos() const { return PsfGrid::m_psfrho; }
 	const VecF& SinRhos() const { return m_sinRhoArr; }
+	
+	const VecF& EdpTrueEnerges() const { return EdpGrid::m_edptrueenergy; }
+	const VecF& EdpObsEnerges() const { return EdpGrid::m_edpobsenergy; }
+	const VecF& EdpTheta() const { return EdpGrid::m_edptheta; }
+	const VecF& EdpPhi() const { return EdpGrid::m_edpphi; }
+	const Mat4F& EdpVal() const { return EdpGrid::m_edpgrid; }
 
 private:	/// Data
 	VecF        m_sinRhoArr;
@@ -170,7 +176,7 @@ public:	/// Operations
 	enum Changes { NoChanges=0, IndexChanged=1, PositionChanged=2, IndexPositionChanged=3 };
 	Changes SetSrcData(double srcL, double srcB, double index, double par2, double par3, bool force=false);
 
-private:	/// Data
+protected:	/// Data
 	const AlikePsfTables* m_psfTab;
 	double m_theta;
 

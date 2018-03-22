@@ -246,14 +246,17 @@ if (inside) {
 ///
 
 
-void AlikeNorm::UpdateNorm(double eMin, double eMax, double index)
+double AlikeNorm::UpdateNorm(double eMin, double eMax, double index, bool norm)
 {
 	
 	//0 - PL -> (k E^-{\index})
 	//Analytical expression
 	index = 1.0-index;
-	m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
-
+	if(norm)
+		m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
+	else
+		return (pow(eMin, index)-pow(eMax, index));
+	return m_normFactor;
 	/*
 	// cout << "NUMINT PL" << endl;
 	TF1 f("PowerLaw", "x^(-[0])", m_eInf, m_eSup);
@@ -267,7 +270,7 @@ void AlikeNorm::UpdateNorm(double eMin, double eMax, double index)
 	
 }
 
-void AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2)
+double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2, bool norm)
 {
 	//1 - PLExpCutoff -> k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
 	TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
@@ -277,10 +280,14 @@ void AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, do
 	ROOT::Math::GaussIntegrator ig;
 	ig.SetFunction(wf1);
 	ig.SetRelTolerance(0.001);
-	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	if(norm)
+		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	else
+		return ig.Integral(eMin, eMax);
+	return m_normFactor;
 }
 
-void AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, double m_par2, double m_par3)
+double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
 {
 	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
 	f.SetParameter(0, index);
@@ -290,10 +297,14 @@ void AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, do
 	ROOT::Math::GaussIntegrator ig;
 	ig.SetFunction(wf1);
 	ig.SetRelTolerance(0.001);
-	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	if(norm)
+		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	else
+		return ig.Integral(eMin, eMax);
+	return m_normFactor;
 }
 
-void AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3)
+double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
 {
 	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
 	TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
@@ -304,7 +315,11 @@ void AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double inde
 	ROOT::Math::GaussIntegrator ig;
 	ig.SetFunction(wf1);
 	ig.SetRelTolerance(0.001);
-	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	if(norm)
+		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	else
+		return ig.Integral(eMin, eMax);
+	return m_normFactor;
 }
 
 
