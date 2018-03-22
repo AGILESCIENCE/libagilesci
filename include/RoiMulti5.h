@@ -1,7 +1,7 @@
 //
 // C++ Interface: %{MODULE}
 //
-// Description: 
+// Description:
 //
 //
 // Author: %{AUTHOR} <%{EMAIL}>, (C) %{YEAR}
@@ -26,6 +26,9 @@
 #include "AlikeData5.h"
 #include "AlikePsf.h"
 #include "Ellipse.h"
+
+/* 03/2018  -> ExpRatioEvaluator dependency */
+#include "ExpRatioEvaluator.h"
 
 
 #define ROIMULTI_VERSION "RoiMulti 2.0"
@@ -56,7 +59,7 @@ public:	/// Get Functions
 	Double_t GetCoefflo() const { return m_coefflo; }
 	Double_t GetCoeffhi() const { return m_coeffhi; }
 	Int_t    GetFixflag() const { return m_fixflag; }
-	
+
 
 public:	/// Set Functions
 	void SetIndex(Double_t index) { m_index = index>0?index:-index; UpdateNorm(); }
@@ -113,7 +116,7 @@ private:	/// Data
 	double   m_baryl;
 	double   m_baryb;
 	void EvalBarycenter();
-	
+
 protected:	/// Making a copy
 	void Copy(const AlikeExtMap &another, bool all);
 };
@@ -171,10 +174,10 @@ public:	/// Data Access
 */
 	void SetIndexerr(double idxErr) { m_idxErr = idxErr; }
 	double GetIndexerr() const { return m_idxErr; }
-	
+
 	void SetPar2err(double idxErr) { m_par2Err = idxErr; }
 	double GetPar2err() const { return m_par2Err; }
-	
+
 	void SetPar3err(double idxErr) { m_par3Err = idxErr; }
 	double GetPar3err() const { return m_par3Err; }
 
@@ -190,7 +193,7 @@ public:	/// Data Access
 
 	Double_t GetTS() const { return m_ts; }
 	void SetTS(Double_t inTS) ;
-	
+
 	void SetLikelihood(Double_t lik) { m_likelihood = lik; };
 	Double_t GetLikelihood() { return m_likelihood; };
 
@@ -222,7 +225,7 @@ public:	/// Data Access
 
     void SetCts(int step, int cts) { m_cts[step] = cts; }
     int GetCts(int step) { return m_cts[step]; }
-	
+
 	double GetSpectraCorrectionFactor(bool fluxcorrection);
 
 private: /// Data
@@ -428,7 +431,7 @@ public:	/// Main operations
 
 	/// Analysis
 	bool SetLogfile(const char* fileName);
-	
+
 	void CloseLogFile();
 	int DoFit(
 		const SourceDataArray& srcDataArr,
@@ -453,9 +456,9 @@ public:	/// Main operations
 
 public:	/// Collecting the results
 	void Write(const char* fileName, bool skipFitInfo=true) const;
-	void WriteSources(const char* fileName, bool skipFixed=false, bool skipEllipses=false) const;
+	void WriteSources(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, bool skipFixed=false, bool skipEllipses=false) const;
 	void LogSources(const char* fileName, int iterNum, AgileMap* simArr, int simArraySize) const;
-	void WriteHtml(const char* fileName, const char* suffix=".html") const;
+	void WriteHtml(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix=".html") const;
 	SourceDataArray GetFitData() const { return m_outSrcDataArr; }
 
 	/// Diffuse components
@@ -473,7 +476,7 @@ public:	/// Collecting the results
 	double GetTotalExposure(int source) const;
 	double GetTotalExposureSpectraCorrected(int source) const;
 	Double_t GetSourceTS(const char* label) const;
-	
+
 private:	/// Internal operations
 	void SetSources(const SourceDataArray& srcDataArr, double ranal, double ulcl, double loccl);
 	Int_t DoFit(const char* fitOpt1, const char* fitOpt2, const char* sourceCheckTS, double minSourceTS);
@@ -562,14 +565,14 @@ private:	/// Internal operations
 	void SetSrcIndex(int source) { SetSrcIndex(source, m_sources[source].GetIndex()); }
 	void FixSrcIndex(int source, double index) { m_model.FixParameter(SrcIdxPar(source), index); }
 	void FixSrcIndex(int source) { FixSrcIndex(source, m_sources[source].GetIndex()); }
-	
+
 	/// Par2 parameter
 	void ReleaseSrcPar2(int source) { m_model.SetParLimits(SrcPar2Par(source), m_par2LimitMin, m_par2LimitMax); }
 	void SetSrcPar2(int source, double par2) { m_model.SetParameter(SrcPar2Par(source), par2); }
 	void SetSrcPar2(int source) { SetSrcPar2(source, m_sources[source].GetPar2()); }
 	void FixSrcPar2(int source, double par2) { m_model.FixParameter(SrcPar2Par(source), par2); }
 	void FixSrcPar2(int source) { FixSrcPar2(source, m_sources[source].GetPar2()); }
-	
+
 	/// Par3 parameter
 	void ReleaseSrcPar3(int source) { m_model.SetParLimits(SrcPar3Par(source), m_par3LimitMin, m_par3LimitMax); }
 	void SetSrcPar3(int source, double par3) { m_model.SetParameter(SrcPar3Par(source), par3); }
@@ -590,8 +593,10 @@ private:	/// Internal operations
 	void PrintDiffData();
 
 	double EvalFitFunction(double* params, double* data=0);
-	
-	
+
+	// exp ratio evaluation - 03/2018
+	double ExpRatioEvaluation(AgileMap& exp, double l, double b, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize) const;
+
 
 private:	/// Data
 	TH1D   m_countsHist;
@@ -620,7 +625,7 @@ private:	/// Data
 	double*   m_isoCoeffs;
 	double    m_energyInf;
 	double    m_energySup;
-	
+
 	/// Corrections
 	int m_galmode2;
 	int m_galmode2fit;
@@ -628,14 +633,14 @@ private:	/// Data
 	int m_isomode2fit;
 	int m_edpcorrection;
 	int m_fluxcorrection;
-	
+
 	//Fitter
 	int m_minimizerdefstrategy;
 
 	/// Sources
 	SourceDataArray m_inSrcDataArr;	/// Copy of the original input data
 	SourceDataArray m_outSrcDataArr;	/// Input data modified after fitting
-	
+
 	/// Diff components
 	DiffMode        m_galMode;
 	DiffMode        m_isoMode;
