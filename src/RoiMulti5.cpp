@@ -1209,7 +1209,7 @@ double exposure = 0;
 if (source<m_srcCount && source>=0)
 	for (int map=0; map<m_mapCount; ++map)
 		exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor();
-	cout << "EXP " << exposure << endl;
+	//cout << "EXP " << exposure << endl;
 return exposure;
 }
 
@@ -1219,7 +1219,7 @@ double RoiMulti::GetTotalExposureSpectraCorrected(int source) const
 	if (source<m_srcCount && source>=0)
 		for (int map=0; map<m_mapCount; ++map)
 			exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor() / m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection);
-	cout << "EXPC " << exposure << endl;
+	//cout << "EXPC " << exposure << endl;
 	return exposure;
 }
 
@@ -2579,6 +2579,7 @@ for (int source=0; source<SrcCount(); ++source) {
 		double like1 = Likelihood();
 		cout << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
 		cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+		m_sources[source].SetLikelihood(like1);
 		
 		cout << "#### Source# " << source <<  " " << m_sources[source].GetFixflag() << " " << m_sources[source].GetTS() << " force " << m_sources[source].GetForcePosFree() << endl;
 
@@ -3322,7 +3323,8 @@ if (m_srcCount) {
 	for (int i=0; i<m_srcCount; ++i) {
 	
 		double exposure = GetTotalExposure(i);
-	
+		double expcor = GetTotalExposureSpectraCorrected(i);
+		
 		output << m_sources[i].GetLabel()
 					<< " " << sqrt(m_sources[i].GetTS())
 					<< " " << m_sources[i].GetSrcL()
@@ -3334,8 +3336,8 @@ if (m_srcCount) {
 					<< " " << exposure*m_sources[i].GetFlux()
 					<< " " << exposure*m_sources[i].GetFluxerr()
 	
-					<< " " << m_sources[i].GetFlux()
-					<< " " << m_sources[i].GetFluxerr()
+					<< " " << exposure*m_sources[i].GetFlux()/expcor
+					<< " " << exposure*m_sources[i].GetFluxerr()/expcor
 					<< " " << m_sources[i].GetIndex()
 					<< " " << m_sources[i].GetIndexerr()
 					<< " " << m_sources[i].GetPar2()
@@ -3420,7 +3422,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L, B, Dist from initial position, r, a, b, phi" << endl;
 	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp, ExpSpectraCorFactor" << endl;
 	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Index Err" << ", Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "], Par2 Err, Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "], Par3 Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 	
@@ -3488,13 +3490,14 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure*m_sources[i].GetFluxul()
 				<< endl;
 
-	srcout << m_sources[i].GetFlux()
-				<< " " << exposure*m_sources[i].GetFlux() / expcor
-				<< " " << m_sources[i].GetFluxerr()
-				<< " " << m_sources[i].GetFluxhi()
-				<< " " << m_sources[i].GetFluxlo()
-				<< " " << m_sources[i].GetFluxul()
-				<< " " << exposure /// m_sources[i].GetExp()
+	srcout << exposure*m_sources[i].GetFlux() / expcor
+				//<< " " << exposure*m_sources[i].GetFlux() / expcor
+				<< " " << exposure*m_sources[i].GetFluxerr() / expcor
+				<< " " << exposure*m_sources[i].GetFluxhi() / expcor
+				<< " " << exposure*m_sources[i].GetFluxlo() / expcor
+				<< " " << exposure*m_sources[i].GetFluxul() / expcor
+				<< " " << exposure
+				<< " " << exposure / expcor
 				<< endl;
 	
 	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;
@@ -3667,14 +3670,16 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel());
 	ofstream srcout(srcoutname.c_str(), ios::app);
+	double exposure = GetTotalExposure(i);
+	double expcor = GetTotalExposureSpectraCorrected(i);
 
 	srcout << iterNum;
 	srcout << " " << m_sources[i].GetSrcL();
 	srcout << " " << m_sources[i].GetSrcB();
 	srcout << " " << m_sources[i].GetTS();
-	srcout << " " << m_sources[i].GetFlux();
-	srcout << " " << m_sources[i].GetFluxerr();
-	srcout << " " << m_sources[i].GetFluxul();
+	srcout << " " << exposure*m_sources[i].GetFlux()/expcor;
+	srcout << " " << exposure*m_sources[i].GetFluxerr()/expcor;
+	srcout << " " << exposure*m_sources[i].GetFluxul()/expcor;
 	srcout << " " << m_sources[i].GetIndex();
 	srcout << " " << m_inSrcDataArr[i].fixflag; /// zzz why not from the sources array?
 	srcout << " " << m_sources[i].GetMinTS();
@@ -3687,7 +3692,7 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	srcout << " " << m_sources[i].GetExp();
 
-	double exposure = GetTotalExposure(i);
+	
 
 	srcout << " " << exposure*m_sources[i].GetFlux();
 	srcout << " " << exposure*m_sources[i].GetFluxerr();
@@ -4079,6 +4084,7 @@ if (SrcCount()) {
 	*/
 
 		double exposure = GetTotalExposure(i);
+		double expcor = GetTotalExposureSpectraCorrected(i);
 		double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 		htmlout << "<tr><td>" << m_sources[i].GetLabel()
 					<< "</td><td>" << sqrt(m_sources[i].GetTS())
@@ -4096,9 +4102,9 @@ if (SrcCount()) {
 					<< "</td><td>" << exposure*m_sources[i].GetFlux()
 					<< "</td><td>" << exposure*m_sources[i].GetFluxerr()
 
-					<< "</td><td>" << m_sources[i].GetFlux()
-					<< "</td><td>" << m_sources[i].GetFluxerr()
-					<< "</td><td>" << m_sources[i].GetFluxul()
+					<< "</td><td>" << exposure*m_sources[i].GetFlux() / expcor
+					<< "</td><td>" << exposure*m_sources[i].GetFluxerr() / expcor
+					<< "</td><td>" << exposure*m_sources[i].GetFluxul() / expcor
 					<< "</td><td>" << m_sources[i].GetIndex()
 		            << "</td><td>" << m_sources[i].GetIndexerr()
 		<< "</td><td>" << m_sources[i].GetPar2()
@@ -4219,7 +4225,7 @@ if (SrcCount() && m_mapCount>1) {
 			htmlout << "<td>" << eMinArr[map] << ".." << eMaxArr[map] << "</td>";
 		htmlout << "</tr><tr>" << endl;
 		for (int i=0; i<m_srcCount; ++i) {
-			htmlout << "<tr><td>" << m_sources[i].GetLabel() << "</td>";
+			htmlout << "<tr><td>L " << m_sources[i].GetLabel() << "</td>";
 			double flux = m_sources[i].GetFlux();
 			/// double index = m_sources[i].GetIndex();
 			for (int map=0; map<chCount; ++map)

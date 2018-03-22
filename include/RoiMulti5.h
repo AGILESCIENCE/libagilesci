@@ -224,8 +224,6 @@ public:	/// Data Access
     int GetCts(int step) { return m_cts[step]; }
 	
 	double GetSpectraCorrectionFactor(bool fluxcorrection);
-	
-	double GetTotalExposureSpectraCorrected(bool fluxcorrection);
 
 private: /// Data
 	Double_t m_flux;
@@ -473,6 +471,7 @@ public:	/// Collecting the results
 	int SrcCount() const { return m_srcCount; }
 	const AlikeSourceMap& GetSource(int source) const { return m_sources[source%m_srcCount]; }
 	double GetTotalExposure(int source) const;
+	double GetTotalExposureSpectraCorrected(int source) const;
 	Double_t GetSourceTS(const char* label) const;
 	
 private:	/// Internal operations
@@ -591,6 +590,8 @@ private:	/// Internal operations
 	void PrintDiffData();
 
 	double EvalFitFunction(double* params, double* data=0);
+	
+	
 
 private:	/// Data
 	TH1D   m_countsHist;
