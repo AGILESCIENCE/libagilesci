@@ -456,9 +456,9 @@ public:	/// Main operations
 
 public:	/// Collecting the results
 	void Write(const char* fileName, bool skipFitInfo=true) const;
-	void WriteSources(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, bool skipFixed=false, bool skipEllipses=false) const;
+	void WriteSources(const char* fileName, bool expratioevaluation, bool isExpMapNormalized=false, double minThreshold=0, double maxThreshold=0, int squareSize=0, bool skipFixed=false, bool skipEllipses=false) const;
 	void LogSources(const char* fileName, int iterNum, AgileMap* simArr, int simArraySize) const;
-	void WriteHtml(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix=".html") const;
+	void WriteHtml(const char* fileName, bool expratioevaluation, bool isExpMapNormalized=false, double minThreshold=0, double maxThreshold=0, int squareSize=0, const char* suffix=".html") const;
 	SourceDataArray GetFitData() const { return m_outSrcDataArr; }
 
 	/// Diffuse components
