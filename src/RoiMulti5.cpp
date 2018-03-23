@@ -3422,7 +3422,7 @@ double RoiMulti::ExpRatioEvaluation(AgileMap& exp, double l, double b, bool isEx
 	return val;
 }
 
-void RoiMulti::WriteSources(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, bool skipFixed, bool skipEllipses) const
+void RoiMulti::WriteSources(const char* fileName, bool expratioevaluation, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, bool skipFixed, bool skipEllipses) const
 {
 for (int i=0; i<m_srcCount; ++i) {
 	if (skipFixed && !m_inSrcDataArr[i].fixflag)
@@ -3604,10 +3604,15 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << m.GetPhaseCode() << " ";
 
 	/* ExpRatioEvaluation */
-	for (int exp=0; exp<m_mapCount; ++exp) {
-		double expratio_value = ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
-		srcout << expratio_value << ",";
+	if(expratioevaluation){
+		for (int exp=0; exp<m_mapCount; ++exp) {
+			double expratio_value = ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+			srcout << expratio_value << ",";
+		}
+	}else{
+		srcout << "not enabled";
 	}
+
 	srcout << endl;
 
 	for(int step=0; step<7; step++) {
@@ -3774,7 +3779,7 @@ if (OpenConditionalBin(f, sameValues, row, count))
 }
 
 
-void RoiMulti::WriteHtml(const char* fileName, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix) const
+void RoiMulti::WriteHtml(const char* fileName, bool expratioevaluation, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix) const
 {
 if (!m_mapCount || !(m_srcCount+m_extCount)) {
 	cerr << "Not writing file " << fileName << ": No data to write" << endl;
@@ -4203,9 +4208,15 @@ if (SrcCount()) {
 		const char* sep[2] = {"", ","};
 
 		/* ExpRatioEvaluation */
-		for (int exp=0; exp<m_mapCount; ++exp) {
-			htmlout << sep[bool(exp)] << ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+		if(expratioevaluation)
+		{
+			for (int exp=0; exp<m_mapCount; ++exp) {
+				htmlout << sep[bool(exp)] << ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+			}
 		}
+		else
+			htmlout << "not enabled";
+
 
 
 
