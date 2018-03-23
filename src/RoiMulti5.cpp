@@ -168,6 +168,11 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 		cout << edptrueenergy[iMin] << " " << edptrueenergy[iMax] << endl;
 		double normsumpl=0, normsumple = 0;
 		//iMin, iMax
+		double indexstd = m_index;
+		if(indexstd < 1.6) {
+			//indexstd = 1.8;
+			//cout << "!### Warning: flux correction. Index is changed: " << indexstd << endl;
+		}
 
 		for (int i=iMin; i<=iMax; i++) {
 			cout << i << " " << edptrueenergy[i] << " " << edptrueenergy[i+1] << endl;
@@ -175,20 +180,20 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 			double lastenergy = edptrueenergy[i+1];
 			if(i == iMax && GetEmax() == 50000)
 				lastenergy = 50000;
-
+		
 			if(m_typefun == 0) {
-				udp1 = UpdateNorm(edptrueenergy[i], lastenergy, m_index, 0);
+				udp1 = UpdateNorm(edptrueenergy[i], lastenergy, indexstd, 0);
 			}
 			if(m_typefun == 1) {
-				udp1 = UpdateNormPLExpCutOff(edptrueenergy[i], lastenergy, m_index, m_par2, 0);
+				udp1 = UpdateNormPLExpCutOff(edptrueenergy[i], lastenergy, indexstd, m_par2, 0);
 
 			}
 			if(m_typefun == 2) {
-				udp1 = UpdateNormPLSuperExpCutOff(edptrueenergy[i], lastenergy, m_index, m_par2, m_par3, 0);
+				udp1 = UpdateNormPLSuperExpCutOff(edptrueenergy[i], lastenergy, indexstd, m_par2, m_par3, 0);
 
 			}
 			if(m_typefun == 3) {
-				udp1 = UpdateNormLogParabola(edptrueenergy[i], lastenergy, m_index, m_par2, m_par3, 0);
+				udp1 = UpdateNormLogParabola(edptrueenergy[i], lastenergy, indexstd, m_par2, m_par3, 0);
 
 			}
 			normsumple += udp1;
@@ -219,13 +224,13 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 					avgValuePL += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, 2.1, 0) * 1;
 					//cout << UpdateNormPL(m_edptrueenergy[etrue], m_edptrueenergy[etrue+1], 2.1) << " " << edpArr[etrue] << endl;
 					if(m_typefun == 0)
-						avgValuePLE += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, m_index, 0) * 1;
+						avgValuePLE += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, indexstd, 0) * 1;
 					if(m_typefun == 1)
-						avgValuePLE += edpArr[etrue] * UpdateNormPLExpCutOff(edptrueenergy[etrue], lastenergy, m_index, m_par2, 0) * 1;
+						avgValuePLE += edpArr[etrue] * UpdateNormPLExpCutOff(edptrueenergy[etrue], lastenergy, indexstd, m_par2, 0) * 1;
 					if(m_typefun == 2)
-						avgValuePLE += edpArr[etrue] * UpdateNormPLSuperExpCutOff(edptrueenergy[etrue], lastenergy, m_index, m_par2, m_par3, 0) * 1;
+						avgValuePLE += edpArr[etrue] * UpdateNormPLSuperExpCutOff(edptrueenergy[etrue], lastenergy, indexstd, m_par2, m_par3, 0) * 1;
 					if(m_typefun == 3)
-						avgValuePLE += edpArr[etrue] * UpdateNormLogParabola(edptrueenergy[etrue], lastenergy, m_index, m_par2, m_par3, 0) * 1;
+						avgValuePLE += edpArr[etrue] * UpdateNormLogParabola(edptrueenergy[etrue], lastenergy, indexstd, m_par2, m_par3, 0) * 1;
 				}
 				double avgpl = 0, avgple = 0;
 				//avgalue dipende da theta e phi

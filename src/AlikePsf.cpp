@@ -272,6 +272,10 @@ double AlikeNorm::UpdateNorm(double eMin, double eMax, double index, bool norm)
 
 double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2, bool norm)
 {
+	if(eMin == eMax) {
+		cout << "!## Error UpdateNormPLExpCutOff: eMin = eMax" << endl;
+		return 0;
+	}
 	//1 - PLExpCutoff -> k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
 	TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
 	f.SetParameter(0, index);
@@ -289,6 +293,10 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 
 double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
 {
+	if(eMin == eMax) {
+		cout << "!## Error UpdateNormLogParabola: eMin = eMax" << endl;
+		return 0;
+	}
 	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
@@ -306,6 +314,10 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 
 double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
 {
+	if(eMin == eMax) {
+		cout << "!## Error UpdateNormPLSuperExpCutOff: eMin = eMax" << endl;
+		return 0;
+	}
 	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
 	TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
 	f.SetParameter(0, index);
