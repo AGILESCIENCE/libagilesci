@@ -2039,7 +2039,7 @@ m_sources[source].PrintSqrtTS();
 
 double like0 = Likelihood();
 cout << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+//cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
 
 if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || (m_sources[source].GetFlux() < 0)) {
 	Nullify(source);
@@ -2083,7 +2083,7 @@ m_sources[source].PrintSqrtTS();
 
 double like0 = Likelihood();
 cout << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+//cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
 
 
 if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].GetFlux()>0) {
@@ -2187,7 +2187,7 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 
 	double like0 = Likelihood();
 	cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-	cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+	//cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
 
 
 	}
@@ -2583,7 +2583,7 @@ for (int source=0; source<SrcCount(); ++source) {
 
 		double like1 = Likelihood();
 		cout << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
-		cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+		//cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
 		m_sources[source].SetLikelihood(like1);
 
 		cout << "#### Source# " << source <<  " " << m_sources[source].GetFixflag() << " " << m_sources[source].GetTS() << " force " << m_sources[source].GetForcePosFree() << endl;
@@ -2629,9 +2629,9 @@ for (int source=0; source<SrcCount(); ++source) {
 
 			double like1 = Likelihood();
 			cerr << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
-			cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+			//cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
 			m_sources[source].SetLikelihood(like1);
-			cout << "SET " << like1 << endl;
+			cout << "## SET " << like1 << endl;
 
 			}
         else {
@@ -3429,7 +3429,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ] typefun par2 par3" << endl;
+	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor" << endl;
 	srcout << "! sqrt(TS)" << endl ;
 	srcout << "! L_peak, B_peak, Dist from initial position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
@@ -3473,6 +3473,13 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_inSrcDataArr[i].typefun;
 	srcout << " " << m_inSrcDataArr[i].par2;
 	srcout << " " << m_inSrcDataArr[i].par3;
+	
+	srcout << " " << m_galmode2;
+	srcout << " " << m_galmode2fit;
+	srcout << " " << m_isomode2;
+	srcout << " " << m_isomode2fit;
+	srcout << " " << m_edpcorrection;
+	srcout << " " << m_fluxcorrection;
 
 	srcout	<< endl;
 	/// zzz m_sources[i].PrintAbphi();
