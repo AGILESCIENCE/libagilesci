@@ -281,9 +281,10 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
 	ROOT::Math::WrappedTF1 wf1(f);
-	ROOT::Math::GaussIntegrator ig;
+	//ROOT::Math::GaussIntegrator ig;
+	ROOT::Math::GaussLegendreIntegrator ig;
 	ig.SetFunction(wf1);
-	ig.SetRelTolerance(0.001);
+	ig.SetRelTolerance(0.000001);
 	if(norm)
 		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
 	else
@@ -302,11 +303,16 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 	f.SetParameter(1, m_par2);
 	f.SetParameter(2, m_par3);
 	ROOT::Math::WrappedTF1 wf1(f);
-	ROOT::Math::GaussIntegrator ig;
+	//ROOT::Math::GaussIntegrator ig;
+	ROOT::Math::GaussLegendreIntegrator ig;
 	ig.SetFunction(wf1);
-	ig.SetRelTolerance(0.001);
-	if(norm)
+	ig.SetRelTolerance(0.000001);
+	if(norm) {
 		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+		//if(m_normFactor < 0.1) {
+			cerr << "### " << m_normFactor << " " << eMin << " " << eMax << " " << m_eInf << " " << m_eSup << " " << index << " " << m_par2 << " " << m_par3 << endl;
+		//}
+	}
 	else
 		return ig.Integral(eMin, eMax);
 	return m_normFactor;
@@ -324,9 +330,10 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 	f.SetParameter(1, m_par2);
 	f.SetParameter(2, m_par3);
 	ROOT::Math::WrappedTF1 wf1(f);
-	ROOT::Math::GaussIntegrator ig;
+	//ROOT::Math::GaussIntegrator ig;
+	ROOT::Math::GaussLegendreIntegrator ig;
 	ig.SetFunction(wf1);
-	ig.SetRelTolerance(0.001);
+	ig.SetRelTolerance(0.000001);
 	if(norm)
 		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
 	else
@@ -521,7 +528,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
-			f.SetParameter(1, m_par3);
+			f.SetParameter(2, m_par3);
 			ROOT::Math::WrappedTF1 wf1(f);
 			ROOT::Math::GaussIntegrator ig;
 			ig.SetFunction(wf1);

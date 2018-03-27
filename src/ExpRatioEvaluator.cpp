@@ -24,7 +24,7 @@ ExpRatioEvaluator::ExpRatioEvaluator(	const char * _expPath,
 					double _squareSize
 				    ) : agileMap(_expPath)
 {	
-	cout << "\n**ExpRatioEvaluator - started!" << endl;
+	cout << "\n**ExpRatioEvaluator - started" << endl;
 	
 	isExpMapNormalized = _isExpMapNormalized;
 	
@@ -72,7 +72,7 @@ ExpRatioEvaluator::ExpRatioEvaluator(
 					) : agileMap(_agileMap)
 {
 
-	cout << "\n**ExpRatioEvaluator - started!" << endl;
+	cout << "\n**ExpRatioEvaluator - started" << endl;
 
 	isExpMapNormalized = _isExpMapNormalized;
 	
@@ -478,7 +478,7 @@ double ExpRatioEvaluator::Alikesinaa(double input){
 // OPTIMIZED CODE!
 double ** ExpRatioEvaluator::computeSpatialNormalizationFactorMatrix(){
 			
-			cout << "*Computing normalization factors matrix.." << endl;
+			//cout << "*Computing normalization factors matrix.." << endl;
 			/*
 					D D D X X X
 					D D D X X X
@@ -546,7 +546,7 @@ double ** ExpRatioEvaluator::computeSpatialNormalizationFactorMatrix(){
 			}
 		}
 
-		cout << "*Computing normalization factors matrix completed!" << endl;
+		//cout << "*Computing normalization factors matrix completed!" << endl;
 		return normalizationFactorMatrix;
 				
 }
@@ -555,7 +555,7 @@ double ** ExpRatioEvaluator::computeSpatialNormalizationFactorMatrix(){
 
 double ** ExpRatioEvaluator::createNormalizedImage(){
 
-	cout << "*Normalizing image... " << endl;
+	//cout << "*Normalizing image... " << endl;
 	
 // Computes time normalization factor
 	double timeFactor = agileMap.GetTstop()  -  agileMap.GetTstart();
@@ -577,7 +577,7 @@ double ** ExpRatioEvaluator::createNormalizedImage(){
 		}
 	}
 			
-	cout << "*Normalization completed!" << endl;
+	//cout << "*Normalization completed!" << endl;
 	return normalizedImage;
 
 }

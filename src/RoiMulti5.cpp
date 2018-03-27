@@ -165,17 +165,17 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 		int eneChanCount = edptrueenergy.Dim(0);
 		int iMin = edptrueenergy.GeomIndex(GetEmin());
 		int iMax = edptrueenergy.GeomIndex(GetEmax()) - 1;
-		cout << edptrueenergy[iMin] << " " << edptrueenergy[iMax] << endl;
+		//cout << edptrueenergy[iMin] << " " << edptrueenergy[iMax] << endl;
 		double normsumpl=0, normsumple = 0;
 		//iMin, iMax
 		double indexstd = m_index;
-		if(indexstd < 1.6) {
+		//if(indexstd < 1.6) {
 			//indexstd = 1.8;
 			//cout << "!### Warning: flux correction. Index is changed: " << indexstd << endl;
-		}
-
+		//}
+		cout << m_label << " [";
 		for (int i=iMin; i<=iMax; i++) {
-			cout << i << " " << edptrueenergy[i] << " " << edptrueenergy[i+1] << endl;
+			cout << edptrueenergy[i] << "-" << edptrueenergy[i+1] << " ";
 			double udp1;
 			double lastenergy = edptrueenergy[i+1];
 			if(i == iMax && GetEmax() == 50000)
@@ -203,7 +203,8 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 
 			normsumpl += udp1;
 		}
-		cout << normsumpl << " " << normsumple << endl;
+		cout << "] ";
+		//cout << normsumpl << " " << normsumple << endl;
 		VecF edpArr(eneChanCount);
 		edpArr = 0.0f;
 
@@ -237,7 +238,7 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 				avgpl = avgValuePL/normsumpl;
 				avgple = avgValuePLE/normsumple;
 				double corr = avgpl/avgple;
-				cout << "A " << edptheta[thetaind] << " " << edpphi[phiindcor] << " " << avgpl << " " << avgple << " " << avgpl - avgple << " PL/" << avgpl/avgple << endl;
+				cout << " funtype: " << m_typefun << " " << indexstd << " " << m_par2 << " " << m_par3 << " " << " theta: " << edptheta[thetaind] << " phi: " << edpphi[phiindcor] << " " << avgpl << " " << avgple << " " << avgpl - avgple << " PL/" << avgpl/avgple << endl;
 				return corr;
 			}
 		}
@@ -454,7 +455,7 @@ RoiMulti::RoiMulti():
 	m_par2LimitMin(20.0),
 	m_par2LimitMax(10000.0),
 	m_par3LimitMin(0.0),
-	m_par3LimitMax(10.0),
+	m_par3LimitMax(100.0),
 
 	m_galmode2(0),
 	m_galmode2fit(0),
@@ -2775,6 +2776,10 @@ else {
 		cout << " Position";
 	if (flags&4)
 		cout << " Index";
+	if (flags&8)
+		cout << " Par2";
+	if (flags&16)
+		cout << " Par3";
 	if (flags&7)
 		cout << " free";
 	cout << endl;
@@ -3429,14 +3434,14 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor" << endl;
+	srcout << "! Label Fix index ULConfidenceLevel SrcLocConfLevel start_l start_b start_flux [ lmin,  lmax ] [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor" << endl;
 	srcout << "! sqrt(TS)" << endl ;
-	srcout << "! L_peak, B_peak, Dist from initial position" << endl;
+	srcout << "! L_peak B_peak Dist_from_start_position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
-	srcout << "! L, B, Dist from initial position, r, a, b, phi" << endl;
-	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp, ExpSpectraCorFactor" << endl;
-	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Index Err" << ", Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "], Par2 Err, Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "], Par3 Err" << endl;
+	srcout << "! L B Dist_from_start_position r a b phi" << endl;
+	srcout << "! Counts Err +Err -Err UL" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor" << endl;
+	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "] Index Err" << " Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "] Par2_Err Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
 	//if (m_inSrcDataArr[i].fixflag) {
@@ -3445,8 +3450,8 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "! Iso coeffs [" << m_isoLimitMin << " , " << m_isoLimitMax << "] and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
 	//	}
-	srcout << "! Start date, end date, start TT, end TT, start MJD, end MJD" << endl;
-	srcout << "! Emin..emax, fovmin..fovmax, albedo, binsize, expstep, phasecode" << endl;
+	srcout << "! Start_date_UTC end_date_UTC start_data_TT end_data_TT start_date_MJD end_date_MJD" << endl;
+	srcout << "! Emin..emax fovmin..fovmax albedo binsize expstep phasecode ExpRatio" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
     srcout << "! skytype.filter_irf" << std::endl;
@@ -3614,10 +3619,12 @@ for (int i=0; i<m_srcCount; ++i) {
 	if(expratioevaluation){
 		for (int exp=0; exp<m_mapCount; ++exp) {
 			double expratio_value = ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
-			srcout << expratio_value << ",";
+			srcout << expratio_value;
+			if(m_mapCount > 1 && exp != m_mapCount - 1)
+				srcout << ",";
 		}
 	}else{
-		srcout << "not enabled";
+		srcout << "-1";
 	}
 
 	srcout << endl;

@@ -94,6 +94,9 @@ struct SourceData
 	double gal;
 	double iso;
 	double fluxul;
+	
+	//double index_low_limit;
+	//double index_upp_limit;
 
 	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), typefun(0), par2(0), par3(0), TS(0), gal(0), iso(0), fluxul(0) {}
 	SourceData(const SourceData& another):
