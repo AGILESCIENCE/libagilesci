@@ -95,12 +95,16 @@ struct SourceData
 	double iso;
 	double fluxul;
 	
-	//double index_low_limit;
-	//double index_upp_limit;
+	double index_low_limit;
+	double index_upp_limit;
+	double par2_low_limit;
+	double par2_upp_limit;
+	double par3_low_limit;
+	double par3_upp_limit;
 
-	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), typefun(0), par2(0), par3(0), TS(0), gal(0), iso(0), fluxul(0) {}
+	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), typefun(0), par2(0), par3(0), TS(0), gal(0), iso(0), fluxul(0), index_low_limit(0.5), index_upp_limit(5.0), par2_low_limit(20.0), par2_upp_limit(10000.0), par3_low_limit(0.0), par3_upp_limit(100.0) {}
 	SourceData(const SourceData& another):
-		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), typefun(another.typefun), par2(another.par2), par3(another.par3), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul) {}
+		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), typefun(another.typefun), par2(another.par2), par3(another.par3), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul), index_low_limit(another.index_low_limit), index_upp_limit(another.index_upp_limit), par2_low_limit(another.par2_low_limit), par2_upp_limit(another.par2_upp_limit), par3_low_limit(another.par3_low_limit), par3_upp_limit(another.par3_upp_limit) {}
 	
 	/// void GetResultsFrom(const AlikeSourceMap& map);
 	

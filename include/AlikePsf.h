@@ -70,11 +70,11 @@ private:
 class AlikeNorm
 {
 public:
-	AlikeNorm(): m_eInf(100), m_eSup(50000), m_normFactor(1) {}
-	AlikeNorm(const AlikeNorm& o): m_eInf(o.m_eInf), m_eSup(o.m_eSup), m_normFactor(o.m_normFactor) {}
+	AlikeNorm(): m_eInf(100), m_eSup(50000), m_normFactor(1), m_integratortype(1) {}
+	AlikeNorm(const AlikeNorm& o): m_eInf(o.m_eInf), m_eSup(o.m_eSup), m_normFactor(o.m_normFactor), m_integratortype(o.m_integratortype) {}
 	~AlikeNorm() {}
 
-	AlikeNorm& operator=(const AlikeNorm& o) { m_eInf=o.m_eInf, m_eSup=o.m_eSup, m_normFactor=o.m_normFactor; return *this; }
+	AlikeNorm& operator=(const AlikeNorm& o) { m_eInf=o.m_eInf, m_eSup=o.m_eSup, m_normFactor=o.m_normFactor; m_integratortype=o.m_integratortype; return *this; }
 
 	double GetEnergyInf() const { return m_eInf; }
 	double GetEnergySup() const { return m_eSup; }
@@ -87,10 +87,15 @@ protected:
 	double UpdateNormPLExpCutOff(double eMin, double eMax, double index, double par2, bool norm=1);
 	double UpdateNormLogParabola(double eMin, double eMax, double index, double par2, double par3, bool norm=1);
 	double UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double par2, double par3, bool norm=1);
+	int m_integratortype;
+	
+	double UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf, double eSup, bool norm);
+	
 private:
 	double m_eInf;
 	double m_eSup;
 	double m_normFactor;
+	
 };
 
 

@@ -280,15 +280,47 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 	TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
+	
+	return UpdateIntegrator(f, eMin, eMax, m_eInf, m_eSup, norm);
+	
+}
+
+double AlikeNorm::UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf, double eSup, bool norm) {
+	
 	ROOT::Math::WrappedTF1 wf1(f);
-	//ROOT::Math::GaussIntegrator ig;
-	ROOT::Math::GaussLegendreIntegrator ig;
-	ig.SetFunction(wf1);
-	ig.SetRelTolerance(0.000001);
-	if(norm)
-		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
-	else
-		return ig.Integral(eMin, eMax);
+	if(m_integratortype == 1 || m_integratortype == 2) {
+		//cout << "Gauss " << m_integratortype << endl;
+		ROOT::Math::GaussIntegrator ig;
+		if(m_integratortype == 1) ig.SetRelTolerance(0.001);
+		if(m_integratortype == 2) ig.SetRelTolerance(0.000001);
+		
+		ig.SetFunction(wf1);
+		
+		if(norm) {
+			m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(eInf, eSup);
+		}
+		else
+			return ig.Integral(eMin, eMax);
+	}
+	
+	if(m_integratortype == 3 || m_integratortype == 4 || m_integratortype == 5) {
+		//cout << "GaussLegendreIntegrator " << m_integratortype << endl;
+		ROOT::Math::GaussLegendreIntegrator ig;
+		ig.SetRelTolerance(0.001);
+		//ig.SetRelTolerance(0.000001);
+		if(m_integratortype == 3) ig.SetNumberPoints(80);
+		if(m_integratortype == 4) ig.SetNumberPoints(160);
+		if(m_integratortype == 5) ig.SetNumberPoints(1600);
+		
+		ig.SetFunction(wf1);
+	
+		if(norm) {
+			m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(eInf, eSup);
+		}
+		else
+			return ig.Integral(eMin, eMax);
+		
+	}
 	return m_normFactor;
 }
 
@@ -299,23 +331,20 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 		return 0;
 	}
 	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	if(isnan(index))
+		exit(0);
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
 	f.SetParameter(2, m_par3);
-	ROOT::Math::WrappedTF1 wf1(f);
-	//ROOT::Math::GaussIntegrator ig;
-	ROOT::Math::GaussLegendreIntegrator ig;
-	ig.SetFunction(wf1);
-	ig.SetRelTolerance(0.000001);
-	if(norm) {
-		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
-		//if(m_normFactor < 0.1) {
-			cerr << "### " << m_normFactor << " " << eMin << " " << eMax << " " << m_eInf << " " << m_eSup << " " << index << " " << m_par2 << " " << m_par3 << endl;
-		//}
-	}
-	else
-		return ig.Integral(eMin, eMax);
-	return m_normFactor;
+	
+	if(norm)
+		if(eMax == m_eSup) {
+			//cout << "### " << m_normFactor << " " << eMin << " " << eMax << " " << m_eInf << " " << m_eSup << " " << index << " " << m_par2 << " " << m_par3 << endl;
+			cout << "[" << index << " " << m_par2 << " " << m_par3 << "] " << endl;
+		}
+	
+	return UpdateIntegrator(f, eMin, eMax, m_eInf, m_eSup, norm);
+	
 }
 
 double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
@@ -326,19 +355,14 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 	}
 	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
 	TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	if(isnan(index))
+		exit(0);
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
 	f.SetParameter(2, m_par3);
-	ROOT::Math::WrappedTF1 wf1(f);
-	//ROOT::Math::GaussIntegrator ig;
-	ROOT::Math::GaussLegendreIntegrator ig;
-	ig.SetFunction(wf1);
-	ig.SetRelTolerance(0.000001);
-	if(norm)
-		m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
-	else
-		return ig.Integral(eMin, eMax);
-	return m_normFactor;
+	
+	return UpdateIntegrator(f, eMin, eMax, m_eInf, m_eSup, norm);
+	
 }
 
 
@@ -508,15 +532,31 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
+			/*
 			ROOT::Math::WrappedTF1 wf1(f);
+			
 			ROOT::Math::GaussIntegrator ig;
-			ig.SetFunction(wf1);
 			ig.SetRelTolerance(0.001);
+			
+			
+			 ROOT::Math::GaussLegendreIntegrator ig;
+			 ig.SetRelTolerance(0.001);
+			 //ig.SetRelTolerance(0.000001);
+			 ig.SetNumberPoints(40);
+			
+			
+			ig.SetFunction(wf1);
+			
 			if(i == psfeCount-1)
 				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
 				//m_specwt[psfeCount-1] = 0;
 			else
 				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			 */
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = UpdateIntegrator(f, psfEnergies[i], 50000, GetEmin(), GetEmax(), false);
+			else
+				m_specwt[i] = UpdateIntegrator(f, psfEnergies[i], psfEnergies[i+1], GetEmin(), GetEmax(), false);
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
@@ -529,14 +569,32 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
 			f.SetParameter(2, m_par3);
+			//f.Print("V");
+			/*
 			ROOT::Math::WrappedTF1 wf1(f);
+			
 			ROOT::Math::GaussIntegrator ig;
-			ig.SetFunction(wf1);
+			//ig.SetRelTolerance(0.001);
 			ig.SetRelTolerance(0.001);
+			
+			
+			ROOT::Math::GaussLegendreIntegrator ig;
+			ig.SetRelTolerance(0.001);
+			//ig.SetRelTolerance(0.000001);
+			ig.SetNumberPoints(40);
+			
+			
+			ig.SetFunction(wf1);
+			
 			if(i == psfeCount-1)
 				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
 			else
 				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			 */
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = UpdateIntegrator(f, psfEnergies[i], 50000, GetEmin(), GetEmax(), false);
+			else
+				m_specwt[i] = UpdateIntegrator(f, psfEnergies[i], psfEnergies[i+1], GetEmin(), GetEmax(), false);
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
@@ -547,14 +605,31 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
 			f.SetParameter(2, m_par3);
+			/*
 			ROOT::Math::WrappedTF1 wf1(f);
-			ROOT::Math::GaussIntegrator ig;
-			ig.SetFunction(wf1);
-			ig.SetRelTolerance(0.001);
+			
+			//ROOT::Math::GaussIntegrator ig;
+			//ig.SetRelTolerance(0.001);
+			
+			
+			//ROOT::Math::GaussLegendreIntegrator ig;
+			//ig.SetRelTolerance(0.001);
+			//ig.SetRelTolerance(0.000001);
+			//ig.SetNumberPoints(800);
+			
+			//ig.SetFunction(wf1);
+			
 			if(i == psfeCount-1)
 				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
 			else
 				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			 */
+			
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = UpdateIntegrator(f, psfEnergies[i], 50000, GetEmin(), GetEmax(), false);
+			else
+				m_specwt[i] = UpdateIntegrator(f, psfEnergies[i], psfEnergies[i+1], GetEmin(), GetEmax(), false);
+			
 		}
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}

@@ -229,12 +229,12 @@ while (!infile.eof()) {
 			SourceData srcData;
 			cout << "### " << str.str() << endl;
 			str >> srcData.flux >> srcData.srcL >> srcData.srcB >> srcData.index
-			>> srcData.fixflag >> srcData.minTS >> srcData.label >> srcData.loclimit >> srcData.typefun >> srcData.par2 >> srcData.par3;
+			>> srcData.fixflag >> srcData.minTS >> srcData.label >> srcData.loclimit >> srcData.typefun >> srcData.par2 >> srcData.par3 >> srcData.index_low_limit >> srcData.index_upp_limit >> srcData.par2_low_limit >> srcData.par2_upp_limit >> srcData.par3_low_limit >> srcData.par3_upp_limit;
 			if(srcData.typefun == 0)
 				srcData.par2 = srcData.par3 = 0.0;
 			if(srcData.typefun == 1)
 				srcData.par3 = 0.0;
-			//cout << "#### " << srcData.typefun << " " << srcData.par2 << " " << srcData.par3 << endl;
+			cout << "#### " << srcData.typefun << " " << srcData.index_low_limit << " " << srcData.index_upp_limit << " " << srcData.par2_low_limit << " " << srcData.par2_upp_limit << " " << srcData.par3_low_limit << " " << srcData.par3_upp_limit << endl;
 			srcData.minTS = srcData.minTS * srcData.minTS;
 			//cout << "before" << endl;
 			//srcData.Print(cout);

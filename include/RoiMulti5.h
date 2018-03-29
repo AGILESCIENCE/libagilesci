@@ -146,11 +146,12 @@ public: /// Construction
 		double srcL, double srcB, double index,
 		int typefun, double par2, double par3,
 		Double_t flux,
-		Double_t exposure)
+		Double_t exposure, int integratortype)
 		{
 		AlikePsfSource::Set(psfTab, map, eInf, eSup, theta, srcL, srcB, index, typefun, par2, par3);
 		m_flux = flux;
 		m_exposure = exposure;
+		m_integratortype = integratortype;
 		}
 
 public:	/// Data Access
@@ -424,7 +425,7 @@ public:	/// Getting the singleton object
 public:	/// Main operations
 	bool SetPsf(const char* psfFileName, const char* raeffFileName, const char* edpFileName);
 	bool SetMaps(const MapData& mapData, int galMode=DiffDefault, int isoMode=DiffDefault);
-	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol);
+	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype);
 	bool SetCorrections(int galmode2, int galmode2fit, int isomode2, int isomode2fit, int edpcorrection, int fluxcorrection) { m_galmode2 = galmode2; m_galmode2fit = galmode2fit; m_isomode2 = isomode2; m_isomode2fit = isomode2fit; m_edpcorrection = edpcorrection; m_fluxcorrection = fluxcorrection;};
 	/// Add the Extended Sources for analysis
 	bool SetExtendedSources(const ExtData& extData);
@@ -560,21 +561,22 @@ private:	/// Internal operations
 	void FixSrcPos(int source, double l, double b);
 
 	/// Spectral index parameter
-    void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_indexLimitMin, m_indexLimitMax); }
+    //void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_indexLimitMin, m_indexLimitMax); }
+	void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_inSrcDataArr[source].index_low_limit, m_inSrcDataArr[source].index_upp_limit); }
 	void SetSrcIndex(int source, double index) { m_model.SetParameter(SrcIdxPar(source), index); }
 	void SetSrcIndex(int source) { SetSrcIndex(source, m_sources[source].GetIndex()); }
 	void FixSrcIndex(int source, double index) { m_model.FixParameter(SrcIdxPar(source), index); }
 	void FixSrcIndex(int source) { FixSrcIndex(source, m_sources[source].GetIndex()); }
 
 	/// Par2 parameter
-	void ReleaseSrcPar2(int source) { m_model.SetParLimits(SrcPar2Par(source), m_par2LimitMin, m_par2LimitMax); }
+	void ReleaseSrcPar2(int source) { m_model.SetParLimits(SrcPar2Par(source), m_inSrcDataArr[source].par2_low_limit, m_inSrcDataArr[source].par2_upp_limit); }
 	void SetSrcPar2(int source, double par2) { m_model.SetParameter(SrcPar2Par(source), par2); }
 	void SetSrcPar2(int source) { SetSrcPar2(source, m_sources[source].GetPar2()); }
 	void FixSrcPar2(int source, double par2) { m_model.FixParameter(SrcPar2Par(source), par2); }
 	void FixSrcPar2(int source) { FixSrcPar2(source, m_sources[source].GetPar2()); }
 
 	/// Par3 parameter
-	void ReleaseSrcPar3(int source) { m_model.SetParLimits(SrcPar3Par(source), m_par3LimitMin, m_par3LimitMax); }
+	void ReleaseSrcPar3(int source) { m_model.SetParLimits(SrcPar3Par(source), m_inSrcDataArr[source].par3_low_limit, m_inSrcDataArr[source].par3_upp_limit); }
 	void SetSrcPar3(int source, double par3) { m_model.SetParameter(SrcPar3Par(source), par3); }
 	void SetSrcPar3(int source) { SetSrcPar3(source, m_sources[source].GetPar3()); }
 	void FixSrcPar3(int source, double par3) { m_model.FixParameter(SrcPar3Par(source), par3); }
@@ -636,6 +638,9 @@ private:	/// Data
 
 	//Fitter
 	int m_minimizerdefstrategy;
+	
+	//Integrator
+	int m_integratortype;
 
 	/// Sources
 	SourceDataArray m_inSrcDataArr;	/// Copy of the original input data

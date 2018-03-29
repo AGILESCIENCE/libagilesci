@@ -936,8 +936,11 @@ if (m_logFile)
 }
 */
 
-bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol) {
+bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
 	m_minimizerdefstrategy = minimizerdefstrategy;
+	
+	m_integratortype = integratortype;
+	cout << "## Set integrator type: " << m_integratortype << endl;
 	/*
 
 	 * Minuit (library libMinuit). Old version of Minuit, based on the TMinuit class. The list of possible algorithms are:
@@ -984,7 +987,7 @@ bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg,
 	 * Precision (MinimizerOptions::SetTolerance(double )). Precision value in the evaluation of the minimization function. Default is numerical double precision.
 	 */
 
-	cout << "Set user choice: " << minimizertype << " " << minimizeralg << " " << minimizerdefstrategy << endl;
+	cout << "## Set minimizer user type: " << minimizertype << " " << minimizeralg << " " << minimizerdefstrategy << endl;
 	ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizertype, minimizeralg);
 	ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
 
@@ -1127,7 +1130,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		cout << " fixed ";
 	cout << index;
 	if (fixFlag & IndexFree)
-		cout << " free (" << m_indexLimitMin << ", " << m_indexLimitMax << ") ";
+		cout << " free (" << m_inSrcDataArr[i].index_low_limit << ", " << m_inSrcDataArr[i].index_upp_limit << ") ";
 	else
 		cout << " fixed ";
 	cout << "(" << m_inSrcDataArr[i].srcL << ", " << m_inSrcDataArr[i].srcB << ")";
@@ -1161,12 +1164,12 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	cout <<  m_inSrcDataArr[i].par2;
 	if(fixFlag & Par2Free)
-		cout << " free (" << m_par2LimitMin << ", " << m_par2LimitMax << ") ";
+		cout << " free (" << m_inSrcDataArr[i].par2_low_limit << ", " << m_inSrcDataArr[i].par2_upp_limit << ") ";
 	else
 		cout << " fixed ";
 	cout <<  m_inSrcDataArr[i].par3;
 	if(fixFlag & Par3Free)
-		cout << " free (" << m_par3LimitMin << ", " << m_par3LimitMax << ") ";
+		cout << " free (" << m_inSrcDataArr[i].par3_low_limit << ", " << m_inSrcDataArr[i].par3_upp_limit << ") ";
 	else
 		cout << " fixed ";
 
@@ -1186,7 +1189,7 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 		double par3 = m_inSrcDataArr[i].par3;
 		int typefun = m_inSrcDataArr[i].typefun;
 		Double_t exposure = EvalExposure(srcL, srcB, expMap);
-		m_sources[src].Set(&m_psfTab, expMap, m_energyInf, m_energySup, theta, srcL, srcB, index, typefun, par2, par3, flux, exposure);
+		m_sources[src].Set(&m_psfTab, expMap, m_energyInf, m_energySup, theta, srcL, srcB, index, typefun, par2, par3, flux, exposure, m_integratortype);
 
 	double cnt = 0;
 	for (int r=0; r<m_sources[src].Rows(); ++r)
@@ -2058,11 +2061,16 @@ else {
 /// This function is called during the first fitting loop if (Fixflag&(PosFree|IndexFree))
 void RoiMulti::FitPositionIndex(int source, const char* fitOpt)
 {
+	
 ReleaseSrcFlux(source);
 for (int i=0; i<SrcCount(); ++i) {
 	if (m_sources[i].GetFixflag()) {
-		FixSrcPos(i);
-		FixSrcIndex(i);
+			FixSrcPos(i);
+			FixSrcIndex(i);
+			//if(m_sources[source].m_typefun > 1)
+				FixSrcPar2(i);
+			//if(m_sources[source].m_typefun > 2)
+				FixSrcPar3(i);
 		}
 	}
 SetSrcPars(source);
@@ -2437,7 +2445,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				}
 				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
 				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
-				gr.Fit(&f3);
+				gr.Fit(&f3); //"LNM"
 				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
 				for (int m=0; m<m_mapCount; ++m) {
 					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
@@ -3032,7 +3040,6 @@ return diffParsStored;
 void RoiMulti::Loop1(const char* fitOpt)
 {
 /// Move(m_sources[0].GetSrcL(), m_sources[0].GetSrcB());
-
 for (int i=0; i<SrcCount(); ++i) {
 	double cnt = 0;
 	for (int r=0; r<m_sources[i].Rows(); ++r)
@@ -3041,6 +3048,7 @@ for (int i=0; i<SrcCount(); ++i) {
 	cout << "Total CNT = " << cnt << endl;
 	}
 
+	
 
 for (int i=0; i<m_extCount; ++i)
 	if (m_extSrcArr[i].GetFixflag())
@@ -3441,7 +3449,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
 	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor" << endl;
-	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "] Index Err" << " Par2 [" << m_par2LimitMin << " , " << m_par2LimitMax << "] Par2_Err Par3 [" << m_par3LimitMin << " , " << m_par3LimitMax << "] Par3_Err" << endl;
+	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
 	//if (m_inSrcDataArr[i].fixflag) {
