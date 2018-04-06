@@ -79,7 +79,11 @@ public:
 	double GetEnergyInf() const { return m_eInf; }
 	double GetEnergySup() const { return m_eSup; }
 	double GetNormFactor() const { return m_normFactor; }
-
+	double PLnuFnu(double eMin, double eMax, double index);
+	double PLExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2);
+	double LogParabolanuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 );
+	double PLSuperExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 );
+	
 protected:
 	/// WARNING: After calling SetEnergyRange the user should call UpdateNorm()
 	void SetEnergyRange(double eInf, double eSup) { m_eInf = eInf; m_eSup = eSup; }
@@ -87,6 +91,7 @@ protected:
 	double UpdateNormPLExpCutOff(double eMin, double eMax, double index, double par2, bool norm=1);
 	double UpdateNormLogParabola(double eMin, double eMax, double index, double par2, double par3, bool norm=1);
 	double UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double par2, double par3, bool norm=1);
+
 	int m_integratortype;
 	
 	double UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf, double eSup, bool norm);

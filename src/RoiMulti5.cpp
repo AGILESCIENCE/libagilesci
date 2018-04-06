@@ -2270,31 +2270,33 @@ for(int i=0; i<m_mapCount*2; i++) // Release gal and iso parameters
 }
 
 
+
 void RoiMulti::Loop2(const char* fitOpt)
 {
 cout << endl << "Begin second loop" << endl << endl;
 	//galMap.SetFixflag(AllFixed);
+	cout << "gal0:" << endl;
 	for (int i=0; i<m_srcCount; ++i) {
 		for (int m=0; m<m_mapCount; ++m)
 			cout << " " << GetFinalDPM(false, m, i, true);
 		cout << endl;
 	}
 	cout << endl;
-
+	cout << "gal1:" << endl;
 	for (int i=0; i<m_srcCount; ++i) {
 		for (int m=0; m<m_mapCount; ++m)
 			cout << " " << GetFinalDPM(false, m, i, false);
 		cout << endl;
 	}
 	cout << endl;
-
+	cout << "iso0:" << endl;
 	for (int i=0; i<m_srcCount; ++i) {
 		for (int m=0; m<m_mapCount; ++m)
 			cout << " " << GetFinalDPM(true, m, i, true);
 		cout << endl;
 	}
 	cout << endl;
-
+	cout << "iso1:" << endl;
 	for (int i=0; i<m_srcCount; ++i) {
 		for (int m=0; m<m_mapCount; ++m)
 			cout << " " << GetFinalDPM(true, m, i, false);
@@ -2360,21 +2362,15 @@ for (int source=0; source<SrcCount(); ++source) {
 				for (int m=0; m<m_mapCount; ++m)
 					edges[m] = m_galSrc[m].GetEmin();
 				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
-				for (int m=0; m<=m_mapCount; ++m)
-				 cout << edges[m] << endl;
-				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				
+				double meangal = 0;
 				for (int m=0; m<m_mapCount; ++m) {
-					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
-					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+					meangal += GetFinalDPM(false, m, source, nulhyp);
 				}
-				TF1 f3("PL", "[0]", 0, m_mapCount);
-				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
-				gr.Fit(&f3);
-				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				meangal /= m_mapCount;
 				for (int m=0; m<m_mapCount; ++m) {
-					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
-					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
-					m_galSrc[m].SetCoeff(val);
+					cout << "gal coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(false, m, source, nulhyp) << " new "  << meangal << endl;
+					m_galSrc[m].SetCoeff(meangal);
 				}
 			}
 			if(m_galmode2fit == 2) {
@@ -2396,7 +2392,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
 				for (int m=0; m<m_mapCount; ++m) {
 					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
-					//cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
 					m_galSrc[m].SetCoeff(val);
 				}
 			}
@@ -2430,26 +2426,51 @@ for (int source=0; source<SrcCount(); ++source) {
 			if(m_isomode2fit == 0)
 				for (int m=0; m<m_mapCount; ++m)
 					m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, nulhyp));
+			if(m_isomode2fit == 1) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_isoSrc[m].GetEmin();
+				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
+				
+				double meaniso = 0;
+				for (int m=0; m<m_mapCount; ++m) {
+					meaniso += GetFinalDPM(true, m, source, nulhyp);
+				}
+				meaniso /= m_mapCount;
+				for (int m=0; m<m_mapCount; ++m) {
+					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << meaniso << endl;
+					m_isoSrc[m].SetCoeff(meaniso);
+				}
+			}
 			if(m_isomode2fit == 2) {
 				double edges[m_mapCount+1];
 				for (int m=0; m<m_mapCount; ++m)
 					edges[m] = m_isoSrc[m].GetEmin();
 				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
-				for (int m=0; m<=m_mapCount; ++m)
-				 cout << edges[m] << endl;
+				
+				//linear regression
+				double xlr[m_mapCount];
+				double ylr[m_mapCount];
+				double b, m, r;
+				for(int i=0; i<m_mapCount; i++) {
+					xlr[i] = m_isoSrc[i].GetEmin() + (m_isoSrc[i].GetEmax() - m_isoSrc[i].GetEmin())/2;
+					ylr[i] = GetFinalDPM(true, i, source, nulhyp);
+				}
+				linreg(m_mapCount, xlr, ylr, b, m, r);
 
 				TH1D gr("spectra", "spectra", m_mapCount, edges);
 				for (int m=0; m<m_mapCount; ++m) {
 					gr.SetBinContent(m+1, GetFinalDPM(true, m, source, nulhyp));
-					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				//	cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
 				}
 				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
 				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
-				gr.Fit(&f3); //"LNM"
+				gr.Fit(&f3, "LNM"); //"LNM"
 				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
 				for (int m=0; m<m_mapCount; ++m) {
 					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
-					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					
+					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << val << " linreg " << m * (edges[m] + (edges[m+1]-edges[m])/2) + b << endl;
 					m_isoSrc[m].SetCoeff(val);
 				}
 			}
@@ -3448,7 +3469,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor erg erg_err" << endl;
 	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
@@ -3523,6 +3544,36 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure*m_sources[i].GetFluxul()
 				<< endl;
 
+	double absEmin = 0;
+	double absEmax = 0;
+	double erg = 0;
+	double ergerr = 0;
+	for (int map=0; map<m_mapCount; ++map) {
+		const AgileMap& m = m_ctsMaps[map];
+		if(absEmin == 0)
+			absEmin = m.GetEmin();
+		absEmax = m.GetEmax();
+		if(m_inSrcDataArr[i].typefun == 0) {
+			double fact = m_sources[i].PLnuFnu(absEmin, absEmax, m_sources[i].GetIndex());
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+		}
+		if(m_inSrcDataArr[i].typefun == 1) {
+			double fact = m_sources[i].PLExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2());
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+		}
+		if(m_inSrcDataArr[i].typefun == 2) {
+			double fact = m_sources[i].PLSuperExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3());
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+		}
+		if(m_inSrcDataArr[i].typefun == 3) {
+			double fact = m_sources[i].LogParabolanuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3());
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+		}
+	}
 	srcout << exposure*m_sources[i].GetFlux() / expcor
 				//<< " " << exposure*m_sources[i].GetFlux() / expcor
 				<< " " << exposure*m_sources[i].GetFluxerr() / expcor
@@ -3531,6 +3582,8 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure*m_sources[i].GetFluxul() / expcor
 				<< " " << exposure
 				<< " " << exposure / expcor
+				<< " " << erg
+				<< " " << ergerr
 				<< endl;
 
 	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;

@@ -54,4 +54,14 @@ inline double Exposure_cm2s(double exp, double lat, double mres)
 	return exp  / ( pow(mres/180.0,2) * cos(lat));	
 }
 
+/// The return value is 0 on success, !=0 on failure.
+/// n = number of data points
+/// x,y  = arrays of data
+/// b = output intercept
+/// m  = output slope
+/// r = output correlation coefficient (can be NULL if you don't want it)
+/// y = mx + b
+int linreg(int n, const double x[], const double y[], double& b, double& m, double& r);
+
+
 #endif

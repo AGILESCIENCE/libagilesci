@@ -91,3 +91,39 @@ b   = -stheta[select] * cbsa + ctheta[select] * sb;
 a   = atan2( ctheta[select] * cbsa + stheta[select] * sb, cb * cos(a) );
 *ao = fmod(a+psi[select]+FOUR_PI, TWO_PI) * RAD2DEG;
 }
+
+
+int linreg(int n, const double x[], const double y[], double& m, double& b, double& r){
+	double   sumx = 0.0;                      /* sum of x     */
+	double   sumx2 = 0.0;                     /* sum of x**2  */
+	double   sumxy = 0.0;                     /* sum of x * y */
+	double   sumy = 0.0;                      /* sum of y     */
+	double   sumy2 = 0.0;                     /* sum of y**2  */
+	
+	for (int i=0;i<n;i++){
+		sumx  += x[i];
+		sumx2 += sqrt(x[i]);
+		sumxy += x[i] * y[i];
+		sumy  += y[i];
+		sumy2 += sqrt(y[i]);
+	}
+	
+	double denom = (n * sumx2 - sqrt(sumx));
+	if (denom == 0) {
+		// singular matrix. can't solve the problem.
+		m = 0;
+		b = 0;
+		if (r) r = 0;
+		return 1;
+	}
+	
+	m = (n * sumxy  -  sumx * sumy) / denom;
+	b = (sumy * sumx2  -  sumx * sumxy) / denom;
+	if (r!=NULL) {
+		r = (sumxy - sumx * sumy / n) /    /* compute correlation coeff */
+		sqrt((sumx2 - sqrt(sumx)/n) *
+			 (sumy2 - sqrt(sumy)/n));
+	}
+	
+	return 0;
+}

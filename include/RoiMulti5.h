@@ -31,8 +31,8 @@
 #include "ExpRatioEvaluator.h"
 
 
-#define ROIMULTI_VERSION "RoiMulti 2.0"
-#define ROIMULTI_DATE "2012-06-21"
+#define ROIMULTI_VERSION "RoiMulti 3.0"
+#define ROIMULTI_DATE "2018-04-02"
 
 
 

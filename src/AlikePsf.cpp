@@ -270,6 +270,27 @@ double AlikeNorm::UpdateNorm(double eMin, double eMax, double index, bool norm)
 	
 }
 
+double AlikeNorm::PLnuFnu(double eMin, double eMax, double index)
+{
+	
+	//0 - PL -> (k E^-{\index})
+	//Analytical expression
+	index = 1.0-index;
+	
+	//TF1 f("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
+	TF1 f1("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
+	f1.SetParameter(0, index);
+	TF1 f2("PLnuFnu2", "x^(-[0])", m_eInf, m_eSup);
+	f2.SetParameter(0, index);
+
+	
+	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	
+}
+
 double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2, bool norm)
 {
 	if(eMin == eMax) {
@@ -285,15 +306,33 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 	
 }
 
+double AlikeNorm::PLExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2)
+{
+	
+	TF1 f1("PLExpCutoffnuFnu", "x * x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
+	f1.SetParameter(0, index);
+	f1.SetParameter(1, m_par2);
+	
+	TF1 f2("PLExpCutoffnuFnu2", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
+	f2.SetParameter(0, index);
+	f2.SetParameter(1, m_par2);
+	
+	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	
+}
+
 double AlikeNorm::UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf, double eSup, bool norm) {
 	
 	ROOT::Math::WrappedTF1 wf1(f);
-	if(m_integratortype == 1 || m_integratortype == 2) {
+	if(m_integratortype == 1 || m_integratortype == 2 || m_integratortype == 3) {
 		//cout << "Gauss " << m_integratortype << endl;
 		ROOT::Math::GaussIntegrator ig;
 		if(m_integratortype == 1) ig.SetRelTolerance(0.001);
 		if(m_integratortype == 2) ig.SetRelTolerance(0.000001);
-		
+		if(m_integratortype == 3) ig.SetRelTolerance(0.00000001);
 		ig.SetFunction(wf1);
 		
 		if(norm) {
@@ -303,15 +342,16 @@ double AlikeNorm::UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf
 			return ig.Integral(eMin, eMax);
 	}
 	
-	if(m_integratortype == 3 || m_integratortype == 4 || m_integratortype == 5) {
+	if(m_integratortype >= 4 ) {
 		//cout << "GaussLegendreIntegrator " << m_integratortype << endl;
 		ROOT::Math::GaussLegendreIntegrator ig;
-		ig.SetRelTolerance(0.001);
-		//ig.SetRelTolerance(0.000001);
-		if(m_integratortype == 3) ig.SetNumberPoints(80);
-		if(m_integratortype == 4) ig.SetNumberPoints(160);
-		if(m_integratortype == 5) ig.SetNumberPoints(1600);
-		
+		//ig.SetRelTolerance(0.001);//A
+		ig.SetRelTolerance(0.000001); //B
+		if(m_integratortype == 4) ig.SetNumberPoints(80);
+		if(m_integratortype == 5) ig.SetNumberPoints(160);
+		if(m_integratortype == 6) ig.SetNumberPoints(1600);
+		if(m_integratortype == 7) ig.SetNumberPoints(2400);
+		if(m_integratortype == 8) ig.SetNumberPoints(3200);
 		ig.SetFunction(wf1);
 	
 		if(norm) {
@@ -347,6 +387,26 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 	
 }
 
+double AlikeNorm::LogParabolanuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 )
+{
+	
+	TF1 f1("PLExpCutoffnuFnu", "x * ( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	f1.SetParameter(0, index);
+	f1.SetParameter(1, m_par2);
+	f1.SetParameter(2, m_par3);
+	
+	TF1 f2("PLExpCutoffnuFnu2", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	f2.SetParameter(0, index);
+	f2.SetParameter(1, m_par2);
+	f2.SetParameter(2, m_par3);
+	
+	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	
+}
+
 double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
 {
 	if(eMin == eMax) {
@@ -365,6 +425,25 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 	
 }
 
+double AlikeNorm::PLSuperExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 )
+{
+	
+	TF1 f1("PLSuperExpCutoff", "x * x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	f1.SetParameter(0, index);
+	f1.SetParameter(1, m_par2);
+	f1.SetParameter(2, m_par3);
+	
+	TF1 f2("PLSuperExpCutoff2", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	f2.SetParameter(0, index);
+	f2.SetParameter(1, m_par2);
+	f2.SetParameter(2, m_par3);
+	
+	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	
+}
 
 
 ////////////////////////////////////////////////////
