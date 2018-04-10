@@ -542,8 +542,8 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                 if (k == count && (rowblockzero + nrows) >= allnrows) {
                     lp0 = lp;
                     bp0 = bp;
-                    if (isnan(lp0)) lp0 = 0.;
-                    if (isnan(bp0)) bp0 = 0.;
+                    if (std::isnan(lp0)) lp0 = 0.;
+                    if (std::isnan(bp0)) bp0 = 0.;
                     //gp0=gp[lowrow]*R2D;
                 }
 

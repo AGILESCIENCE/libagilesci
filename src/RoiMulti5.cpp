@@ -3469,7 +3469,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor erg erg_err" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor erg erg_err senstivity" << endl;
 	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
@@ -3584,6 +3584,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure / expcor
 				<< " " << erg
 				<< " " << ergerr
+				<< " 0.0 "
 				<< endl;
 
 	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;
