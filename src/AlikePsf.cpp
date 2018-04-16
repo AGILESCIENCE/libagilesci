@@ -298,7 +298,7 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 		return 0;
 	}
 	//1 - PLExpCutoff -> k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
-	TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
+	TF1 f("PLExpCutoff", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
 	
@@ -309,11 +309,11 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 double AlikeNorm::PLExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2)
 {
 	
-	TF1 f1("PLExpCutoffnuFnu", "x * x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
+	TF1 f1("PLExpCutoffnuFnu", "x * x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
 	f1.SetParameter(0, index);
 	f1.SetParameter(1, m_par2);
 	
-	TF1 f2("PLExpCutoffnuFnu2", "x^(-[0]) * e^(- x / [1])", m_eInf, m_eSup);
+	TF1 f2("PLExpCutoffnuFnu2", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
 	f2.SetParameter(0, index);
 	f2.SetParameter(1, m_par2);
 	
@@ -390,12 +390,12 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 double AlikeNorm::LogParabolanuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 )
 {
 	
-	TF1 f1("PLExpCutoffnuFnu", "x * ( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	TF1 f1("LogParabolanuFnu", "x * ( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
 	f1.SetParameter(0, index);
 	f1.SetParameter(1, m_par2);
 	f1.SetParameter(2, m_par3);
 	
-	TF1 f2("PLExpCutoffnuFnu2", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	TF1 f2("LogParabolanuFnu2", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
 	f2.SetParameter(0, index);
 	f2.SetParameter(1, m_par2);
 	f2.SetParameter(2, m_par3);
@@ -414,7 +414,7 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 		return 0;
 	}
 	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
-	TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
 	if(std::isnan(index))
 		exit(0);
 	f.SetParameter(0, index);
@@ -428,12 +428,12 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 double AlikeNorm::PLSuperExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 )
 {
 	
-	TF1 f1("PLSuperExpCutoff", "x * x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	TF1 f1("PLSuperExpCutoff", "x * x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
 	f1.SetParameter(0, index);
 	f1.SetParameter(1, m_par2);
 	f1.SetParameter(2, m_par3);
 	
-	TF1 f2("PLSuperExpCutoff2", "x^(-[0]) * e^(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	TF1 f2("PLSuperExpCutoff2", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
 	f2.SetParameter(0, index);
 	f2.SetParameter(1, m_par2);
 	f2.SetParameter(2, m_par3);
@@ -608,7 +608,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		//cout << GetEmax() << endl;
 		UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
 		for (int i=0; i<=psfeCount-1; ++i) {
-			TF1 f("PLExpCutoff", "x^(-[0]) * e^(- x / [1])", GetEmin(), GetEmax());
+			TF1 f("PLExpCutoff", "x^(-[0]) * exp(- x / [1])", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
 			/*
@@ -644,7 +644,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
 		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
 		for (int i=0; i<=psfeCount-1; ++i) {
-			TF1 f("PLSuperExpCutoff", "x^(-[0]) * e^(- pow(x / [1], [2]))", GetEmin(), GetEmax());
+			TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
 			f.SetParameter(1, m_par2);
 			f.SetParameter(2, m_par3);
