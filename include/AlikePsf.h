@@ -158,7 +158,7 @@ private:	/// Data
 class AlikePsfSource: public AgileMap, public AlikeNorm
 {
 public:	/// Construction
-	AlikePsfSource(): AgileMap(), AlikeNorm(), m_psfTab(0), m_theta(0), m_srcL(0), m_srcB(0), m_index(2.1), m_typefun(0), m_par2(3000.0), m_par3(2.0), m_psfArr(0), m_edpArr(0), m_specwt(0) {}
+	AlikePsfSource(): AgileMap(), AlikeNorm(), m_psfTab(0), m_theta(0), m_srcL(0), m_srcB(0), m_index(2.1), m_typefun(0), m_par2(3000.0), m_par3(2.0), m_psfArr(0), m_edpArr(0), m_specwt(0), m_init(false), m_init_index(2.1), m_init_par2(3000.0), m_init_par3(2.0) {}
 	~AlikePsfSource() {}
 	void Set(
 		const AlikePsfTables* psfTab,
@@ -196,6 +196,10 @@ protected:	/// Data
 	int m_typefun;
 	double m_par2;
 	double m_par3;
+	double m_init_index;
+	double m_init_par2;
+	double m_init_par3;
+	bool m_init;
 
 	VecD   m_psfArr;
 
