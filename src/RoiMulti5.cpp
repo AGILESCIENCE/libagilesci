@@ -3465,7 +3465,7 @@ if (m_srcCount) {
 					<< " " << m_sources[i].GetPar3()
 					<< " " << m_sources[i].GetPar3err()
 					<< " " << m_sources[i].GetTypeFun();
-		if (m_sources[i].GetFixflag() && !skipFitInfo)
+		if (!skipFitInfo)
 			output << " " << m_fitInfo[i].fitstatus0
 					<< " " << m_fitInfo[i].fcn0
 					<< " " << m_fitInfo[i].edm0

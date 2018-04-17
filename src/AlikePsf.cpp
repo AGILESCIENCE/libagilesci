@@ -299,10 +299,7 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 	}
 	if(std::isnan(index)) {
 		cout << "PLExpCutoff isnan with integrator " << m_integratortype << endl;
-		m_integratortype++;
-		if(m_integratortype > 8)
-			exit(0);
-		return -1;
+		exit(0);
 	}
 	//1 - PLExpCutoff -> k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
 	TF1 f("PLExpCutoff", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
@@ -380,10 +377,7 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
 	if(std::isnan(index)) {
 		cout << "LogParabola isnan with integrator " << m_integratortype << endl;
-		m_integratortype++;
-		if(m_integratortype > 8)
-			exit(0);
-		return -1;
+		exit(0);
 	}
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
@@ -429,10 +423,7 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 	TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
 	if(std::isnan(index)) {
 		cout << "PLSuperExpCutoff isnan with integrator " << m_integratortype << endl;
-		m_integratortype++;
-		if(m_integratortype > 8)
-			exit(0);
-		return -1;
+		exit(0);
 	}
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
@@ -631,12 +622,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		//cout << "PLExpCutOff"<< endl;
 		//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
 		//cout << GetEmax() << endl;
-		while(UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2) < 0){
-			m_index = m_init_index;
-			m_par2 = m_init_par2;
-			m_par3 = m_init_par3;
-			UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
-		}
+		UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
 		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("PLExpCutoff", "x^(-[0]) * exp(- x / [1])", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
@@ -672,12 +658,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 	if(m_typefun == 2) {
 		//cout << "PLSuperExpCutOff"<< endl;
 		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
-		while(UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3)<0) {
-			m_index = m_init_index;
-			m_par2 = m_init_par2;
-			m_par3 = m_init_par3;
-			UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
-		};
+		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
 		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
@@ -713,12 +694,7 @@ if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
 	}
 	if(m_typefun == 3) {
-		while(UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3)<0) {
-			m_index = m_init_index;
-			m_par2 = m_init_par2;
-			m_par3 = m_init_par3;
-			UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
-		};
+		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
 		for (int i=0; i<=psfeCount-1; ++i) {
 			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
 			f.SetParameter(0, m_index);
