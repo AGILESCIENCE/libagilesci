@@ -371,8 +371,10 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 		return 0;
 	}
 	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
-	if(std::isnan(index))
+	if(std::isnan(index)) {
+		cout << "LogParabola isnan" << endl;
 		exit(0);
+	}
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
 	f.SetParameter(2, m_par3);
@@ -415,8 +417,10 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 	}
 	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
 	TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
-	if(std::isnan(index))
+	if(std::isnan(index)) {
+		cout << "PLSuperExpCutoff isnan" << endl;
 		exit(0);
+	}
 	f.SetParameter(0, index);
 	f.SetParameter(1, m_par2);
 	f.SetParameter(2, m_par3);
