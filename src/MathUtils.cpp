@@ -127,3 +127,4 @@ int linreg(int n, const double x[], const double y[], double& m, double& b, doub
 	
 	return 0;
 }
+

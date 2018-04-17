@@ -1845,6 +1845,87 @@ for (int cts=0; cts<m_mapCount; ++cts) {
 SetErrorDef(olderrdef);
 }
 
+float RoiMulti::helene(float src_cnt, float exp, float gal, float iso, float mres, float alpha)
+{
+	//part 1
+	/*
+	Double_t non, noff, errnoff;
+	
+	
+	Float_t ratio_onoff = 4./100.;
+	
+	//AgileMap ha area(i,j)
+	noff=(exp*pixel_area_v1(mres)*(iso*1.e-5 + gal))*ratio_onoff;
+	errnoff=sqrt(noff);
+	cout << "NOFF: " << noff << endl;
+	
+	non = src_cnt;
+	
+	//part 2
+	//input const Double_t non, const Double_t noff, const Double_t errnoff, const Float_t alpha=0.05
+	Int_t nbins = 4000;
+	Double_t minabar  = non-noff;
+	
+	//    if (minabar < 0.)
+	//      minabar = 0.;
+	cout << "EXCESS: " << minabar << endl;
+	
+	minabar = -minabar;
+	
+	if ((non+noff) < 0.)
+	{
+		cout << "ERROR: Cannot determine upper limit: background plus signal smaller 0" << endl;
+		return -1.;
+	}
+	
+	Float_t sigma   = TMath::Sqrt(non+(errnoff*errnoff));
+	cout << "sigma: " << sigma << endl;
+	
+	Float_t diff = TMath::Abs(non-noff);
+	cout << "diff: " << diff << endl;
+	
+	//TH1F ha("ha","",nbins,0., 50. * ((diff > 1.0) ? diff : 1.0));
+	
+	TH1F ha("ha","",nbins,0., 50. * diff);
+	
+	Float_t a = 0.;
+	Int_t i;
+	
+	Double_t quot = TMath::Erfc(minabar /sigma / TMath::Sqrt(2.));
+	cout << "quot: " << quot << endl;
+	if (quot < 0.0000001)
+	{
+		cout << "Cannot determine upper limit: Quotient too small" << endl;
+		return -1.;
+	}
+	
+	//    cout << "QUOT: " << quot << endl;
+	
+	for (i=1; i<nbins; i++)
+	{
+		a = ha.GetBinCenter(i);
+		const Double_t denom = TMath::Erfc((a+minabar)/sigma / TMath::Sqrt(2.));
+		if ((denom / quot) < alpha)
+			break;
+	}
+	
+	//    cout << "FOUND UL: " << a << endl;
+	//    cout << "IN BIN:  " << i << endl;
+	
+	if (i == nbins)
+	{
+		cout << "ERROR: Calculation of UL failed!!! Number of bins too low" << endl;
+		a = 0.;
+	}
+	
+	cout << "UL CTS: " << a << endl;
+	cout << "UL flux: " << a/exp << endl;
+
+	
+	return a;
+	 */
+}
+
 
 
 

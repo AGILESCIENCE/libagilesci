@@ -490,6 +490,7 @@ private:	/// Internal operations
 	void Loop2(const char* fitOpt);
 	void MakeCovarMat(int source);
 	void MakeEllipse(int source);
+	float helene(float src_cnt, float exp, float gal, float iso, float mres, float alpha);
 
 	/// Cleaning memory
 	void CleanMaps();
