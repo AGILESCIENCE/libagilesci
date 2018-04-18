@@ -24,7 +24,7 @@ ExpRatioEvaluator::ExpRatioEvaluator(	const char * _expPath,
 					double _squareSize
 				    ) : agileMap(_expPath)
 {	
-	cout << "\n**ExpRatioEvaluator - started" << endl;
+	cout << "\n**ExpRatioEvaluator - started " << _isExpMapNormalized << " " << _createExpNormalizedMap << " " << _minThreshold << " " << _maxThreshold << " " << _squareSize << endl;
 	
 	isExpMapNormalized = _isExpMapNormalized;
 	
@@ -72,7 +72,7 @@ ExpRatioEvaluator::ExpRatioEvaluator(
 					) : agileMap(_agileMap)
 {
 
-	cout << "\n**ExpRatioEvaluator - started" << endl;
+	cout << "\n**ExpRatioEvaluator - started " << _isExpMapNormalized << " " << _createExpNormalizedMap << " " << _minThreshold << " " << _maxThreshold << " " << _squareSize << endl;
 
 	isExpMapNormalized = _isExpMapNormalized;
 	
