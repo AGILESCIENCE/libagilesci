@@ -621,6 +621,8 @@ private:	/// Data
 	AgileMap* m_ctsMaps;
 	AgileMap* m_expMaps;
 	AgileMap* m_gasMaps;
+	AgileMap* m_sumCts; //the sum of all cts maps
+	AgileMap* m_sumExp; //the sum of all exp maps
 	bool      m_alignedMaps;
 	int*      m_counts;
 	double*   m_thetaArr;

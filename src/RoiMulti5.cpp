@@ -795,7 +795,50 @@ for (int map=0; map<m_mapCount; ++map) {
 	m_expMaps[map] = mapData.ExpMap(map);
 	m_gasMaps[map] = mapData.GasMap(map);
 	}
+	
+//sum cts and exp maps
+	m_sumCts = new AgileMap(mapData.CtsMap(0));
+	m_sumExp = new AgileMap(mapData.ExpMap(0));
+	
+	double emin = m_sumCts->GetEmin();
+	double emax = m_sumCts->GetEmax();
+	double fovmin = m_sumCts->GetFovMin();
+	double fovmax = m_sumCts->GetFovMax();
+	double tstart = m_sumCts->GetTstart();
+	double tstop = m_sumCts->GetTstop();
+	for(int i=1; i<m_mapCount; i++) {
+		//cout << "map " << i << endl;
+		AgileMap otherCts = mapData.CtsMap(i);
+		for (int y=0; y<m_sumCts->Dim(0); ++y)
+			for (int x=0; x<m_sumCts->Dim(1); ++x)
+				(*m_sumCts)(y, x) += otherCts(y, x);
+		AgileMap otherExp = mapData.ExpMap(i);
+		for (int y=0; y<m_sumExp->Dim(0); ++y)
+			for (int x=0; x<m_sumExp->Dim(1); ++x)
+				(*m_sumExp)(y, x) += otherExp(y, x);
+		if(otherCts.GetEmin() < emin)
+			emin = otherCts.GetEmin();
+		if(otherCts.GetEmax() > emax)
+			emax = otherCts.GetEmax();
+		if(otherCts.GetFovMin() < fovmin)
+			fovmin = otherCts.GetFovMin();
+		if(otherCts.GetFovMax() > fovmax)
+			fovmax = otherCts.GetFovMax();
+		if(otherCts.GetTstart() < tstart)
+			tstart = otherCts.GetTstart();
+		if(otherCts.GetTstop() > tstop)
+			tstop = otherCts.GetTstop();
+	}
+	m_sumCts->SetEnergy(emin, emax);
+	m_sumExp->SetEnergy(emin, emax);
+	m_sumCts->SetFov(fovmin, fovmax);
+	m_sumExp->SetFov(fovmin, fovmax);
+	m_sumCts->SetTT(tstart, tstop);
+	m_sumExp->SetTT(tstart, tstop);
 
+	
+//---
+	
 m_galSrc = new AlikeDiffMap[m_mapCount];
 m_isoSrc = new AlikeDiffMap[m_mapCount];
 for (int map=0; map<m_mapCount; ++map) {
@@ -810,7 +853,7 @@ for (int map=0; map<m_mapCount; ++map) {
 	for (int r=0; r<galMap.Rows(); ++r)
 		for (int c=0; c<galMap.Cols(); ++c)
 			totExp += galMap(r,c);
-	cout << "Total exposure = " << totExp << endl;
+	cout << "Total EXP = " << totExp << endl;
 
 	FixFlag fixFlag = FluxFree;
 	if (m_galMode==DiffFixed || (m_galMode==DiffDefault && m_galCoeffs[map]>0))
@@ -2529,16 +2572,17 @@ for (int source=0; source<SrcCount(); ++source) {
 					edges[m] = m_isoSrc[m].GetEmin();
 				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
 				
+				/*
 				//linear regression
 				double xlr[m_mapCount];
 				double ylr[m_mapCount];
-				double b, m, r;
+				double b1, mm1, r1;
 				for(int i=0; i<m_mapCount; i++) {
 					xlr[i] = CalcLogBarycenter(m_isoSrc[i].GetEmin(), m_isoSrc[i].GetEmax());
 					ylr[i] = GetFinalDPM(true, i, source, nulhyp);
 				}
-				linreg(m_mapCount, xlr, ylr, b, m, r);
-
+				linreg(m_mapCount, xlr, ylr, b1, mm1, r1);
+				*/
 				TH1D gr("spectra", "spectra", m_mapCount, edges);
 				for (int m=0; m<m_mapCount; ++m) {
 					gr.SetBinContent(m+1, GetFinalDPM(true, m, source, nulhyp));
@@ -2551,7 +2595,8 @@ for (int source=0; source<SrcCount(); ++source) {
 				for (int m=0; m<m_mapCount; ++m) {
 					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
 					
-					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << val << " linreg " << m * (edges[m] + (edges[m+1]-edges[m])/2) + b << endl;
+					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << val << endl;
+					//" linreg " << mm1 * (edges[m] + (edges[m+1]-edges[m])/2) + b1 << endl;
 					m_isoSrc[m].SetCoeff(val);
 				}
 			}
@@ -3776,13 +3821,17 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << m.GetPhaseCode() << " ";
 
 	/* ExpRatioEvaluation */
-	if(expratioevaluation){
+	if(expratioevaluation) {
+		/*
 		for (int exp=0; exp<m_mapCount; ++exp) {
 			double expratio_value = ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
 			srcout << expratio_value;
 			if(m_mapCount > 1 && exp != m_mapCount - 1)
 				srcout << ",";
 		}
+		 */
+		double expratio_value = ExpRatioEvaluation(*m_sumExp, m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+		srcout << expratio_value;
 	}else{
 		srcout << "-1";
 	}
@@ -4384,9 +4433,12 @@ if (SrcCount()) {
 		/* ExpRatioEvaluation */
 		if(expratioevaluation)
 		{
+			/*
 			for (int exp=0; exp<m_mapCount; ++exp) {
 				htmlout << sep[bool(exp)] << ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
 			}
+			*/
+			ExpRatioEvaluation(*m_sumExp, m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
 		}
 		else
 			htmlout << "not enabled";
