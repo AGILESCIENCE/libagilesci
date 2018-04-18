@@ -10,7 +10,7 @@ using std::endl;
 #include "Math/WrappedTF1.h"
 #include "Math/GaussIntegrator.h"
 #include "Math/GaussLegendreIntegrator.h"
-
+#include "TMath.h"
 
 #include "wcstrig.h"
 
@@ -270,25 +270,30 @@ double AlikeNorm::UpdateNorm(double eMin, double eMax, double index, bool norm)
 	
 }
 
-double AlikeNorm::PLnuFnu(double eMin, double eMax, double index)
+double AlikeNorm::PLnuFnu(double eMin, double eMax, double index, int type)
 {
+	if(type == 0) {
+		//0 - PL -> (k E^-{\index})
+		//Analytical expression
+		index = 1.0-index;
 	
-	//0 - PL -> (k E^-{\index})
-	//Analytical expression
-	index = 1.0-index;
-	
-	//TF1 f("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
-	TF1 f1("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
-	f1.SetParameter(0, index);
-	TF1 f2("PLnuFnu2", "x^(-[0])", m_eInf, m_eSup);
-	f2.SetParameter(0, index);
+		//TF1 f("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
+		TF1 f1("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		TF1 f2("PLnuFnu2", "x^(-[0])", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
 
 	
-	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
-	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
-	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
-	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
-	
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
 }
 
 double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2, bool norm)
@@ -310,23 +315,30 @@ double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, 
 	
 }
 
-double AlikeNorm::PLExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2)
+double AlikeNorm::PLExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, int type)
 {
-	
-	TF1 f1("PLExpCutoffnuFnu", "x * x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
-	f1.SetParameter(0, index);
-	f1.SetParameter(1, m_par2);
-	
-	TF1 f2("PLExpCutoffnuFnu2", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
-	f2.SetParameter(0, index);
-	f2.SetParameter(1, m_par2);
-	
-	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
-	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
-	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
-	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
-	
+	if(type == 0) {
+		TF1 f1("PLExpCutoffnuFnu", "x * x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		f1.SetParameter(1, m_par2);
+		
+		TF1 f2("PLExpCutoffnuFnu2", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+		f2.SetParameter(1, m_par2);
+		
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
 }
+
+
 
 double AlikeNorm::UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf, double eSup, bool norm) {
 	
@@ -393,24 +405,29 @@ double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, 
 	
 }
 
-double AlikeNorm::LogParabolanuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 )
+double AlikeNorm::LogParabolanuFnu(double eMin, double eMax, double index, double m_par2, double m_par3, int type )
 {
+	if(type == 0) {
+		TF1 f1("LogParabolanuFnu", "x * ( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		f1.SetParameter(1, m_par2);
+		f1.SetParameter(2, m_par3);
 	
-	TF1 f1("LogParabolanuFnu", "x * ( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
-	f1.SetParameter(0, index);
-	f1.SetParameter(1, m_par2);
-	f1.SetParameter(2, m_par3);
+		TF1 f2("LogParabolanuFnu2", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+		f2.SetParameter(1, m_par2);
+		f2.SetParameter(2, m_par3);
 	
-	TF1 f2("LogParabolanuFnu2", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
-	f2.SetParameter(0, index);
-	f2.SetParameter(1, m_par2);
-	f2.SetParameter(2, m_par3);
-	
-	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
-	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
-	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
-	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
-	
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
 }
 
 double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
@@ -433,24 +450,29 @@ double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double in
 	
 }
 
-double AlikeNorm::PLSuperExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, double m_par3 )
+double AlikeNorm::PLSuperExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, double m_par3, int type )
 {
+	if(type == 0) {
+		TF1 f1("PLSuperExpCutoff", "x * x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		f1.SetParameter(1, m_par2);
+		f1.SetParameter(2, m_par3);
 	
-	TF1 f1("PLSuperExpCutoff", "x * x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
-	f1.SetParameter(0, index);
-	f1.SetParameter(1, m_par2);
-	f1.SetParameter(2, m_par3);
+		TF1 f2("PLSuperExpCutoff2", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+		f2.SetParameter(1, m_par2);
+		f2.SetParameter(2, m_par3);
 	
-	TF1 f2("PLSuperExpCutoff2", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
-	f2.SetParameter(0, index);
-	f2.SetParameter(1, m_par2);
-	f2.SetParameter(2, m_par3);
-	
-	double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
-	double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
-	cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
-	return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
-	
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
 }
 
 

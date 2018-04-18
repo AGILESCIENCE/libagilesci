@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <assert.h>
+#include "TMath.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -63,5 +64,8 @@ inline double Exposure_cm2s(double exp, double lat, double mres)
 /// y = mx + b
 int linreg(int n, const double x[], const double y[], double& b, double& m, double& r);
 
-
+inline double CalcLogBarycenter(double e_min, double e_max) {
+	double e_log = (TMath::Log10(e_max) - TMath::Log10(e_min)) / 2.0 + TMath::Log10(e_min);
+	return pow(10, e_log);
+}
 #endif

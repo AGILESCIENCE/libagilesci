@@ -2534,7 +2534,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				double ylr[m_mapCount];
 				double b, m, r;
 				for(int i=0; i<m_mapCount; i++) {
-					xlr[i] = m_isoSrc[i].GetEmin() + (m_isoSrc[i].GetEmax() - m_isoSrc[i].GetEmin())/2;
+					xlr[i] = CalcLogBarycenter(m_isoSrc[i].GetEmin(), m_isoSrc[i].GetEmax());
 					ylr[i] = GetFinalDPM(true, i, source, nulhyp);
 				}
 				linreg(m_mapCount, xlr, ylr, b, m, r);
@@ -3544,14 +3544,14 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label Fix index ULConfidenceLevel SrcLocConfLevel start_l start_b start_flux [ lmin,  lmax ] [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor" << endl;
+	srcout << "! Label Fix index ULConfidenceLevel SrcLocConfLevel start_l start_b start_flux [ lmin,  lmax ] [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor integratortype" << endl;
 	srcout << "! sqrt(TS)" << endl ;
 	srcout << "! L_peak B_peak Dist_from_start_position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor erg erg_err senstivity" << endl;
-	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor Erg Erg_Err Erglog Erglog_Err Senstivity" << endl;
+	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index_Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
 	//if (m_inSrcDataArr[i].fixflag) {
@@ -3560,7 +3560,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "! Iso coeffs [" << m_isoLimitMin << " , " << m_isoLimitMax << "] and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
 	//	}
-	srcout << "! Start_date_UTC end_date_UTC start_data_TT end_data_TT start_date_MJD end_date_MJD" << endl;
+	srcout << "! Start_date_UTC End_date_UTC Start_data_TT End_data_TT Start_date_MJD End_date_MJD" << endl;
 	srcout << "! Emin..emax fovmin..fovmax albedo binsize expstep phasecode ExpRatio" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
@@ -3595,7 +3595,8 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_isomode2fit;
 	srcout << " " << m_edpcorrection;
 	srcout << " " << m_fluxcorrection;
-
+	srcout << " " << m_integratortype;
+	
 	srcout	<< endl;
 	/// zzz m_sources[i].PrintAbphi();
 	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
@@ -3629,30 +3630,44 @@ for (int i=0; i<m_srcCount; ++i) {
 	double absEmax = 0;
 	double erg = 0;
 	double ergerr = 0;
+	double erglog = 0;
+	double erglogerr = 0;
 	for (int map=0; map<m_mapCount; ++map) {
 		const AgileMap& m = m_ctsMaps[map];
 		if(absEmin == 0)
 			absEmin = m.GetEmin();
 		absEmax = m.GetEmax();
 		if(m_inSrcDataArr[i].typefun == 0) {
-			double fact = m_sources[i].PLnuFnu(absEmin, absEmax, m_sources[i].GetIndex());
+			double fact = m_sources[i].PLnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), 0);
 			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
 			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			fact = m_sources[i].PLnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
 		}
 		if(m_inSrcDataArr[i].typefun == 1) {
-			double fact = m_sources[i].PLExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2());
+			double fact = m_sources[i].PLExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), 0);
 			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
 			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			fact = m_sources[i].PLExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
 		}
 		if(m_inSrcDataArr[i].typefun == 2) {
-			double fact = m_sources[i].PLSuperExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3());
+			double fact = m_sources[i].PLSuperExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 0);
 			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
 			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			fact = m_sources[i].PLSuperExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
 		}
 		if(m_inSrcDataArr[i].typefun == 3) {
-			double fact = m_sources[i].LogParabolanuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3());
+			double fact = m_sources[i].LogParabolanuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 0);
 			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
 			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			fact = m_sources[i].LogParabolanuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
 		}
 	}
 	srcout << exposure*m_sources[i].GetFlux() / expcor
@@ -3665,6 +3680,8 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure / expcor
 				<< " " << erg
 				<< " " << ergerr
+				<< " " << erglog
+				<< " " << erglogerr
 				<< " 0.0 "
 				<< endl;
 
