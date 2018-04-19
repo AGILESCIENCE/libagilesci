@@ -129,6 +129,11 @@ public:	/// General information
 	double SrcDist(int i, int j, double lng, double lat) const
 		{ return SphDistDeg(lng, lat, l(i,j), b(i,j)); }
 	MatD SrcDist(double lng, double lat) const;
+	
+	/// Operations
+	//Return the sum of the bins inside lng,lat,radius, -1 if the radius is outisde
+	double SumBin(double lng, double lat, double radius) const;
+	bool IsRadiusInside(double lng, double lat, double radius) const;
 
 private:	/// Data
 	/// Mandatory for this map to make sense

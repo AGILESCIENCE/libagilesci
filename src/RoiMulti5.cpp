@@ -30,6 +30,7 @@
 
 #include "RoiMulti5.h"
 
+
 using namespace std;
 
 
@@ -1888,17 +1889,32 @@ for (int cts=0; cts<m_mapCount; ++cts) {
 SetErrorDef(olderrdef);
 }
 
-float RoiMulti::helene(float src_cnt, float exp, float gal, float iso, float mres, float alpha)
+double RoiMulti::helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double alpha)
 {
+	//part 0
+	//get float src_cnt and float mres
+	int x=0;
+	int y=0;
+	
+	bool inside = ctsmap.GetRowCol(lng,lat,&x,&y);
+	if(!inside)
+		return -1;
+	
+	double src_cnt = ctsmap.SumBin(lng, lat, 2.0);
+	//= ctsmap.SumBin(lng, lat, 2.0);
+	double area = ctsmap.Area(x, y);
+	
+	double exp = EvalExposure(lng, lat, expmap);
+	
 	//part 1
-	/*
+	
 	Double_t non, noff, errnoff;
 	
 	
 	Float_t ratio_onoff = 4./100.;
 	
 	//AgileMap ha area(i,j)
-	noff=(exp*pixel_area_v1(mres)*(iso*1.e-5 + gal))*ratio_onoff;
+	noff=(exp*area*(iso*1.e-5 + gal))*ratio_onoff;
 	errnoff=sqrt(noff);
 	cout << "NOFF: " << noff << endl;
 	
@@ -1966,7 +1982,7 @@ float RoiMulti::helene(float src_cnt, float exp, float gal, float iso, float mre
 
 	
 	return a;
-	 */
+	
 }
 
 
@@ -2427,6 +2443,8 @@ cout << endl << "Begin second loop" << endl << endl;
 		cout << endl;
 	}
 	cout << endl;
+	
+	
 
 ResetFitStatus();
 ResetFitCts();
@@ -3651,6 +3669,18 @@ for (int i=0; i<m_srcCount; ++i) {
 	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 
 	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << " " << dist << endl;
+	
+	
+	for (int m=0; m<m_mapCount; ++m) {
+		double gal0 = GetFinalDPM(false, m, i, true);
+		double iso0 = GetFinalDPM(true, m, i, true);
+		double lng = m_sources[i].GetSrcL();
+		double lat = m_sources[i].GetSrcB();
+		AgileMap& ctsMap = m_ctsMaps[m];
+		AgileMap& expMap = m_expMaps[m];
+		double resf = helene(ctsMap, expMap, lng, lat, gal0, iso0, 0.05);
+		cout << "helene m " << m << " " << resf << endl;
+	}
 
 	if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
 		double dist2 = SphDistDeg(ellipse.center.x, ellipse.center.y, m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);

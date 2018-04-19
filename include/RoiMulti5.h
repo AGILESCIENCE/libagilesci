@@ -26,6 +26,7 @@
 #include "AlikeData5.h"
 #include "AlikePsf.h"
 #include "Ellipse.h"
+#include "AgileMap.h"
 
 /* 03/2018  -> ExpRatioEvaluator dependency */
 #include "ExpRatioEvaluator.h"
@@ -490,7 +491,7 @@ private:	/// Internal operations
 	void Loop2(const char* fitOpt);
 	void MakeCovarMat(int source);
 	void MakeEllipse(int source);
-	float helene(float src_cnt, float exp, float gal, float iso, float mres, float alpha);
+	double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double alpha);
 
 	/// Cleaning memory
 	void CleanMaps();
