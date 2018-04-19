@@ -1889,22 +1889,51 @@ for (int cts=0; cts<m_mapCount; ++cts) {
 SetErrorDef(olderrdef);
 }
 
-double RoiMulti::helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double alpha)
+double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double ulcl)
 {
 	//part 0
 	//get float src_cnt and float mres
 	int x=0;
 	int y=0;
 	
+	int ulcl2 = (int) ulcl;
+	double alpha = 1.0-0.955;
+	
+	if(ulcl2 == 3)
+		alpha = 1.0-0.997; //UL al 95% di confidenza (2 sigma)
+	if(ulcl2 == 2)
+		alpha = 1.0-0.955; //UL al 95% di confidenza (2 sigma)
+	if(ulcl2 == 1)
+		alpha = 1.0-0.683; //UL al 68% di confidenza (1 sigma)
+	
+	
 	bool inside = ctsmap.GetRowCol(lng,lat,&x,&y);
 	if(!inside)
 		return -1;
 	
-	double src_cnt = ctsmap.SumBin(lng, lat, 2.0);
+	double emin = ctsmap.GetEmin();
+	double rads = 2;
+	double radsfact = 2;
+	if(emin >= 10)
+		rads = 5.0 / radsfact;
+	if(emin >= 100)
+		rads = 4.0 / radsfact;
+	if(emin >= 400)
+		rads = 3.0 / radsfact;
+	if(emin >= 1000)
+		rads = 2.0 / radsfact;
+	if(emin >= 10000)
+		rads = 1.0 / radsfact;
+	cout << "Bayes confidence level " << ulcl2 << " alpha " << alpha << " and psf " << rads << " for emin " << emin << endl;
+	//rads = 2;
+	double src_cnt = ctsmap.SumBin(lng, lat, rads);
 	//= ctsmap.SumBin(lng, lat, 2.0);
 	double area = ctsmap.Area(x, y);
 	
 	double exp = EvalExposure(lng, lat, expmap);
+	
+	if(exp <= 0)
+		return -1;
 	
 	//part 1
 	
@@ -1981,7 +2010,7 @@ double RoiMulti::helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double
 	cout << "UL flux: " << a/exp << endl;
 
 	
-	return a;
+	return a/exp;
 	
 }
 
@@ -3613,7 +3642,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL Exp ExpSpectraCorFactor Erg Erg_Err Erglog Erglog_Err Senstivity" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL ULbayes Exp ExpSpectraCorFactor Erg Erg_Err Erglog Erglog_Err Senstivity" << endl;
 	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index_Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
@@ -3670,7 +3699,7 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << " " << dist << endl;
 	
-	
+	double ulbayes = 0;
 	for (int m=0; m<m_mapCount; ++m) {
 		double gal0 = GetFinalDPM(false, m, i, true);
 		double iso0 = GetFinalDPM(true, m, i, true);
@@ -3678,10 +3707,15 @@ for (int i=0; i<m_srcCount; ++i) {
 		double lat = m_sources[i].GetSrcB();
 		AgileMap& ctsMap = m_ctsMaps[m];
 		AgileMap& expMap = m_expMaps[m];
-		double resf = helene(ctsMap, expMap, lng, lat, gal0, iso0, 0.05);
-		cout << "helene m " << m << " " << resf << endl;
+		double resf = helene(ctsMap, expMap, lng, lat, gal0, iso0, sqrt(m_sources[i].GetULCL()));
+		if(resf < 0) {
+			ulbayes = -1;
+			break;
+		}
+		ulbayes += resf;
+		
 	}
-
+	cout << "helene   " << ulbayes << endl;
 	if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
 		double dist2 = SphDistDeg(ellipse.center.x, ellipse.center.y, m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 		srcout << ellipse.center.x << " " << ellipse.center.y << " " << dist2 << " " << m_sources[i].GetRadius() << " " << ellipse.horAxis << " " << ellipse.verAxis << " " << ellipse.attitude*RAD2DEG << " " << endl;
@@ -3755,6 +3789,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure*m_sources[i].GetFluxhi() / expcor
 				<< " " << exposure*m_sources[i].GetFluxlo() / expcor
 				<< " " << exposure*m_sources[i].GetFluxul() / expcor
+				<< " " << ulbayes
 				<< " " << exposure
 				<< " " << exposure / expcor
 				<< " " << erg

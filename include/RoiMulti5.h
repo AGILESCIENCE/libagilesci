@@ -39,6 +39,7 @@
 
 
 Double_t EvalExposure(Double_t srcl, Double_t srcb, const AgileMap& expmap);
+double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double ulcl);
 
 
 
@@ -491,7 +492,6 @@ private:	/// Internal operations
 	void Loop2(const char* fitOpt);
 	void MakeCovarMat(int source);
 	void MakeEllipse(int source);
-	double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double alpha);
 
 	/// Cleaning memory
 	void CleanMaps();
