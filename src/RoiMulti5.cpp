@@ -150,7 +150,7 @@ if (m_polygon.Sides()) {
 	}
 }
 
-double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
+double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection, double edpcorrection) {
 	if(fluxcorrection == false)
 		return 1.0;
 	else {
@@ -239,6 +239,8 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection) {
 				avgpl = avgValuePL/normsumpl;
 				avgple = avgValuePLE/normsumple;
 				double corr = avgpl/avgple;
+				if(edptrueenergy[iMin] >= 1000)
+					corr *= edpcorrection;
 				cout << " funtype: " << m_typefun << " " << indexstd << " " << m_par2 << " " << m_par3 << " " << " theta: " << edptheta[thetaind] << " phi: " << edpphi[phiindcor] << " " << avgpl << " " << avgple << " " << avgpl - avgple << " PL/" << avgpl/avgple << endl;
 				return corr;
 			}
@@ -1271,7 +1273,7 @@ double RoiMulti::GetTotalExposureSpectraCorrected(int source) const
 	double exposure = 0;
 	if (source<m_srcCount && source>=0)
 		for (int map=0; map<m_mapCount; ++map)
-			exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor() / m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection);
+			exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor() / m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection, m_edpcorrection);
 	//cout << "EXPC " << exposure << endl;
 	return exposure;
 }
