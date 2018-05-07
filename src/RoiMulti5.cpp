@@ -1915,7 +1915,7 @@ double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, doub
 	
 	double emin = ctsmap.GetEmin();
 	double rads = 2;
-	double radsfact = 2;
+	double radsfact = 1;
 	if(emin >= 10)
 		rads = 5.0 / radsfact;
 	if(emin >= 100)
