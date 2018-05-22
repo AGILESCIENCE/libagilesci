@@ -879,9 +879,9 @@ if (GetImageSize(edpFile, naxes)) {
 	}
 	
 	
-	int edpcorrection = 0;
+	int edpqueuecorrection = 0;
 	//Correction factor
-	if(edpcorrection > 0) {
+	if(edpqueuecorrection > 0) {
 		int numtheta = m_edpgrid.Dim(1);
 		int numphi = m_edpgrid.Dim(0);
 		int eneChanCount = m_edptrueenergy.Dim(0);

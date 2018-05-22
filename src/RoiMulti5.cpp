@@ -517,8 +517,9 @@ m_mapCount = 0;
 m_diffParCount = 0;
 m_sourceParOffset = 0;
 
-ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Migrad");
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad");
 ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.01);
 }
 
 void RoiMulti::CleanSources()

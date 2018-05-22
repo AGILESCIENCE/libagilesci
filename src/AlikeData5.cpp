@@ -240,7 +240,7 @@ while (!infile.eof()) {
 			//srcData.Print(cout);
 			srcArr.Append(srcData);
 			//cout << "after" << endl;
-			srcArr.Print(cout);
+			//srcArr.Print(cout);
 			
 			}
 		}
