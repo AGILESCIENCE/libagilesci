@@ -229,7 +229,7 @@ public:	/// Data Access
     void SetCts(int step, int cts) { m_cts[step] = cts; }
     int GetCts(int step) { return m_cts[step]; }
 
-	double GetSpectraCorrectionFactor(bool fluxcorrection, double edpcorrection);
+	double GetSpectraCorrectionFactor(int fluxcorrection, double edpcorrection);
 
 private: /// Data
 	Double_t m_flux;

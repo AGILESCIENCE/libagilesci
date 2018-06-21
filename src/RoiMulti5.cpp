@@ -150,8 +150,8 @@ if (m_polygon.Sides()) {
 	}
 }
 
-double AlikeSourceMap::GetSpectraCorrectionFactor(bool fluxcorrection, double edpcorrection) {
-	if(fluxcorrection == false)
+double AlikeSourceMap::GetSpectraCorrectionFactor(int fluxcorrection, double edpcorrection) {
+	if(fluxcorrection == 0)
 		return 1.0;
 	else {
 		//return 0.0;
