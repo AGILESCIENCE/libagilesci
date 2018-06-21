@@ -6,7 +6,7 @@
  * Any information contained in this software
  * is property of the AGILE TEAM and is strictly
  * private and confidential.
- * 
+ *
 */
 
 #ifndef EVALUATOR_H
@@ -16,39 +16,40 @@
 #include <fitsio.h>
 #include <stdio.h>
 #include <iostream>
+#include "MapConverter.h"
 
- 
-using namespace std;
 
 class BinEvaluator {
 	public:
- 
-		BinEvaluator(const char * fitsFilePath, double ** image, double l, double b, double radius);
+
+		BinEvaluator(const char * fitsFilePath, DoubleMatrixCustomMap * image, double l, double b, double radius);
 		BinEvaluator(const char * fitsFilePath, double l, double b, double radius);
+        //~BinEvaluator();
 
-		int sumBin();
-		bool isRadiusInside();
+        double binSum;
+        double tmin;
+        double tmax;
 
-		const char * fitsFilePath;
-		double l, b, radius;
-		int x, y;
-		double binSum;
-		double tmin;
-		double tmax;
-		AgileMap * agileMapUtils;
+        void sumBin();
 
- 
+    private:
 
- 		bool convertFitsDataToMatrix(); 
-		int rows;
-		int cols;
-		double ** image;
- 
+        const char * fitsFilePath;
 
-	 
+        int    x, y;
+        double l, b;
 
-		
-		
+        double radius;
+
+        int rows;
+        int cols;
+        AgileMap * agileMapUtils;
+
+        DoubleMatrixCustomMap * image;
+
+        bool checkIfRadiusExceedsMapBorders();
+
+
 };
 
 #endif
