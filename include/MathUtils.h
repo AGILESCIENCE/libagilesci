@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <assert.h>
+#include "TMath.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -54,4 +55,17 @@ inline double Exposure_cm2s(double exp, double lat, double mres)
 	return exp  / ( pow(mres/180.0,2) * cos(lat));	
 }
 
+/// The return value is 0 on success, !=0 on failure.
+/// n = number of data points
+/// x,y  = arrays of data
+/// b = output intercept
+/// m  = output slope
+/// r = output correlation coefficient (can be NULL if you don't want it)
+/// y = mx + b
+int linreg(int n, const double x[], const double y[], double& b, double& m, double& r);
+
+inline double CalcLogBarycenter(double e_min, double e_max) {
+	double e_log = (TMath::Log10(e_max) - TMath::Log10(e_min)) / 2.0 + TMath::Log10(e_min);
+	return pow(10, e_log);
+}
 #endif

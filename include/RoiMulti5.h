@@ -1,7 +1,7 @@
 //
 // C++ Interface: %{MODULE}
 //
-// Description: 
+// Description:
 //
 //
 // Author: %{AUTHOR} <%{EMAIL}>, (C) %{YEAR}
@@ -11,6 +11,8 @@
 //
 #ifndef _ROI_MULTI_
 #define _ROI_MULTI_
+
+#define PARNUM 6
 
 /// #include <iomanip>
 #include <fstream>
@@ -24,15 +26,20 @@
 #include "AlikeData5.h"
 #include "AlikePsf.h"
 #include "Ellipse.h"
+#include "AgileMap.h"
+
+/* 03/2018  -> ExpRatioEvaluator dependency */
+#include "ExpRatioEvaluator.h"
 
 
-#define ROIMULTI_VERSION "RoiMulti 2.0"
-#define ROIMULTI_DATE "2012-06-21"
+#define ROIMULTI_VERSION "RoiMulti 3.0"
+#define ROIMULTI_DATE "2018-04-02"
 
 
 
 
 Double_t EvalExposure(Double_t srcl, Double_t srcb, const AgileMap& expmap);
+double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double ulcl);
 
 
 
@@ -54,6 +61,7 @@ public:	/// Get Functions
 	Double_t GetCoefflo() const { return m_coefflo; }
 	Double_t GetCoeffhi() const { return m_coeffhi; }
 	Int_t    GetFixflag() const { return m_fixflag; }
+
 
 public:	/// Set Functions
 	void SetIndex(Double_t index) { m_index = index>0?index:-index; UpdateNorm(); }
@@ -98,16 +106,19 @@ public:
 
 	double GetTS() const { return m_TS; }
 	void SetTS(double ts) ;
+	void SetLikelihood(Double_t lik) { m_likelihood = lik; };
+	double GetLikelihood() { return m_likelihood; };
 	void PrintSqrtTS() const;
 	double GetBaryL() const { return m_baryl; }
 	double GetBaryB() const { return m_baryb; }
 
 private:	/// Data
 	double   m_TS;
+	double	 m_likelihood;
 	double   m_baryl;
 	double   m_baryb;
 	void EvalBarycenter();
-	
+
 protected:	/// Making a copy
 	void Copy(const AlikeExtMap &another, bool all);
 };
@@ -118,8 +129,8 @@ class AlikeSourceMap: public AlikePsfSource
 public: /// Construction
 	AlikeSourceMap(): AlikePsfSource(),
 		m_flux(0), m_fluxerr(0), m_fluxlo(0), m_fluxhi(0), m_fluxul(0),
-		m_idxErr(0), m_exposure(0), m_ts(0), m_minTS(3),
-		m_ulcl(0.95), m_loccl(0.95), m_fixflag(0), /// m_covar(),
+		m_idxErr(0), m_par2Err(0), m_par3Err(0), m_exposure(0), m_ts(0), m_minTS(3),
+		m_ulcl(0.95), m_loccl(0.95), m_fixflag(0), m_forceposfree(0), /// m_covar(),
 		m_polygon(), m_ellipse(), m_radius(0), m_label()
         {
             for(int i=0; i<7; i++) {
@@ -135,12 +146,14 @@ public: /// Construction
 		const AgileMap &map,
 		double eInf, double eSup, double theta,
 		double srcL, double srcB, double index,
+		int typefun, double par2, double par3,
 		Double_t flux,
-		Double_t exposure)
+		Double_t exposure, int integratortype)
 		{
-		AlikePsfSource::Set(psfTab, map, eInf, eSup, theta, srcL, srcB, index);
+		AlikePsfSource::Set(psfTab, map, eInf, eSup, theta, srcL, srcB, index, typefun, par2, par3);
 		m_flux = flux;
 		m_exposure = exposure;
+		m_integratortype = integratortype;
 		}
 
 public:	/// Data Access
@@ -165,6 +178,12 @@ public:	/// Data Access
 	void SetIndexerr(double idxErr) { m_idxErr = idxErr; }
 	double GetIndexerr() const { return m_idxErr; }
 
+	void SetPar2err(double idxErr) { m_par2Err = idxErr; }
+	double GetPar2err() const { return m_par2Err; }
+
+	void SetPar3err(double idxErr) { m_par3Err = idxErr; }
+	double GetPar3err() const { return m_par3Err; }
+
 	Double_t GetExp() const { return m_exposure; }
 	void SetExp(Double_t exposure) { m_exposure = exposure; }
 
@@ -172,10 +191,14 @@ public:	/// Data Access
 	void SetMinTS(Double_t minTS) { m_minTS = minTS; }
 
 	Int_t GetFixflag() const { return m_fixflag; }
-	void SetFixflag(Int_t fixflag) { m_fixflag = fixflag; }
+	void SetFixflag(Int_t fixflag) { m_fixflag = fixflag; if(fixflag & ForcePosFree) m_forceposfree = 1; }
+	Int_t   GetForcePosFree() const { return m_forceposfree; }
 
 	Double_t GetTS() const { return m_ts; }
 	void SetTS(Double_t inTS) ;
+
+	void SetLikelihood(Double_t lik) { m_likelihood = lik; };
+	Double_t GetLikelihood() { return m_likelihood; };
 
 	Double_t GetULCL() const { return m_ulcl; }
 	Double_t GetLocCL() const { return m_loccl; }
@@ -206,6 +229,8 @@ public:	/// Data Access
     void SetCts(int step, int cts) { m_cts[step] = cts; }
     int GetCts(int step) { return m_cts[step]; }
 
+	double GetSpectraCorrectionFactor(int fluxcorrection, double edpcorrection);
+
 private: /// Data
 	Double_t m_flux;
 	Double_t m_fluxerr;
@@ -214,15 +239,19 @@ private: /// Data
 	Double_t m_fluxul;
 
 	double m_idxErr;
+	double m_par2Err;
+	double m_par3Err;
 
 	Double_t m_exposure;
 
 	Double_t m_ts;
 	Double_t m_minTS;
+	Double_t m_likelihood;
 
 	Double_t m_ulcl;
 	Double_t m_loccl;
 	FixFlag  m_fixflag;
+	Int_t m_forceposfree;
 	/// TMatrixD m_covar;
 
 	Polygon  m_polygon;	/// Source coutour if available, empty otherwise
@@ -269,13 +298,24 @@ const DiffMode DiffTogether   = 3;
 
 struct FitInfo
 {
-	FitInfo(): fcn0(0), fcn1(0), edm0(0), edm1(0), iter0(0), iter1(0), counts(0) {}
+	//amin or fcn : chisquare
+	//edm : estimated distance to minimum
+	//errdef
+	//nvpar : number of variable parameters
+	//nparx : total number of parameters
+	FitInfo(): fcn0(0), fcn1(0), edm0(0), edm1(0), iter0(0), iter1(0), counts(0), fitstatus0(0), fitstatus1(0), nvpar0(0), nvpar1(0), nparx0(0), nparx1(0) {}
 	double fcn0;
 	double fcn1;
 	double edm0;
 	double edm1;
 	int    iter0;
 	int    iter1;
+	int fitstatus0;
+	int fitstatus1;
+	int nvpar0;
+	int nvpar1;
+	int nparx0;
+	int nparx1;
 	int    counts;
 };
 
@@ -387,13 +427,14 @@ public:	/// Getting the singleton object
 public:	/// Main operations
 	bool SetPsf(const char* psfFileName, const char* raeffFileName, const char* edpFileName);
 	bool SetMaps(const MapData& mapData, int galMode=DiffDefault, int isoMode=DiffDefault);
-
+	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype);
+	bool SetCorrections(int galmode2, int galmode2fit, int isomode2, int isomode2fit, double edpcorrection, int fluxcorrection) { m_galmode2 = galmode2; m_galmode2fit = galmode2fit; m_isomode2 = isomode2; m_isomode2fit = isomode2fit; m_edpcorrection = edpcorrection; m_fluxcorrection = fluxcorrection;};
 	/// Add the Extended Sources for analysis
 	bool SetExtendedSources(const ExtData& extData);
 
 	/// Analysis
 	bool SetLogfile(const char* fileName);
-	
+
 	void CloseLogFile();
 	int DoFit(
 		const SourceDataArray& srcDataArr,
@@ -418,9 +459,9 @@ public:	/// Main operations
 
 public:	/// Collecting the results
 	void Write(const char* fileName, bool skipFitInfo=true) const;
-	void WriteSources(const char* fileName, bool skipFixed=false, bool skipEllipses=false) const;
+	void WriteSources(const char* fileName, bool expratioevaluation, bool isExpMapNormalized=false, double minThreshold=0, double maxThreshold=15, int squareSize=10, bool skipFixed=false, bool skipEllipses=false) const;
 	void LogSources(const char* fileName, int iterNum, AgileMap* simArr, int simArraySize) const;
-	void WriteHtml(const char* fileName, const char* suffix=".html") const;
+	void WriteHtml(const char* fileName, bool expratioevaluation, bool isExpMapNormalized=false, double minThreshold=0, double maxThreshold=10, int squareSize=10, const char* suffix=".html") const;
 	SourceDataArray GetFitData() const { return m_outSrcDataArr; }
 
 	/// Diffuse components
@@ -436,8 +477,9 @@ public:	/// Collecting the results
 	int SrcCount() const { return m_srcCount; }
 	const AlikeSourceMap& GetSource(int source) const { return m_sources[source%m_srcCount]; }
 	double GetTotalExposure(int source) const;
+	double GetTotalExposureSpectraCorrected(int source) const;
 	Double_t GetSourceTS(const char* label) const;
-	
+
 private:	/// Internal operations
 	void SetSources(const SourceDataArray& srcDataArr, double ranal, double ulcl, double loccl);
 	Int_t DoFit(const char* fitOpt1, const char* fitOpt2, const char* sourceCheckTS, double minSourceTS);
@@ -465,10 +507,12 @@ private:	/// Internal operations
 	int ExtCoeffPar(int index) const { return m_diffParCount+index; }
 
 	/// src in [0..m_srcCount-1]
-	int SrcFluxPar(int src) const { return m_sourceParOffset + src*4; }
-	int SrcIdxPar(int src) const  { return m_sourceParOffset + src*4 + 1; }
-	int SrcLPar(int src) const    { return m_sourceParOffset + src*4 + 2; }
-	int SrcBPar(int src) const    { return m_sourceParOffset + src*4 + 3; }
+	int SrcFluxPar(int src) const { return m_sourceParOffset + src*6; }
+	int SrcIdxPar(int src) const  { return m_sourceParOffset + src*6 + 1; }
+	int SrcLPar(int src) const    { return m_sourceParOffset + src*6 + 2; }
+	int SrcBPar(int src) const    { return m_sourceParOffset + src*6 + 3; }
+	int SrcPar2Par(int src) const  { return m_sourceParOffset + src*6 + 4; }
+	int SrcPar3Par(int src) const  { return m_sourceParOffset + src*6 + 5; }
 
 	/// Fitting
 	Double_t FitFunction(Double_t *x, Double_t *par);
@@ -519,11 +563,26 @@ private:	/// Internal operations
 	void FixSrcPos(int source, double l, double b);
 
 	/// Spectral index parameter
-    void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_indexLimitMin, m_indexLimitMax); }
+    //void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_indexLimitMin, m_indexLimitMax); }
+	void ReleaseSrcIndex(int source) { m_model.SetParLimits(SrcIdxPar(source), m_inSrcDataArr[source].index_low_limit, m_inSrcDataArr[source].index_upp_limit); }
 	void SetSrcIndex(int source, double index) { m_model.SetParameter(SrcIdxPar(source), index); }
 	void SetSrcIndex(int source) { SetSrcIndex(source, m_sources[source].GetIndex()); }
 	void FixSrcIndex(int source, double index) { m_model.FixParameter(SrcIdxPar(source), index); }
 	void FixSrcIndex(int source) { FixSrcIndex(source, m_sources[source].GetIndex()); }
+
+	/// Par2 parameter
+	void ReleaseSrcPar2(int source) { m_model.SetParLimits(SrcPar2Par(source), m_inSrcDataArr[source].par2_low_limit, m_inSrcDataArr[source].par2_upp_limit); }
+	void SetSrcPar2(int source, double par2) { m_model.SetParameter(SrcPar2Par(source), par2); }
+	void SetSrcPar2(int source) { SetSrcPar2(source, m_sources[source].GetPar2()); }
+	void FixSrcPar2(int source, double par2) { m_model.FixParameter(SrcPar2Par(source), par2); }
+	void FixSrcPar2(int source) { FixSrcPar2(source, m_sources[source].GetPar2()); }
+
+	/// Par3 parameter
+	void ReleaseSrcPar3(int source) { m_model.SetParLimits(SrcPar3Par(source), m_inSrcDataArr[source].par3_low_limit, m_inSrcDataArr[source].par3_upp_limit); }
+	void SetSrcPar3(int source, double par3) { m_model.SetParameter(SrcPar3Par(source), par3); }
+	void SetSrcPar3(int source) { SetSrcPar3(source, m_sources[source].GetPar3()); }
+	void FixSrcPar3(int source, double par3) { m_model.FixParameter(SrcPar3Par(source), par3); }
+	void FixSrcPar3(int source) { FixSrcPar3(source, m_sources[source].GetPar3()); }
 
 	/// Reading the Model and setting up diff and source components
 	double PeekSrcFluxPar(int source) const { return m_model.GetParameter(SrcFluxPar(source))*m_fluxScaleFactorMulInv; }
@@ -538,6 +597,10 @@ private:	/// Internal operations
 	void PrintDiffData();
 
 	double EvalFitFunction(double* params, double* data=0);
+
+	// exp ratio evaluation - 03/2018
+	double ExpRatioEvaluation(AgileMap& exp, double l, double b, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize) const;
+
 
 private:	/// Data
 	TH1D   m_countsHist;
@@ -559,6 +622,8 @@ private:	/// Data
 	AgileMap* m_ctsMaps;
 	AgileMap* m_expMaps;
 	AgileMap* m_gasMaps;
+	AgileMap* m_sumCts; //the sum of all cts maps
+	AgileMap* m_sumExp; //the sum of all exp maps
 	bool      m_alignedMaps;
 	int*      m_counts;
 	double*   m_thetaArr;
@@ -567,10 +632,24 @@ private:	/// Data
 	double    m_energyInf;
 	double    m_energySup;
 
+	/// Corrections
+	int m_galmode2;
+	int m_galmode2fit;
+	int m_isomode2;
+	int m_isomode2fit;
+	double m_edpcorrection;
+	int m_fluxcorrection;
+
+	//Fitter
+	int m_minimizerdefstrategy;
+	
+	//Integrator
+	int m_integratortype;
+
 	/// Sources
 	SourceDataArray m_inSrcDataArr;	/// Copy of the original input data
 	SourceDataArray m_outSrcDataArr;	/// Input data modified after fitting
-	
+
 	/// Diff components
 	DiffMode        m_galMode;
 	DiffMode        m_isoMode;
@@ -646,6 +725,10 @@ private:	/// Data
     double m_fluxLimitMax;
     double m_indexLimitMin;
     double m_indexLimitMax;
+	double m_par2LimitMin;
+	double m_par2LimitMax;
+	double m_par3LimitMin;
+	double m_par3LimitMax;
 
 private:		/// Forbidden functions
 	RoiMulti(const RoiMulti& another);					/// Singleton class, copy constructor not allowed

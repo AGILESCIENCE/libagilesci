@@ -11,6 +11,10 @@
 //
 
 #include <TGraph.h>
+#include <Math/MinimizerOptions.h>
+#include <Fit/FitResult.h>
+#include <Fit/Fitter.h>
+#include <TKDTreeBinning.h>
 #include <TMatrixDEigen.h>
 #include <TRandom3.h>
 #ifndef ROOT_TROOT
@@ -25,6 +29,7 @@
 #include "wcstrig.h"
 
 #include "RoiMulti5.h"
+
 
 using namespace std;
 
@@ -82,12 +87,6 @@ for (int i=0; i<size; ++i)
 
 
 
-/**
-void AlikeDiffMap::UpdNorm()
-{
-m_normFactor = (pow(GetEmin(), 1.0-m_index)-pow(GetEmax(), 1.0-m_index)) / pow(100.0, 1.0-m_index);
-}
-*/
 
 
 void AlikeExtMap::Copy(const AlikeExtMap &another, bool all)
@@ -151,6 +150,105 @@ if (m_polygon.Sides()) {
 	}
 }
 
+double AlikeSourceMap::GetSpectraCorrectionFactor(int fluxcorrection, double edpcorrection) {
+	if(fluxcorrection == 0)
+		return 1.0;
+	else {
+		//return 0.0;
+
+		AlikePsfTables* psfTab = (AlikePsfTables*) AlikePsfSource::PsfTab();
+		//psfTab->EdpGrid::Values();
+		VecF  edptrueenergy = psfTab->EdpTrueEnerges();
+		VecF  edpobsenergy = psfTab->EdpObsEnerges();
+		VecF  edptheta = psfTab->EdpTheta();
+		VecF  edpphi = psfTab->EdpPhi();
+		Mat4F edpgrid = psfTab->EdpVal();
+		int eneChanCount = edptrueenergy.Dim(0);
+		int iMin = edptrueenergy.GeomIndex(GetEmin());
+		int iMax = edptrueenergy.GeomIndex(GetEmax()) - 1;
+		//cout << edptrueenergy[iMin] << " " << edptrueenergy[iMax] << endl;
+		double normsumpl=0, normsumple = 0;
+		//iMin, iMax
+		double indexstd = m_index;
+		//if(indexstd < 1.6) {
+			//indexstd = 1.8;
+			//cout << "!### Warning: flux correction. Index is changed: " << indexstd << endl;
+		//}
+		cout << m_label << " [";
+		for (int i=iMin; i<=iMax; i++) {
+			cout << edptrueenergy[i] << "-" << edptrueenergy[i+1] << " ";
+			double udp1;
+			double lastenergy = edptrueenergy[i+1];
+			if(i == iMax && GetEmax() == 50000)
+				lastenergy = 50000;
+		
+			if(m_typefun == 0) {
+				udp1 = UpdateNorm(edptrueenergy[i], lastenergy, indexstd, 0);
+			}
+			if(m_typefun == 1) {
+				udp1 = UpdateNormPLExpCutOff(edptrueenergy[i], lastenergy, indexstd, m_par2, 0);
+
+			}
+			if(m_typefun == 2) {
+				udp1 = UpdateNormPLSuperExpCutOff(edptrueenergy[i], lastenergy, indexstd, m_par2, m_par3, 0);
+
+			}
+			if(m_typefun == 3) {
+				udp1 = UpdateNormLogParabola(edptrueenergy[i], lastenergy, indexstd, m_par2, m_par3, 0);
+
+			}
+			normsumple += udp1;
+
+			udp1 = UpdateNorm(edptrueenergy[i], lastenergy, 2.1, 0);
+
+
+			normsumpl += udp1;
+		}
+		cout << "] ";
+		//cout << normsumpl << " " << normsumple << endl;
+		VecF edpArr(eneChanCount);
+		edpArr = 0.0f;
+
+		for(int thetaind=0; thetaind<edptheta.Dim(0); thetaind++) {
+			for(int phiind=0; phiind<edpphi.Dim(0); phiind++){
+				int phiindcor = phiind%2?phiind-1:phiind;
+				float avgValuePL = 0.0f;
+				float avgValuePLE = 0.0f;
+				for (int etrue = 0; etrue < eneChanCount-1; etrue++)  {
+					double lastenergy = edptrueenergy[etrue+1];
+					if(etrue == iMax && GetEmax() == 50000)
+						lastenergy = 50000;
+
+					for (int eobs = iMin;  eobs <= iMax; eobs++) {
+						edpArr[etrue] += edpgrid( phiind, thetaind, eobs, etrue);
+						//edp.Val(m_edptrueenergy[etrue], m_edpobsenergy[eobs], m_edptheta[thetaind], m_edpphi[phiindcor]); //CORRETTO
+					}
+					avgValuePL += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, 2.1, 0) * 1;
+					//cout << UpdateNormPL(m_edptrueenergy[etrue], m_edptrueenergy[etrue+1], 2.1) << " " << edpArr[etrue] << endl;
+					if(m_typefun == 0)
+						avgValuePLE += edpArr[etrue] * UpdateNorm(edptrueenergy[etrue], lastenergy, indexstd, 0) * 1;
+					if(m_typefun == 1)
+						avgValuePLE += edpArr[etrue] * UpdateNormPLExpCutOff(edptrueenergy[etrue], lastenergy, indexstd, m_par2, 0) * 1;
+					if(m_typefun == 2)
+						avgValuePLE += edpArr[etrue] * UpdateNormPLSuperExpCutOff(edptrueenergy[etrue], lastenergy, indexstd, m_par2, m_par3, 0) * 1;
+					if(m_typefun == 3)
+						avgValuePLE += edpArr[etrue] * UpdateNormLogParabola(edptrueenergy[etrue], lastenergy, indexstd, m_par2, m_par3, 0) * 1;
+				}
+				double avgpl = 0, avgple = 0;
+				//avgalue dipende da theta e phi
+				avgpl = avgValuePL/normsumpl;
+				avgple = avgValuePLE/normsumple;
+				double corr = avgpl/avgple;
+				if(edptrueenergy[iMin] >= 1000)
+					corr *= edpcorrection;
+				cout << " funtype: " << m_typefun << " " << indexstd << " " << m_par2 << " " << m_par3 << " " << " theta: " << edptheta[thetaind] << " phi: " << edpphi[phiindcor] << " " << avgpl << " " << avgple << " " << avgpl - avgple << " PL/" << avgpl/avgple << endl;
+				return corr;
+			}
+		}
+	}
+
+}
+
 void AlikeSourceMap::WriteEllipse(string fileprefix) const
 {
 const double numPoints = 40;
@@ -181,6 +279,7 @@ if (m_ellipse.horAxis>0 && m_ellipse.verAxis>0) {
 			<< m_ellipse.horAxis << "," << m_ellipse.verAxis << "," << -m_ellipse.attitude*RAD2DEG << ")" << endl;
 	}
 }
+
 
 void AlikeSourceMap::SetTS(Double_t inTS)
 {
@@ -311,7 +410,7 @@ RoiMulti::RoiMulti():
 
 	m_inSrcDataArr(0),
 	m_outSrcDataArr(0),
-	
+
 	m_galMode(DiffFixed),
 	m_isoMode(DiffFixed),
 	m_galSrc(0),
@@ -355,7 +454,19 @@ RoiMulti::RoiMulti():
     m_fluxLimitMin(0.0),
     m_fluxLimitMax(FLUX_UPPER_BOUND),
     m_indexLimitMin(0.5),
-    m_indexLimitMax(5.0)
+    m_indexLimitMax(5.0),
+	m_par2LimitMin(20.0),
+	m_par2LimitMax(10000.0),
+	m_par3LimitMin(0.0),
+	m_par3LimitMax(100.0),
+
+	m_galmode2(0),
+	m_galmode2fit(0),
+	m_isomode2(0),
+	m_isomode2fit(0),
+	m_edpcorrection(0),
+	m_fluxcorrection(0),
+	m_minimizerdefstrategy(2)
 
 {
 	m_countsHist.Sumw2();
@@ -405,6 +516,10 @@ m_galCoeffs = m_isoCoeffs = m_thetaArr = 0;
 m_mapCount = 0;
 m_diffParCount = 0;
 m_sourceParOffset = 0;
+
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad");
+ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.01);
 }
 
 void RoiMulti::CleanSources()
@@ -684,7 +799,50 @@ for (int map=0; map<m_mapCount; ++map) {
 	m_expMaps[map] = mapData.ExpMap(map);
 	m_gasMaps[map] = mapData.GasMap(map);
 	}
+	
+//sum cts and exp maps
+	m_sumCts = new AgileMap(mapData.CtsMap(0));
+	m_sumExp = new AgileMap(mapData.ExpMap(0));
+	
+	double emin = m_sumCts->GetEmin();
+	double emax = m_sumCts->GetEmax();
+	double fovmin = m_sumCts->GetFovMin();
+	double fovmax = m_sumCts->GetFovMax();
+	double tstart = m_sumCts->GetTstart();
+	double tstop = m_sumCts->GetTstop();
+	for(int i=1; i<m_mapCount; i++) {
+		//cout << "map " << i << endl;
+		AgileMap otherCts = mapData.CtsMap(i);
+		for (int y=0; y<m_sumCts->Dim(0); ++y)
+			for (int x=0; x<m_sumCts->Dim(1); ++x)
+				(*m_sumCts)(y, x) += otherCts(y, x);
+		AgileMap otherExp = mapData.ExpMap(i);
+		for (int y=0; y<m_sumExp->Dim(0); ++y)
+			for (int x=0; x<m_sumExp->Dim(1); ++x)
+				(*m_sumExp)(y, x) += otherExp(y, x);
+		if(otherCts.GetEmin() < emin)
+			emin = otherCts.GetEmin();
+		if(otherCts.GetEmax() > emax)
+			emax = otherCts.GetEmax();
+		if(otherCts.GetFovMin() < fovmin)
+			fovmin = otherCts.GetFovMin();
+		if(otherCts.GetFovMax() > fovmax)
+			fovmax = otherCts.GetFovMax();
+		if(otherCts.GetTstart() < tstart)
+			tstart = otherCts.GetTstart();
+		if(otherCts.GetTstop() > tstop)
+			tstop = otherCts.GetTstop();
+	}
+	m_sumCts->SetEnergy(emin, emax);
+	m_sumExp->SetEnergy(emin, emax);
+	m_sumCts->SetFov(fovmin, fovmax);
+	m_sumExp->SetFov(fovmin, fovmax);
+	m_sumCts->SetTT(tstart, tstop);
+	m_sumExp->SetTT(tstart, tstop);
 
+	
+//---
+	
 m_galSrc = new AlikeDiffMap[m_mapCount];
 m_isoSrc = new AlikeDiffMap[m_mapCount];
 for (int map=0; map<m_mapCount; ++map) {
@@ -699,7 +857,7 @@ for (int map=0; map<m_mapCount; ++map) {
 	for (int r=0; r<galMap.Rows(); ++r)
 		for (int c=0; c<galMap.Cols(); ++c)
 			totExp += galMap(r,c);
-	cout << "Total exposure = " << totExp << endl;
+	cout << "Total EXP = " << totExp << endl;
 
 	FixFlag fixFlag = FluxFree;
 	if (m_galMode==DiffFixed || (m_galMode==DiffDefault && m_galCoeffs[map]>0))
@@ -825,6 +983,65 @@ if (m_logFile)
 }
 */
 
+bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
+	m_minimizerdefstrategy = minimizerdefstrategy;
+	
+	m_integratortype = integratortype;
+	cout << "## Set integrator type: " << m_integratortype << endl;
+	/*
+
+	 * Minuit (library libMinuit). Old version of Minuit, based on the TMinuit class. The list of possible algorithms are:
+	 Migrad (default one)
+	 Simplex
+	 Minimize (it is a combination of Migrad and Simplex)
+	 MigradImproved
+	 Scan
+	 Seek
+
+	 * Minuit2 (library libMinuit2). New C++ version of Minuit. The list of possible algorithm is :
+	 Migrad (default)
+	 Simplex
+	 Minimize
+	 Scan
+
+	 *Fumili . This is the same algorithm of TFumili, but implemented in the Minuit2 library.
+
+	 * GSLMultiMin (library libMathMore). Minimizer based on the Multidimensional Minimization routines of the Gnu Scientific Library (GSL). The list of available algorithms is
+	 BFGS2 (default) : second version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm;
+	 BFGS : old version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm;
+	 ConjugateFR : Fletcher-Reeves conjugate gradient algorithm;
+	 ConjugatePR : Polak-Ribiere conjugate gradient algorithm;
+	 SteepestDescent: steepest descent algorithm;
+
+	 * GSLMultiFit (library libMathMore). Minimizer based on the Non-Linear Least-Square routines of GSL. This minimizer can be used only for least-square fits.
+
+	 * GSLSimAn (library libMathMore). Minimizer based on simulated annealing.
+
+	 * Genetic (library libGenetic). Genetic minimizer based on an algorithm implemented in the TMVA package.
+	 */
+
+	/*
+	 Each minimizer can be configured using the ROOT::Math::MinimizerOptions class. The list of possible option that can be set are:
+
+	 * Minimizer type (MinimizerOptions::SetMinimizerType(const char *)) .
+	 * Minimizer algorithm (MinimizerOptions::SetMinimizerAlgorithm(const char *)).
+	 * Print Level (MinimizerOptions::SetPrintLevel(int )) to set the verbose printing level (default is 0).
+	 * Tolerance (MinimizerOptions::SetTolerance(double )) tolerance used to control the iterations.
+	 * Maximum number of function calls (MinimizerOptions::SetMaxFunctionCalls(int )).
+	 * Maximum number of iterations (MinimizerOptions::SetMaxIterations(int )). Note that this is not used by Minuit
+	 FCN Upper value for Error Definition (MinimizerOptions::SetMaxIterations(int )). Value in the minimization function used to compute the parameter errors. The default is to get the uncertainties at the 68% CL is a value of 1 for a chi-squared function minimization and 0.5 for a log-likelihood function.
+	 * Strategy (MinimizerOptions::SetStrategy(int )), minimization strategy used. For each minimization strategy Minuit uses different configuration parameters (e.g. different requirements in computing derivatives, computing full Hessian (strategy = 2) or an approximate version. The default is a value of 1. In this case the full Hessian matrix is computed only after the minimization.
+	 * Precision (MinimizerOptions::SetTolerance(double )). Precision value in the evaluation of the minimization function. Default is numerical double precision.
+	 */
+
+	cout << "## Set minimizer user type: " << minimizertype << " " << minimizeralg << " " << minimizerdefstrategy << endl;
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizertype, minimizeralg);
+	ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+
+	ROOT::Math::MinimizerOptions::SetDefaultTolerance(deftol);
+	//ROOT::Math::MinimizerOptions::SetDefaultPrecision(0.01);
+
+}
 
 int RoiMulti::DoFit(
 	const SourceDataArray& srcDataArr,
@@ -839,15 +1056,22 @@ if (!m_mapCount) {
 	cerr << "No maps loaded: Fitting not possible" << endl;
 	return 2;
 	}
+
+
+	//ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.001);
+	//ROOT::Math::MinimizerOptions::SetDefaultPrecision(0.01);
+	ROOT::Math::MinimizerOptions opt;
+	opt.Print();
+
 char option1[8];
 char option2[8];
 if (gROOT->GetVersionInt() < 53000) {
 	strcpy(option1,"LLNM");
 	strcpy(option2,"LLNEM");
 } else {
-	strcpy(option1,"LNM");
-	strcpy(option2,"LNEM");
-}	
+	strcpy(option1,"LN"); //ADD M to activate Minuit
+	strcpy(option2,"LNE");//ADD EM to activate Minuit
+}
 if (chatter==0) {
 	strcat(option1, "Q");
 	strcat(option2, "Q");
@@ -858,6 +1082,12 @@ else if (chatter!=1) {
 	}
 
 /// m_countsHist.SetDirectory(0);
+	/*
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Migrad");
+	ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+	ROOT::Math::MinimizerOptions opt;
+	opt.Print();
+	 */
 
 SetSources(srcDataArr, ranal, ulcl, loccl);
 InitParams();
@@ -918,12 +1148,12 @@ m_fitInfo = new FitInfo[m_srcCount];
 
 /// Correcting and printing the source input values
 if (m_srcCount)
-	cout << endl << "Sources [name sqrt(minTS) flux index position(l, b)]" << endl;
+	cout << endl << "Sources [name sqrt(minTS) flux index position(l, b) typefun par2 par3]" << endl;
 else
 	cout << endl << "No point sources considered" << endl;
 for (int i=0; i<m_srcCount; ++i) {
 	int& fixFlag = m_inSrcDataArr[i].fixflag;
-	if (fixFlag & (PosFree | IndexFree))	/// If any of Pos or Index are free => Flux will be free too
+	if (fixFlag & (PosFree | IndexFree | Par2Free | Par3Free ))	/// If any of Pos or Index are free => Flux will be free too
 		fixFlag = fixFlag | FluxFree;
 
 	if (fixFlag & PosFree)
@@ -932,6 +1162,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		m_srcLimits[i].lLim = m_srcLimits[i].bLim = false;
 
 	double& index = m_inSrcDataArr[i].index;
+
 	if (index<0)	/// Adopting a positive value of index by convention
 		index = -index;
 
@@ -946,26 +1177,49 @@ for (int i=0; i<m_srcCount; ++i) {
 		cout << " fixed ";
 	cout << index;
 	if (fixFlag & IndexFree)
-		cout << " free ";
+		cout << " free (" << m_inSrcDataArr[i].index_low_limit << ", " << m_inSrcDataArr[i].index_upp_limit << ") ";
 	else
 		cout << " fixed ";
 	cout << "(" << m_inSrcDataArr[i].srcL << ", " << m_inSrcDataArr[i].srcB << ")";
 	if (fixFlag & PosFree) {
 		if (!m_srcLimits[i].lLim && !m_srcLimits[i].bLim)
-			cout << " free";
+			cout << " free ";
 		else {
 			if (m_srcLimits[i].lLim)
 				cout << ", l free in [" << m_srcLimits[i].lMin << ".." << m_srcLimits[i].lMax << "]";
 			else
-				cout << ", l free";
+				cout << ", l free ";
 			if (m_srcLimits[i].bLim)
 				cout << ", b free in [" << m_srcLimits[i].bMin << ".." << m_srcLimits[i].bMax << "]";
 			else
-				cout << ", b free";
+				cout << ", b free ";
 			}
 		}
 	else
-		cout << " fixed";
+		cout << " fixed ";
+
+	cout <<  m_inSrcDataArr[i].typefun;
+	if(m_inSrcDataArr[i].typefun == 0)
+		cout << " PowerLaw(1 - index) ";
+	if(m_inSrcDataArr[i].typefun == 1)
+		cout << " PLExpCutOff(1 - gamma1, 2 - Ec) ";
+	if(m_inSrcDataArr[i].typefun == 2)
+		cout << " PLSuperExpCutOff(1 - gamma1, 2 - Ec, 3 - gamma2) ";
+	if(m_inSrcDataArr[i].typefun == 3)
+		cout << " LogParabola(1 - alpha, 2 - Eb, 3 - beta) ";
+
+
+	cout <<  m_inSrcDataArr[i].par2;
+	if(fixFlag & Par2Free)
+		cout << " free (" << m_inSrcDataArr[i].par2_low_limit << ", " << m_inSrcDataArr[i].par2_upp_limit << ") ";
+	else
+		cout << " fixed ";
+	cout <<  m_inSrcDataArr[i].par3;
+	if(fixFlag & Par3Free)
+		cout << " free (" << m_inSrcDataArr[i].par3_low_limit << ", " << m_inSrcDataArr[i].par3_upp_limit << ") ";
+	else
+		cout << " fixed ";
+
 	cout << endl;
 	}
 
@@ -978,8 +1232,11 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 		double srcB = m_inSrcDataArr[i].srcB;
 		double index = m_inSrcDataArr[i].index;
 		double flux = m_inSrcDataArr[i].flux;
+		double par2 = m_inSrcDataArr[i].par2;
+		double par3 = m_inSrcDataArr[i].par3;
+		int typefun = m_inSrcDataArr[i].typefun;
 		Double_t exposure = EvalExposure(srcL, srcB, expMap);
-		m_sources[src].Set(&m_psfTab, expMap, m_energyInf, m_energySup, theta, srcL, srcB, index, flux, exposure);
+		m_sources[src].Set(&m_psfTab, expMap, m_energyInf, m_energySup, theta, srcL, srcB, index, typefun, par2, par3, flux, exposure, m_integratortype);
 
 	double cnt = 0;
 	for (int r=0; r<m_sources[src].Rows(); ++r)
@@ -999,13 +1256,27 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 
 
 
+
+
+
 double RoiMulti::GetTotalExposure(int source) const
 {
 double exposure = 0;
 if (source<m_srcCount && source>=0)
 	for (int map=0; map<m_mapCount; ++map)
 		exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor();
+	//cout << "EXP " << exposure << endl;
 return exposure;
+}
+
+double RoiMulti::GetTotalExposureSpectraCorrected(int source) const
+{
+	double exposure = 0;
+	if (source<m_srcCount && source>=0)
+		for (int map=0; map<m_mapCount; ++map)
+			exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor() / m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection, m_edpcorrection);
+	//cout << "EXPC " << exposure << endl;
+	return exposure;
 }
 
 
@@ -1092,7 +1363,7 @@ if (!bin) {
 	++s_fitterIterations;
 	if (s_fitterIterations%100==0) {
 		cout << c_progChar[c_progIndx] << '\r' << flush;
-		c_progIndx = (c_progIndx+1)%4;
+		c_progIndx = (c_progIndx+1)%PARNUM;
 		}
 	}
 int map = m_binAddr[bin];
@@ -1114,7 +1385,7 @@ for (int s=0; s<m_extCount; ++s)
 
 for (int s=0; s<m_srcCount; ++s) {
 	AlikeSourceMap& source = m_sources[srcOfs+s];
-	AlikePsfSource::Changes changes = source.SetSrcData(par[SrcLPar(s)], par[SrcBPar(s)], par[SrcIdxPar(s)]);
+	AlikePsfSource::Changes changes = source.SetSrcData(par[SrcLPar(s)], par[SrcBPar(s)], par[SrcIdxPar(s)], par[SrcPar2Par(s)], par[SrcPar3Par(s)]);
 	if (s_fitterChanges) {
 		if (changes & AlikePsfSource::IndexChanged)
 			s_fitterChanges[s*2] += 1;
@@ -1148,7 +1419,9 @@ m_model.FixParameter(SrcFluxPar(source), 0);
 m_model.FixParameter(SrcLPar(source), m_model.GetParameter(SrcLPar(source)));
 m_model.FixParameter(SrcBPar(source), m_model.GetParameter(SrcBPar(source)));
 m_model.FixParameter(SrcIdxPar(source), m_model.GetParameter(SrcIdxPar(source)));
-} 
+m_model.FixParameter(SrcPar2Par(source), m_model.GetParameter(SrcPar2Par(source)));
+m_model.FixParameter(SrcPar3Par(source), m_model.GetParameter(SrcPar3Par(source)));
+}
 
 
 void RoiMulti::SetSrcPars(int source)
@@ -1157,6 +1430,8 @@ SetSrcFlux(source);
 m_model.SetParameter(SrcLPar(source), m_sources[source].GetSrcL());
 m_model.SetParameter(SrcBPar(source), m_sources[source].GetSrcB());
 m_model.SetParameter(SrcIdxPar(source), m_sources[source].GetIndex());
+m_model.SetParameter(SrcPar2Par(source), m_sources[source].GetPar2());
+m_model.SetParameter(SrcPar3Par(source), m_sources[source].GetPar3());
 }
 
 
@@ -1222,7 +1497,7 @@ m_diffPars[1].ResizeTo(m_diffParCount, m_srcCount, 2); /// Iso
 m_diffErrs[0].ResizeTo(m_diffParCount, m_srcCount, 2); /// Gal
 m_diffErrs[1].ResizeTo(m_diffParCount, m_srcCount, 2); /// Iso
 
-m_model = TF1("Model", SingleFitFunction, 0, 0, m_sourceParOffset + 4*m_srcCount);
+m_model = TF1("Model", SingleFitFunction, 0, 0, m_sourceParOffset + PARNUM*m_srcCount);
 
 /// m_fitParams.Init(m_sourceParOffset + 4*m_srcCount);
 
@@ -1290,7 +1565,7 @@ if (m_isoMode==DiffTogether) {
 	else
 		cout << " free" << endl;
 	}
-else 
+else
 	for (int map=0; map<m_mapCount; ++map) {
 		sprintf(parname, "Isotropic_%i", map+1);
 		if (m_mapCount==1)
@@ -1380,7 +1655,36 @@ for (int i=0; i<m_srcCount; ++i) {
 		cout << " free" << endl;
 	else
 		cout << " fixed" << endl;
+
+	sprintf(parname, "%s_2", m_sources[i].GetLabel().c_str());
+	m_model.SetParName(SrcPar2Par(i), parname);
+	cout << SrcPar2Par(i)+1 << " - " << parname << ": " << m_sources[i].GetPar2();
+
+	if (m_sources[i].GetFixflag() & Par2Free) {
+		ReleaseSrcPar2(i);
+		cout << " free" << endl;
 	}
+	else {
+		FixSrcPar2(i);
+		cout << " fixed" << endl;
+	}
+
+
+	sprintf(parname, "%s_3", m_sources[i].GetLabel().c_str());
+	m_model.SetParName(SrcPar3Par(i), parname);
+	cout << SrcPar3Par(i)+1 << " - " << parname << ": " << m_sources[i].GetPar3();
+
+	if (m_sources[i].GetFixflag() & Par3Free) {
+			ReleaseSrcPar3(i);
+			cout << " free" << endl;
+	}
+	else {
+		FixSrcPar3(i);
+		cout << " fixed" << endl;
+	}
+
+	}
+
 cout << endl;
 }
 
@@ -1393,9 +1697,11 @@ double flux = PeekSrcFluxPar(source);
 double l = m_model.GetParameter(SrcLPar(source));
 double b = m_model.GetParameter(SrcBPar(source));
 double idx = m_model.GetParameter(SrcIdxPar(source));
+double par2 = m_model.GetParameter(SrcPar2Par(source));
+double par3 = m_model.GetParameter(SrcPar3Par(source));
 for (int cts=0; cts<m_mapCount; ++cts) {
 	m_sources[m_srcCount*cts+source].SetFlux(flux>0?flux:0);
-	m_sources[m_srcCount*cts+source].SetSrcData(l, b, idx>0?idx:0);
+	m_sources[m_srcCount*cts+source].SetSrcData(l, b, idx>0?idx:0, par2>0?par2:0, par3>0?par3:0);
 	}
 }
 
@@ -1501,21 +1807,40 @@ for (int cts=0; cts<m_mapCount; ++cts) {
 
 void RoiMulti::FitIndex(int source)
 {
-ReleaseSrcIndex(source);
-SetSrcPars(source);
-cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Finding best index" << endl;
-if (gROOT->GetVersionInt() < 53000) {
-	Fit("LLONEM", source, false, 1);
-} else {
-	Fit("LONEM", source, false, 1);
-}
-TVirtualFitter* fitter = TVirtualFitter::GetFitter();
-Double_t index_plus, index_minus, index_parab, globcc;
-fitter->GetErrors(SrcIdxPar(source), index_plus, index_minus, index_parab, globcc);
-for (int cts=0; cts<m_mapCount; ++cts)
-	m_sources[m_srcCount*cts+source].SetIndexerr(index_parab);
-GetSrcPars(source);
-FixSrcIndex(source);
+	if(m_sources[source].GetFixflag() & IndexFree)
+		ReleaseSrcIndex(source);
+	if(m_sources[source].GetFixflag() & Par2Free)
+		ReleaseSrcPar2(source);
+	if(m_sources[source].GetFixflag() & Par3Free)
+		ReleaseSrcPar3(source);
+
+	SetSrcPars(source);
+	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Finding best indexes" << endl;
+	if (gROOT->GetVersionInt() < 53000) {
+		Fit("LLONEM", source, false, 1);
+	} else {
+		Fit("LONE", source, false, 1);
+	}
+	TVirtualFitter* fitter = TVirtualFitter::GetFitter();
+	Double_t index_plus, index_minus, index_parab, globcc;
+	fitter->GetErrors(SrcIdxPar(source), index_plus, index_minus, index_parab, globcc);
+	Double_t par2_plus, par2_minus, par2_parab, p2globcc;
+	fitter->GetErrors(SrcPar2Par(source), par2_plus, par2_minus, par2_parab, p2globcc);
+	Double_t par3_plus, par3_minus, par3_parab, p3globcc;
+	fitter->GetErrors(SrcPar3Par(source), par3_plus, par3_minus, par3_parab, p3globcc);
+	for (int cts=0; cts<m_mapCount; ++cts) {
+		m_sources[m_srcCount*cts+source].SetIndexerr(index_parab);
+		m_sources[m_srcCount*cts+source].SetPar2err(par2_parab);
+		m_sources[m_srcCount*cts+source].SetPar3err(par3_parab);
+	}
+	GetSrcPars(source);
+
+	if(m_sources[source].GetFixflag() & IndexFree)
+		FixSrcIndex(source);
+	if(m_sources[source].GetFixflag() & Par2Free)
+		FixSrcPar2(source);
+	if(m_sources[source].GetFixflag() & Par3Free)
+		FixSrcPar3(source);
 }
 
 
@@ -1552,7 +1877,7 @@ cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Find
 if (gROOT->GetVersionInt() < 53000) {
 	Fit("LLONEM", source, false, 1);
 } else {
-	Fit("LONEM", source, false, 1);
+	Fit("LONE", source, false, 1);
 }
 TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 Double_t flux = PeekSrcFluxPar(source);
@@ -1565,6 +1890,131 @@ for (int cts=0; cts<m_mapCount; ++cts) {
 		m_sources[m_srcCount*cts+source].SetFluxul(flux_plus*m_fluxScaleFactorMulInv - flux);
 	}
 SetErrorDef(olderrdef);
+}
+
+double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, double gal, double iso, double ulcl)
+{
+	//part 0
+	//get float src_cnt and float mres
+	int x=0;
+	int y=0;
+	
+	int ulcl2 = (int) ulcl;
+	double alpha = 1.0-0.955;
+	
+	if(ulcl2 == 3)
+		alpha = 1.0-0.997; //UL al 95% di confidenza (2 sigma)
+	if(ulcl2 == 2)
+		alpha = 1.0-0.955; //UL al 95% di confidenza (2 sigma)
+	if(ulcl2 == 1)
+		alpha = 1.0-0.683; //UL al 68% di confidenza (1 sigma)
+	
+	
+	bool inside = ctsmap.GetRowCol(lng,lat,&x,&y);
+	if(!inside)
+		return -1;
+	
+	double emin = ctsmap.GetEmin();
+	double rads = 2;
+	double radsfact = 1;
+	if(emin >= 10)
+		rads = 5.0 / radsfact;
+	if(emin >= 100)
+		rads = 4.0 / radsfact;
+	if(emin >= 400)
+		rads = 3.0 / radsfact;
+	if(emin >= 1000)
+		rads = 2.0 / radsfact;
+	if(emin >= 10000)
+		rads = 1.0 / radsfact;
+	cout << "Bayes confidence level " << ulcl2 << " alpha " << alpha << " and psf " << rads << " for emin " << emin << endl;
+	//rads = 2;
+	double src_cnt = ctsmap.SumBin(lng, lat, rads);
+	//= ctsmap.SumBin(lng, lat, 2.0);
+	double area = ctsmap.Area(x, y);
+	
+	double exp = EvalExposure(lng, lat, expmap);
+	
+	if(exp <= 0)
+		return -1;
+	
+	//part 1
+	
+	Double_t non, noff, errnoff;
+	
+	
+	Float_t ratio_onoff = 4./100.;
+	
+	//AgileMap ha area(i,j)
+	noff=(exp*area*(iso*1.e-5 + gal))*ratio_onoff;
+	errnoff=sqrt(noff);
+	cout << "NOFF: " << noff << endl;
+	
+	non = src_cnt;
+	
+	//part 2
+	//input const Double_t non, const Double_t noff, const Double_t errnoff, const Float_t alpha=0.05
+	Int_t nbins = 4000;
+	Double_t minabar  = non-noff;
+	
+	//    if (minabar < 0.)
+	//      minabar = 0.;
+	cout << "EXCESS: " << minabar << endl;
+	
+	minabar = -minabar;
+	
+	if ((non+noff) < 0.)
+	{
+		cout << "ERROR: Cannot determine upper limit: background plus signal smaller 0" << endl;
+		return -1.;
+	}
+	
+	Float_t sigma   = TMath::Sqrt(non+(errnoff*errnoff));
+	cout << "sigma: " << sigma << endl;
+	
+	Float_t diff = TMath::Abs(non-noff);
+	cout << "diff: " << diff << endl;
+	
+	//TH1F ha("ha","",nbins,0., 50. * ((diff > 1.0) ? diff : 1.0));
+	
+	TH1F ha("ha","",nbins,0., 50. * diff);
+	
+	Float_t a = 0.;
+	Int_t i;
+	
+	Double_t quot = TMath::Erfc(minabar /sigma / TMath::Sqrt(2.));
+	cout << "quot: " << quot << endl;
+	if (quot < 0.0000001)
+	{
+		cout << "Cannot determine upper limit: Quotient too small" << endl;
+		return -1.;
+	}
+	
+	//    cout << "QUOT: " << quot << endl;
+	
+	for (i=1; i<nbins; i++)
+	{
+		a = ha.GetBinCenter(i);
+		const Double_t denom = TMath::Erfc((a+minabar)/sigma / TMath::Sqrt(2.));
+		if ((denom / quot) < alpha)
+			break;
+	}
+	
+	//    cout << "FOUND UL: " << a << endl;
+	//    cout << "IN BIN:  " << i << endl;
+	
+	if (i == nbins)
+	{
+		cout << "ERROR: Calculation of UL failed!!! Number of bins too low" << endl;
+		a = 0.;
+	}
+	
+	cout << "UL CTS: " << a << endl;
+	cout << "UL flux: " << a/exp << endl;
+
+	
+	return a/exp;
+	
 }
 
 
@@ -1606,10 +2056,9 @@ return -1;
 
 
 
-static void GetTsStat(Double_t& amin, Double_t& edm, int& iter)
+static void GetTsStat(Double_t& amin, Double_t& edm, int& iter, int& nvpar, int& nparx)
 {
 Double_t errdef;
-Int_t nvpar, nparx;
 TVirtualFitter* fitter = TVirtualFitter::GetFitter();
 fitter->GetStats(amin, edm, errdef, nvpar, nparx);
 iter = RoiMulti::GetFitterIterations();
@@ -1676,7 +2125,7 @@ return like;
 
 double RoiMulti::Likelihood(double* data)
 {
-int count = m_galParCount + m_isoParCount + 4*m_srcCount;
+int count = m_galParCount + m_isoParCount + PARNUM*m_srcCount;
 double* par = new double[count];
 for (int p=0; p<count; ++p)
 	par[p] = m_model.GetParameter(p);
@@ -1693,7 +2142,7 @@ void RoiMulti::MakeTSArrays(double*& tsVarArr, double*& tsConstArr)
 tsVarArr = new double[m_srcCount];
 tsConstArr = new double[m_srcCount];
 
-int count = m_galParCount + m_isoParCount + 4*m_srcCount;
+int count = m_galParCount + m_isoParCount + PARNUM*m_srcCount;
 double* par = new double[count];
 
 for (int s=0; s<m_srcCount; ++s) {
@@ -1711,17 +2160,19 @@ for (int s=0; s<m_srcCount; ++s) {
 			par[p+m_galParCount] = GetDPM(true, p, s, false);
 		for (int i=0; i<m_srcCount; ++i) {
 			const AlikeSourceMap& source = m_sources[i];
-			int index = m_galParCount+m_isoParCount+i*4;
+			int index = m_galParCount+m_isoParCount+i*PARNUM;
 			par[index] = source.GetFlux()*m_fluxScaleFactor;
 			par[index+1] = source.GetIndex();
 			par[index+2] = source.GetSrcL();
 			par[index+3] = source.GetSrcB();
+			par[index+4] = source.GetPar2();
+			par[index+5] = source.GetPar3();
 			}
 		double data;
 		double likeWith = EvalFitFunction(par, &data);
 
 		/// Case without source, diffuse parameters unchanged (as if they were fixed)
-		par[m_galParCount+m_isoParCount+s*4] = 0;
+		par[m_galParCount+m_isoParCount+s*PARNUM] = 0;
 		double likeWithoutConst = EvalFitFunction(par, &data);
 
 		/// Case without source, diffuse parameters variable
@@ -1749,7 +2200,7 @@ cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() <<
 Double_t amin1;
 Fit(fitOpt, source, false, 1, &amin1);
 
-/// double like1 = Likelihood();
+double like1 = Likelihood();
 
 for (int i=0; i<=source; ++i)
 	GetSrcPars(i);
@@ -1761,11 +2212,11 @@ Fit(fitOpt, source, true, 1, &amin0);
 m_sources[source].SetTS(amin0 - amin1);
 m_sources[source].PrintSqrtTS();
 
-/**
+
 double like0 = Likelihood();
-cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-*/
+cout << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
+//cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+
 if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || (m_sources[source].GetFlux() < 0)) {
 	Nullify(source);
 	for (int i=0; i<=source; ++i)
@@ -1782,40 +2233,47 @@ else {
 /// This function is called during the first fitting loop if (Fixflag&(PosFree|IndexFree))
 void RoiMulti::FitPositionIndex(int source, const char* fitOpt)
 {
+	
 ReleaseSrcFlux(source);
 for (int i=0; i<SrcCount(); ++i) {
 	if (m_sources[i].GetFixflag()) {
-		FixSrcPos(i);
-		FixSrcIndex(i);
+			FixSrcPos(i);
+			FixSrcIndex(i);
+			//if(m_sources[source].m_typefun > 1)
+				FixSrcPar2(i);
+			//if(m_sources[source].m_typefun > 2)
+				FixSrcPar3(i);
 		}
 	}
 SetSrcPars(source);
-cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position and index fixed " << endl;
+	cout << endl << "S1: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position and index fixed " << endl;
 Double_t amin1;
 Fit(fitOpt, source, false, 1, &amin1);
 
-/// double like1 = Likelihood();
+double like1 = Likelihood();
 
 GetSrcPars(source);
 Nullify(source);
-cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0 " << endl;
+	cout << "S2: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0 " << endl;
 Double_t amin0;
 Fit(fitOpt, source, true, 1, &amin0);
 
 m_sources[source].SetTS(amin0 - amin1);
 m_sources[source].PrintSqrtTS();
 
-/**
+
 double like0 = Likelihood();
-cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-*/
+cout << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
+//cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+
 
 if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].GetFlux()>0) {
-	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel();
+	cout << "S3: Source " << source+1 << ": " << m_sources[source].GetLabel();
 	SetSrcPars(source);
 	ReleaseSrcFlux(source);
+	cout << ": Flux free";
 	int fitFlags = m_sources[source].GetFixflag();
+	/*
 	if ((fitFlags & PosFree) && (fitFlags & IndexFree)) {
 		ReleaseSrcIndex(source);
 		ReleaseSrcPos(source);
@@ -1831,6 +2289,24 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 		}
 	else
 		cout << ": Flux free" << endl;
+	*/
+	if (fitFlags & PosFree) {
+		ReleaseSrcPos(source);
+		cout << ", Position free";
+	}
+	if (fitFlags & IndexFree) {
+		ReleaseSrcIndex(source);
+		cout << ", Index(par1) free";
+	}
+	if (fitFlags & Par2Free) {
+		ReleaseSrcPar2(source);
+		cout << ", Par2 free";
+	}
+	if (fitFlags & Par3Free) {
+		ReleaseSrcPar3(source);
+		cout << ", Par3 free";
+	}
+	cout << endl;
 	double oldL = m_sources[source].GetSrcL();
 	double oldB = m_sources[source].GetSrcB();
 	double newL = oldL;
@@ -1851,8 +2327,8 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 			Move(newL, newB);
 			oldL = newL;
 			oldB = newB;
-			}
-		} while (++loopcount<1000 && !centergood);
+		}
+	} while (++loopcount<1000 && !centergood);
 	if (loopcount>1000)
 		cout << "Location search failed to converge after " << loopcount << " iterations" << endl;
 	Int_t result = GetCovarStat();
@@ -1860,48 +2336,55 @@ if (m_sources[source].GetTS()>m_sources[source].GetLocCL() && m_sources[source].
 	if (amin2<amin1) {
 		for (int i=0; i<=source; ++i)
 			GetSrcPars(i);
-		cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << " best position found in (l,b) = (";
+		if (fitFlags & PosFree)
+			cout << "S4: Source " << source+1 << ": " << m_sources[source].GetLabel() << " best position found in (l,b) = (";
+		else
+			cout << "S4: Source " << source+1 << ": " << m_sources[source].GetLabel() << " position fixed in (l,b) = (";
 		cout << m_sources[source].GetSrcL() << "," << m_sources[source].GetSrcB() << ")" << endl;
-		}
+	}
 	for (int i=0; i<=source; ++i) {
 		FixSrcPos(i);
 		FixSrcIndex(i);
-		}
+		FixSrcPar2(i);
+		FixSrcPar3(i);
+	}
 	GetDiffPars();
 
-	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
+	cout << "S5: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
 	Double_t amin1;
 	Fit(fitOpt, source, false, 1, &amin1);
 
-	/// double like1 = Likelihood();
+	double like1 = Likelihood();
 
 	GetSrcPars(source);
 	Nullify(source);
-	cout << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
+	cout << "S6: Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
 	Double_t amin0;
 	Fit(fitOpt, source, true, 0, &amin0);
 
 	m_sources[source].SetTS(amin0 - amin1);
 	m_sources[source].PrintSqrtTS();
 
-	/**
+
 	double like0 = Likelihood();
 	cerr << endl << "amin1=" << amin1 << ", amin0=" << amin0 << ", L1=" << like1  << ", L0=" << like0 << endl;
-	cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-	*/
+	//cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+
 
 	}
-if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || m_sources[source].GetFlux()<0) {
-	Nullify(source);
-	for (int i=0; i<=source; ++i)
-		GetSrcPars(i);
-	m_sources[source].SetFixflag(AllFixed);
-	}
-else {
-	ReleaseSrcFlux(source);
-	SetSrcFlux(source);
-	FixSrcPos(source);
-	FixSrcIndex(source);
+	if (m_sources[source].GetTS() < m_sources[source].GetMinTS() || m_sources[source].GetFlux()<0) {
+		Nullify(source);
+		for (int i=0; i<=source; ++i)
+			GetSrcPars(i);
+			m_sources[source].SetFixflag(AllFixed);
+		}
+	else {
+		ReleaseSrcFlux(source);
+		SetSrcFlux(source);
+		FixSrcPos(source);
+		FixSrcIndex(source);
+		FixSrcPar2(source);
+		FixSrcPar3(source);
 	}
 }
 
@@ -1959,9 +2442,41 @@ for(int i=0; i<m_mapCount*2; i++) // Release gal and iso parameters
 }
 
 
+
 void RoiMulti::Loop2(const char* fitOpt)
 {
 cout << endl << "Begin second loop" << endl << endl;
+	//galMap.SetFixflag(AllFixed);
+	cout << "gal0:" << endl;
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(false, m, i, true);
+		cout << endl;
+	}
+	cout << endl;
+	cout << "gal1:" << endl;
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(false, m, i, false);
+		cout << endl;
+	}
+	cout << endl;
+	cout << "iso0:" << endl;
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(true, m, i, true);
+		cout << endl;
+	}
+	cout << endl;
+	cout << "iso1:" << endl;
+	for (int i=0; i<m_srcCount; ++i) {
+		for (int m=0; m<m_mapCount; ++m)
+			cout << " " << GetFinalDPM(true, m, i, false);
+		cout << endl;
+	}
+	cout << endl;
+	
+	
 
 ResetFitStatus();
 ResetFitCts();
@@ -1990,6 +2505,158 @@ for (int source=0; source<SrcCount(); ++source) {
 		Nullify(source);
 		cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux=0, position fixed" << endl;
 		Double_t amin0;
+
+		//fix gal0
+		//true -> L0
+		//false -> L1
+		/*
+		 galmode2
+
+		 0 none
+		 1 set gal0(T) for L0 and gal1(F) for L1
+		 2 set gal0(T) for L0 and L1
+		 3 set gal1(F) for L0 and L1
+
+		 galmode2fit
+		 0 do not fit
+		 1 pol0 fit
+		 2 powerlaw fit
+		 */
+		if(m_galmode2 > 0) {
+			bool nulhyp;
+			if(m_galmode2 == 1 || m_galmode2 == 2)
+				nulhyp = true;
+			if(m_galmode2 == 3)
+				nulhyp = false;
+			if(m_galmode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, nulhyp));
+			if(m_galmode2fit == 1) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				
+				double meangal = 0;
+				for (int m=0; m<m_mapCount; ++m) {
+					meangal += GetFinalDPM(false, m, source, nulhyp);
+				}
+				meangal /= m_mapCount;
+				for (int m=0; m<m_mapCount; ++m) {
+					cout << "gal coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(false, m, source, nulhyp) << " new "  << meangal << endl;
+					m_galSrc[m].SetCoeff(meangal);
+				}
+			}
+			if(m_galmode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				/*for (int m=0; m<=m_mapCount; ++m)
+					cout << edges[m] << endl;
+				*/
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					//cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_galSrc[m].SetFixflag(AllFixed);
+				FixGalPar(m);
+			}
+
+		}
+
+		//fix iso0
+		/*
+		 isomode2
+
+		 0 none
+		 1 set iso0(T) for L0 and iso1(F) for L1
+		 2 set iso0(T) for L0 and L1
+		 3 set iso1(F) for L0 and L1
+
+		 isomode2fit
+		 0 do not fit
+		 1 pol0 fit
+		 2 powerlaw fit
+		 */
+		if(m_isomode2 > 0) {
+			bool nulhyp;
+			if(m_isomode2 == 1 || m_isomode2 == 2)
+				nulhyp = true;
+			if(m_isomode2 == 3)
+				nulhyp = false;
+			if(m_isomode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, nulhyp));
+			if(m_isomode2fit == 1) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_isoSrc[m].GetEmin();
+				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
+				
+				double meaniso = 0;
+				for (int m=0; m<m_mapCount; ++m) {
+					meaniso += GetFinalDPM(true, m, source, nulhyp);
+				}
+				meaniso /= m_mapCount;
+				for (int m=0; m<m_mapCount; ++m) {
+					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << meaniso << endl;
+					m_isoSrc[m].SetCoeff(meaniso);
+				}
+			}
+			if(m_isomode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_isoSrc[m].GetEmin();
+				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
+				
+				/*
+				//linear regression
+				double xlr[m_mapCount];
+				double ylr[m_mapCount];
+				double b1, mm1, r1;
+				for(int i=0; i<m_mapCount; i++) {
+					xlr[i] = CalcLogBarycenter(m_isoSrc[i].GetEmin(), m_isoSrc[i].GetEmax());
+					ylr[i] = GetFinalDPM(true, i, source, nulhyp);
+				}
+				linreg(m_mapCount, xlr, ylr, b1, mm1, r1);
+				*/
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(true, m, source, nulhyp));
+				//	cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3, "LNM"); //"LNM"
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					
+					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << val << endl;
+					//" linreg " << mm1 * (edges[m] + (edges[m+1]-edges[m])/2) + b1 << endl;
+					m_isoSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_isoSrc[m].SetFixflag(AllFixed);
+				FixIsoPar(m);
+			}
+		}
+
+
 		Fit(fitOpt, source, true, 0, &amin0);
 		if (!diffParsStored) {
 			GetDiffPars();
@@ -1997,28 +2664,140 @@ for (int source=0; source<SrcCount(); ++source) {
 			/// PrintDiffData();
 			}
 
-		/// double like0 = Likelihood();
+		double like0 = Likelihood();
 
 
 		ReleaseSrcFlux(source);
 		SetSrcPars(source);
 		cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux free, position fixed" << endl;
 		Double_t amin1;
+
+		//fix gal and iso1
+		if(m_galmode2 > 0) {
+			bool nulhyp;
+			if(m_galmode2 == 1 || m_galmode2 == 3)
+				nulhyp = false;
+			if(m_galmode2 == 2)
+				nulhyp = true;
+			if(m_galmode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, nulhyp));
+			if(m_galmode2fit == 1) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				for (int m=0; m<=m_mapCount; ++m)
+					cout << edges[m] << endl;
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0]", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			if(m_galmode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_galSrc[m].GetEmin();
+				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
+				/*for (int m=0; m<=m_mapCount; ++m)
+				 cout << edges[m] << endl;
+				 */
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(false, m, source, nulhyp));
+					//cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					//cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_galSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_galSrc[m].SetFixflag(AllFixed);
+				FixGalPar(m);
+			}
+
+		}
+		if(m_isomode2 > 0) {
+			bool nulhyp;
+			if(m_isomode2 == 1 || m_isomode2 == 3)
+				nulhyp = false;
+			if(m_isomode2 == 2)
+				nulhyp = true;
+			if(m_isomode2fit == 0)
+				for (int m=0; m<m_mapCount; ++m)
+					m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, nulhyp));
+			if(m_isomode2fit == 2) {
+				double edges[m_mapCount+1];
+				for (int m=0; m<m_mapCount; ++m)
+					edges[m] = m_isoSrc[m].GetEmin();
+				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
+				for (int m=0; m<=m_mapCount; ++m)
+					cout << edges[m] << endl;
+
+				TH1D gr("spectra", "spectra", m_mapCount, edges);
+				for (int m=0; m<m_mapCount; ++m) {
+					gr.SetBinContent(m+1, GetFinalDPM(true, m, source, nulhyp));
+					cout << "val " << m+1 << " " << gr.GetBinContent(m+1) << endl;
+				}
+				TF1 f3("PL", "[0] * x^(-[1])", 0, m_mapCount);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(1);
+				gr.Fit(&f3);
+				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
+				for (int m=0; m<m_mapCount; ++m) {
+					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
+					cout << edges[m] + (edges[m+1]-edges[m])/2 << " " << val << endl;
+					m_isoSrc[m].SetCoeff(val);
+				}
+			}
+			for (int m=0; m<m_mapCount; ++m) {
+				m_isoSrc[m].SetFixflag(AllFixed);
+				FixIsoPar(m);
+			}
+		}
+
+		/* AB AB AB
+		for (int m=0; m<m_mapCount; ++m) {
+			m_galSrc[m].SetCoeff(GetFinalDPM(false, m, source, false));
+			m_galSrc[m].SetFixflag(AllFixed);
+			m_isoSrc[m].SetCoeff(GetFinalDPM(true, m, source, false));
+			m_isoSrc[m].SetFixflag(AllFixed);
+			FixGalPar(m);
+			FixIsoPar(m);
+		}
+		*/
 		Fit(fitOpt, source, false, 1, &amin1);
 
 		m_sources[source].SetTS(amin0 - amin1);
 		m_sources[source].PrintSqrtTS();
 
-		/**
-		double like1 = Likelihood();
-		cerr << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
-		cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-		*/
 
-		if (m_sources[source].GetFixflag() > FluxFree && m_sources[source].GetTS() > m_sources[source].GetLocCL()) {
+		double like1 = Likelihood();
+		cout << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
+		//cout << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+		m_sources[source].SetLikelihood(like1);
+
+		cout << "#### Source# " << source <<  " " << m_sources[source].GetFixflag() << " " << m_sources[source].GetTS() << " force " << m_sources[source].GetForcePosFree() << endl;
+
+		if ((m_sources[source].GetFixflag() > FluxFree && m_sources[source].GetTS() > m_sources[source].GetLocCL()) || m_sources[source].GetForcePosFree() ) {
 			Double_t olderrdef = GetErrorDef();
 			ReleaseSrcFlux(source);
-			if (m_sources[source].GetFixflag() & PosFree) {
+			if (m_sources[source].GetFixflag() & PosFree || m_sources[source].GetForcePosFree()) {
 				ReleaseSrcPos(source);
 				Double_t newerrdef = m_sources[source].GetLocCL();
 				if (gROOT->GetVersionInt() >= 53000) {newerrdef *= 0.5;}
@@ -2027,10 +2806,11 @@ for (int source=0; source<SrcCount(); ++source) {
 			SetSrcPars(source);
 			cout << endl << "Source " << source+1 << ": " << m_sources[source].GetLabel() << ": Flux and position free, Errordef = " << m_sources[source].GetLocCL() << endl;
 			Double_t amin2 = amin1;
+			//fitOpt
 			Fit(fitOpt, source, false, 3, &amin2);
 			Int_t result = GetCovarStat();
 			cout << "Fit result = " << result << endl;
-			if (m_sources[source].GetFixflag() & PosFree) {
+			if (m_sources[source].GetFixflag() & PosFree || m_sources[source].GetForcePosFree()) {
 				if (amin2 < amin1) {
 					GetSrcPars(source);
 					srcL = m_sources[source].GetSrcL();
@@ -2052,11 +2832,12 @@ for (int source=0; source<SrcCount(); ++source) {
 			m_sources[source].SetTS(amin0 - amin1);
 			m_sources[source].PrintSqrtTS();
 
-			/**
+
 			double like1 = Likelihood();
 			cerr << endl << "amin0=" << amin0 << ", amin1=" << amin1 << ", L0=" << like0  << ", L1=" << like1 << endl;
-			cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
-			*/
+			//cerr << "sqrt(TS)=" << sqrt(amin0 - amin1) << ", sqrt(TS2)=" << SqrtTS(like0, like1) << endl;
+			m_sources[source].SetLikelihood(like1);
+			cout << "## SET " << like1 << endl;
 
 			}
         else {
@@ -2076,7 +2857,7 @@ for (int source=0; source<SrcCount(); ++source) {
         m_sources[source].SetCts(3, m_cts);
 
         ResetFitStatus();
-		if (m_sources[source].GetFixflag() & IndexFree) {
+		if (m_sources[source].GetFixflag() & (IndexFree|Par2Free|Par3Free)) {
 			FitIndex(source);
             m_sources[source].SetStatus(5, m_status);
             m_sources[source].SetCts(5, m_cts);
@@ -2128,7 +2909,9 @@ for (int source=0; source<SrcCount(); ++source) {
 			l -= 360;
 		double b = m_sources[source].GetSrcB();
 		double x = m_sources[source].GetIndex();
-		m_sources[source].SetSrcData(l, b, x);
+		double par2 = m_sources[source].GetPar2();
+		double par3 = m_sources[source].GetPar3();
+		m_sources[source].SetSrcData(l, b, x, par2, par3);
 		}
 	}
 delete[] savedFlux;
@@ -2173,6 +2956,8 @@ Int_t RoiMulti::Fit(const char* opt, int source, bool zero, int flags, Double_t*
     std::cout << "### pre-fitting parameters" << std::endl;
     m_model.Print("V");
 #endif
+	std::cout << "### pre-fitting parameters" << std::endl;
+	m_model.Print("V");
 
 /// zzz
 for (int i=0; i<SrcCount(); ++i) {
@@ -2196,6 +2981,10 @@ else {
 		cout << " Position";
 	if (flags&4)
 		cout << " Index";
+	if (flags&8)
+		cout << " Par2";
+	if (flags&16)
+		cout << " Par3";
 	if (flags&7)
 		cout << " free";
 	cout << endl;
@@ -2207,28 +2996,39 @@ if (source>=0) { /// Exclude extended sources
 		m_fitInfo[source].counts += m_ctsMaps[m_binAddr[i]](m_binList[i]);
 	}
 
-s_fitterIterations = 0;
-s_fitterChanges = new unsigned[m_srcCount*2];
-for (int i=0; i<m_srcCount*2; ++i)
-	s_fitterChanges[i] = 0;
+	s_fitterIterations = 0;
+	s_fitterChanges = new unsigned[m_srcCount*2];
+	for (int i=0; i<m_srcCount*2; ++i)
+		s_fitterChanges[i] = 0;
 
-Int_t fitResult = m_countsHist.Fit(&m_model, opt ,"", 0, m_binCount);
-if(fitResult >= 4000) fitResult -= 4000;
-SetFitStatus(fitResult);
-/// Evaluate the exposure again if the position was free
+	cout << "FIT HISTO " << opt << endl;
+	//m_model.Print();
+	Int_t fitResult = m_countsHist.Fit(&m_model, opt ,"", 0, m_binCount);
+	//ROOT::Fit::FitResult fitres;
+	//cout <<"CHI2: " <<fitres.Chi2() << endl;
 
-
-/// zzz
+	/*ROOT::Fit::DataOptions optf;
+	optf.fIntegral = true;
+	ROOT::Fit::Fitter fitterf1;
+	ROOT::Fit::DataRange rangef(-0.5, m_binCount-0.5);
+	ROOT::Fit::BinData dataf(optf,rangef);
+	ROOT::Fit::FillData(dataf, &m_countsHist);
+	//m_countsHist.Print();m_binCount, -0.5, m_binCount-0.5
+	 */
+	if(fitResult >= 4000) fitResult -= 4000;
+	SetFitStatus(fitResult);
+	/// Evaluate the exposure again if the position was free
+	/// zzz
 #define ADJUST_EXPOSURE
 #ifdef ADJUST_EXPOSURE
-if (source>=0) { /// Exclude extended sources
-	if (flags&2) {
-		for (int exp=0; exp<m_mapCount; ++exp) {
-			double exposure = EvalExposure(m_sources[source].GetSrcL(), m_sources[source].GetSrcB(), m_expMaps[exp]);
-			m_sources[exp*m_srcCount+source].SetExp(exposure);
+	if (source>=0) { /// Exclude extended sources
+		if (flags&2) {
+			for (int exp=0; exp<m_mapCount; ++exp) {
+				double exposure = EvalExposure(m_sources[source].GetSrcL(), m_sources[source].GetSrcB(), m_expMaps[exp]);
+				m_sources[exp*m_srcCount+source].SetExp(exposure);
+				}
 			}
 		}
-	}
 #endif
 
 TVirtualFitter* fitter = TVirtualFitter::GetFitter();
@@ -2286,8 +3086,8 @@ delete[] s_fitterChanges;
 s_fitterChanges = 0;
 
 Double_t fcn, edm;
-int iter;
-GetTsStat(fcn, edm, iter);
+int iter, nvpar, nparx;
+GetTsStat(fcn, edm, iter, nvpar, nparx);
 
 if (amin) {
 	*amin = fcn;
@@ -2296,11 +3096,17 @@ if (amin) {
 			m_fitInfo[source].fcn0 = fcn;
 			m_fitInfo[source].edm0 = edm;
 			m_fitInfo[source].iter0 = iter;
+			m_fitInfo[source].nvpar0 = nvpar;
+			m_fitInfo[source].nparx0 = nparx;
+			m_fitInfo[source].fitstatus0 = fitResult;
 			}
 		else {
 			m_fitInfo[source].fcn1 = fcn;
 			m_fitInfo[source].edm1 = edm;
 			m_fitInfo[source].iter1 = iter;
+			m_fitInfo[source].nvpar1 = nvpar;
+			m_fitInfo[source].nparx1 = nparx;
+			m_fitInfo[source].fitstatus1 = fitResult;
 			}
 		}
 	}
@@ -2311,7 +3117,7 @@ if (m_logFile && source>=0) { /// Exclude extended sources for now
 	double data;
 	double likelihood = Likelihood(&data);
 	*/
-	
+
 	ofstream& logFile = *m_logFile;
 	char textFlags[4] = "ZFF";
 	if (!zero) {
@@ -2331,7 +3137,7 @@ if (m_logFile && source>=0) { /// Exclude extended sources for now
 		logFile << sep[bool(map)] << GetFinalDPM(false, map, source, zero);
 	count = SingleIsoPar() ? 1 : m_mapCount;
 	for (int map=0; map<count; ++map)
-		logFile << sep[bool(map)] << GetFinalDPM(true, map, source, zero);	
+		logFile << sep[bool(map)] << GetFinalDPM(true, map, source, zero);
 
 	logFile << " " << m_lCenter << " " << m_bCenter << " " << fcn << " " << edm << " " << iter << endl;
 	}
@@ -2431,7 +3237,6 @@ return diffParsStored;
 void RoiMulti::Loop1(const char* fitOpt)
 {
 /// Move(m_sources[0].GetSrcL(), m_sources[0].GetSrcB());
-
 for (int i=0; i<SrcCount(); ++i) {
 	double cnt = 0;
 	for (int r=0; r<m_sources[i].Rows(); ++r)
@@ -2440,6 +3245,7 @@ for (int i=0; i<SrcCount(); ++i) {
 	cout << "Total CNT = " << cnt << endl;
 	}
 
+	
 
 for (int i=0; i<m_extCount; ++i)
 	if (m_extSrcArr[i].GetFixflag())
@@ -2464,13 +3270,19 @@ for (int source=0; source<SrcCount(); ++source) {
 		cout << "Considering source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
 		double circL = m_sources[source].GetSrcL();
 		double circB = m_sources[source].GetSrcB();
+		cout << "##AB: Move"<<endl;
 		Move(circL, circB);
+		cout << "##AB: FixDistantSources" << endl;
 		FixDistantSources(circL, circB, source, false);
-		if (m_sources[source].GetFixflag() & (PosFree|IndexFree))
+		if (m_sources[source].GetFixflag() & (PosFree|IndexFree|Par2Free|Par3Free)) {
+			cout << "##AB: FitPositionIndex" << endl;
 			FitPositionIndex(source, fitOpt);
-		else if (m_sources[source].GetFixflag() & FluxFree)
+		}
+		else if (m_sources[source].GetFixflag() & FluxFree) {
+			cout << "##AB: FitFlux" << endl;
 			FitFlux(source, fitOpt);
 		}
+	}
 	else
 		cout << "Skipping source " << source+1 << ": " << m_sources[source].GetLabel() << endl;
         m_sources[source].SetStatus(1, m_status);
@@ -2718,15 +3530,16 @@ if (ExtCount()) {
 
 
 if (m_srcCount) {
-	output << "! SrcName, sqrt(TS), L_peak, B_peak, Counts, Err, Flux, Err, Index, Err";
+	output << "! SrcName, sqrt(TS), L_peak, B_peak, Counts, Err, Flux, Err, Index, Err, Par2, Par2Err, Par3, Par3Err, TypeFun";
 	if (!skipFitInfo)
-		output << " [fcn0 fcn1 edm0 edm1 iter0 iter1]";
+		output << " [fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1]";
 	output << endl;
-	
+
 	for (int i=0; i<m_srcCount; ++i) {
-	
+
 		double exposure = GetTotalExposure(i);
-	
+		double expcor = GetTotalExposureSpectraCorrected(i);
+
 		output << m_sources[i].GetLabel()
 					<< " " << sqrt(m_sources[i].GetTS())
 					<< " " << m_sources[i].GetSrcL()
@@ -2737,18 +3550,29 @@ if (m_srcCount) {
 	*/
 					<< " " << exposure*m_sources[i].GetFlux()
 					<< " " << exposure*m_sources[i].GetFluxerr()
-	
-					<< " " << m_sources[i].GetFlux()
-					<< " " << m_sources[i].GetFluxerr()
+
+					<< " " << exposure*m_sources[i].GetFlux()/expcor
+					<< " " << exposure*m_sources[i].GetFluxerr()/expcor
 					<< " " << m_sources[i].GetIndex()
-					<< " " << m_sources[i].GetIndexerr();
-		if (m_sources[i].GetFixflag() && !skipFitInfo)
-			output << " " << m_fitInfo[i].fcn0
-					<< " " << m_fitInfo[i].fcn1
+					<< " " << m_sources[i].GetIndexerr()
+					<< " " << m_sources[i].GetPar2()
+					<< " " << m_sources[i].GetPar2err()
+					<< " " << m_sources[i].GetPar3()
+					<< " " << m_sources[i].GetPar3err()
+					<< " " << m_sources[i].GetTypeFun();
+		if (!skipFitInfo)
+			output << " " << m_fitInfo[i].fitstatus0
+					<< " " << m_fitInfo[i].fcn0
 					<< " " << m_fitInfo[i].edm0
-					<< " " << m_fitInfo[i].edm1
+					<< " " << m_fitInfo[i].nvpar0
+					<< " " << m_fitInfo[i].nparx0
 					<< " " << m_fitInfo[i].iter0
-					<< " " << m_fitInfo[i].iter1;
+			<< " " << m_fitInfo[i].fitstatus1
+			<< " " << m_fitInfo[i].fcn1
+			<< " " << m_fitInfo[i].edm1
+			<< " " << m_fitInfo[i].nvpar1
+			<< " " << m_fitInfo[i].nparx1
+			<< " " << m_fitInfo[i].iter0;
 		output << endl;
 		}
 	}
@@ -2800,31 +3624,39 @@ static void WriteIsoDate2(ofstream& f, const char* isoDdate)
 		f << isoDdate;
 }
 
-void RoiMulti::WriteSources(const char* fileName, bool skipFixed, bool skipEllipses) const
+double RoiMulti::ExpRatioEvaluation(AgileMap& exp, double l, double b, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize) const
+{
+	ExpRatioEvaluator * erEvaluator = new ExpRatioEvaluator(exp, isExpMapNormalized, false, false, minThreshold, maxThreshold, squareSize);
+	double val = erEvaluator->computeExpRatioValues(l,b);
+	delete erEvaluator;
+	return val;
+}
+
+void RoiMulti::WriteSources(const char* fileName, bool expratioevaluation, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, bool skipFixed, bool skipEllipses) const
 {
 for (int i=0; i<m_srcCount; ++i) {
 	if (skipFixed && !m_inSrcDataArr[i].fixflag)
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label, Fix, index, UL conf. level, srcloc conf. level, start l, start b, start flux, [ lmin , lmax ], [ bmin, bmax ]" << endl;
+	srcout << "! Label Fix index ULConfidenceLevel SrcLocConfLevel start_l start_b start_flux [ lmin,  lmax ] [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor integratortype expratioEval expratio_minthr expratio_maxthr expratio_size " << endl;
 	srcout << "! sqrt(TS)" << endl ;
-	srcout << "! L_peak, B_peak, Dist from initial position" << endl;
+	srcout << "! L_peak B_peak Dist_from_start_position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
-	srcout << "! L, B, Dist from initial position, r, a, b, phi" << endl;
-	srcout << "! Counts, Err, +Err, -Err, UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "], Err, +Err, -Err, UL, Exp" << endl;
-	srcout << "! Index [" << m_indexLimitMin << " , " << m_indexLimitMax << "], Err" << endl;
-	srcout << "! cts, fcn0, fcn1, edm0, edm1, iter0, iter1" << endl;
-	
+	srcout << "! L B Dist_from_start_position r a b phi" << endl;
+	srcout << "! Counts Err +Err -Err UL" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL ULbayes Exp ExpSpectraCorFactor Erg Erg_Err Erg_UL Erglog Erglog_Err Erglog_UL Senstivity" << endl;
+	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index_Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
+	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
+
 	//if (m_inSrcDataArr[i].fixflag) {
 		srcout << "! Gal coeffs [" << m_galLimitMin << " , " << m_galLimitMax << "] and errs" << endl;
 		srcout << "! Gal zero coeffs and errs" << endl;
 		srcout << "! Iso coeffs [" << m_isoLimitMin << " , " << m_isoLimitMax << "] and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
 	//	}
-	srcout << "! Start date, end date, start TT, end TT, start MJD, end MJD" << endl;
-	srcout << "! Emin..emax, fovmin..fovmax, albedo, binsize, expstep, phasecode" << endl;
+	srcout << "! Start_date_UTC End_date_UTC Start_data_TT End_data_TT Start_date_MJD End_date_MJD" << endl;
+	srcout << "! Emin..emax fovmin..fovmax albedo binsize expstep phasecode ExpRatio" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
     srcout << "! skytype.filter_irf" << std::endl;
@@ -2836,23 +3668,57 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << m_inSrcDataArr[i].srcL
 				<< " " << m_inSrcDataArr[i].srcB
 	<< " " << m_inSrcDataArr[i].flux;
-	
+
+
 	if (m_srcLimits[i].lLim)
 		srcout <<  " [ " << m_srcLimits[i].lMin << " , " << m_srcLimits[i].lMax << " ] ";
 	else
 		srcout << " [ -1 , -1 ] ";
-	
+
 	if (m_srcLimits[i].bLim)
 		srcout << " [ " << m_srcLimits[i].bMin << " , " << m_srcLimits[i].bMax << " ] ";
 	else
 		srcout << " [ -1 , -1 ] ";
+
+	srcout << " " << m_inSrcDataArr[i].typefun;
+	srcout << " " << m_inSrcDataArr[i].par2;
+	srcout << " " << m_inSrcDataArr[i].par3;
 	
-		srcout	<< endl;
+	srcout << " " << m_galmode2;
+	srcout << " " << m_galmode2fit;
+	srcout << " " << m_isomode2;
+	srcout << " " << m_isomode2fit;
+	srcout << " " << m_edpcorrection;
+	srcout << " " << m_fluxcorrection;
+	srcout << " " << m_integratortype;
+	srcout << " " << expratioevaluation;
+	srcout << " " << minThreshold;
+	srcout << " " << maxThreshold;
+	srcout << " " << squareSize;
+	
+	srcout	<< endl;
 	/// zzz m_sources[i].PrintAbphi();
 	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
-	
-	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << " " << dist << endl;
 
+	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << " " << dist << endl;
+	
+	double ulbayes = 0;
+	for (int m=0; m<m_mapCount; ++m) {
+		double gal0 = GetFinalDPM(false, m, i, true);
+		double iso0 = GetFinalDPM(true, m, i, true);
+		double lng = m_sources[i].GetSrcL();
+		double lat = m_sources[i].GetSrcB();
+		AgileMap& ctsMap = m_ctsMaps[m];
+		AgileMap& expMap = m_expMaps[m];
+		double resf = helene(ctsMap, expMap, lng, lat, gal0, iso0, sqrt(m_sources[i].GetULCL()));
+		if(resf < 0) {
+			ulbayes = -1;
+			break;
+		}
+		ulbayes += resf;
+		
+	}
+	cout << "helene   " << ulbayes << endl;
 	if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
 		double dist2 = SphDistDeg(ellipse.center.x, ellipse.center.y, m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 		srcout << ellipse.center.x << " " << ellipse.center.y << " " << dist2 << " " << m_sources[i].GetRadius() << " " << ellipse.horAxis << " " << ellipse.verAxis << " " << ellipse.attitude*RAD2DEG << " " << endl;
@@ -2860,6 +3726,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "-1 -1 -1 -1 -1 -1 -1 " << endl;
 
 	double exposure = GetTotalExposure(i);
+	double expcor = GetTotalExposureSpectraCorrected(i);
 /**
 	srcout << m_sources[i].GetCounts()
 				<< " " << m_sources[i].GetCountsErr()
@@ -2875,25 +3742,97 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure*m_sources[i].GetFluxul()
 				<< endl;
 
-	srcout << m_sources[i].GetFlux()
-				<< " " << m_sources[i].GetFluxerr()
-				<< " " << m_sources[i].GetFluxhi()
-				<< " " << m_sources[i].GetFluxlo()
-				<< " " << m_sources[i].GetFluxul()
-				<< " " << exposure /// m_sources[i].GetExp()
+	double absEmin = 0;
+	double absEmax = 0;
+	double erg = 0;
+	double ergerr = 0;
+	double ergul = 0;
+	double erglog = 0;
+	double erglogerr = 0;
+	double erglogul = 0;
+	for (int map=0; map<m_mapCount; ++map) {
+		const AgileMap& m = m_ctsMaps[map];
+		if(absEmin == 0)
+			absEmin = m.GetEmin();
+		absEmax = m.GetEmax();
+		if(m_inSrcDataArr[i].typefun == 0) {
+			double fact = m_sources[i].PLnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), 0);
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			ergul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+			fact = m_sources[i].PLnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			erglogul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+		}
+		if(m_inSrcDataArr[i].typefun == 1) {
+			double fact = m_sources[i].PLExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), 0);
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			ergul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+			fact = m_sources[i].PLExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			erglogul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+		}
+		if(m_inSrcDataArr[i].typefun == 2) {
+			double fact = m_sources[i].PLSuperExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 0);
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			ergul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+			fact = m_sources[i].PLSuperExpCutOffnuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			erglogul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+		}
+		if(m_inSrcDataArr[i].typefun == 3) {
+			double fact = m_sources[i].LogParabolanuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 0);
+			erg = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			ergerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			ergul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+			fact = m_sources[i].LogParabolanuFnu(absEmin, absEmax, m_sources[i].GetIndex(), m_sources[i].GetPar2(), m_sources[i].GetPar3(), 1);
+			erglog = (exposure*m_sources[i].GetFlux() / expcor) * fact;
+			erglogerr = (exposure*m_sources[i].GetFluxerr() / expcor) * fact;
+			erglogul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
+		}
+	}
+	srcout << exposure*m_sources[i].GetFlux() / expcor
+				//<< " " << exposure*m_sources[i].GetFlux() / expcor
+				<< " " << exposure*m_sources[i].GetFluxerr() / expcor
+				<< " " << exposure*m_sources[i].GetFluxhi() / expcor
+				<< " " << exposure*m_sources[i].GetFluxlo() / expcor
+				<< " " << exposure*m_sources[i].GetFluxul() / expcor
+				<< " " << ulbayes
+				<< " " << exposure
+				<< " " << exposure / expcor
+				<< " " << erg
+				<< " " << ergerr
+				<< " " << ergul
+				<< " " << erglog
+				<< " " << erglogerr
+				<< " " << erglogul
+				<< " 0.0 "
 				<< endl;
-	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << endl;
-	
+
+	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;
 	//AB
-	
+
 	srcout << m_fitInfo[i].counts;
-	
-	srcout << " " << m_fitInfo[i].fcn0;
-	srcout << " " << m_fitInfo[i].fcn1;
-	srcout << " " << m_fitInfo[i].edm0;
-	srcout << " " << m_fitInfo[i].edm1;
-	srcout << " " << m_fitInfo[i].iter0;
-	srcout << " " << m_fitInfo[i].iter1 << endl;
+
+	srcout << " " << m_fitInfo[i].fitstatus0
+	<< " " << m_fitInfo[i].fcn0
+	<< " " << m_fitInfo[i].edm0
+	<< " " << m_fitInfo[i].nvpar0
+	<< " " << m_fitInfo[i].nparx0
+	<< " " << m_fitInfo[i].iter0
+	<< " " << m_fitInfo[i].fitstatus1
+	<< " " << m_fitInfo[i].fcn1
+	<< " " << m_fitInfo[i].edm1
+	<< " " << m_fitInfo[i].nvpar1
+	<< " " << m_fitInfo[i].nparx1
+	<< " " << m_fitInfo[i].iter0
+	<< " " << m_sources[i].GetLikelihood()
+	<< endl;
 
 	if (m_inSrcDataArr[i].fixflag) {
 		const char* sep[2] = {"", ","};
@@ -2963,7 +3902,25 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << m.GetAlbedo() << " ";
 	srcout << m.GetYbin() << " ";
 	srcout << m_expMaps[0].GetStep() << " ";
-	srcout << m.GetPhaseCode() << endl;
+	srcout << m.GetPhaseCode() << " ";
+
+	/* ExpRatioEvaluation */
+	if(expratioevaluation) {
+		/*
+		for (int exp=0; exp<m_mapCount; ++exp) {
+			double expratio_value = ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+			srcout << expratio_value;
+			if(m_mapCount > 1 && exp != m_mapCount - 1)
+				srcout << ",";
+		}
+		 */
+		double expratio_value = ExpRatioEvaluation(*m_sumExp, m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+		srcout << expratio_value;
+	}else{
+		srcout << "-1";
+	}
+
+	srcout << endl;
 
 	for(int step=0; step<7; step++) {
 	    int lstatus = m_sources[i].GetStatus(step);
@@ -3015,7 +3972,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		htmlout << m.GetEmin() << ".." << m.GetEmax() << "</td>";
 	if (OpenConditionalBin(htmlout, sameFOV, map, m_mapCount))
 		htmlout << m.GetFovMin() << ".." << m.GetFovMax() << "</td>";
-	
+
 	if (OpenConditionalBin(htmlout, sameCenter, map, m_mapCount))
 		htmlout <<m.GetMapCenterL() << ",&nbsp;" << m.GetMapCenterB() << "</td>";
 	WriteConditionalBin(htmlout, m.GetAlbedo(), sameAlbedo, map, m_mapCount);
@@ -3045,14 +4002,16 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel());
 	ofstream srcout(srcoutname.c_str(), ios::app);
+	double exposure = GetTotalExposure(i);
+	double expcor = GetTotalExposureSpectraCorrected(i);
 
 	srcout << iterNum;
 	srcout << " " << m_sources[i].GetSrcL();
 	srcout << " " << m_sources[i].GetSrcB();
 	srcout << " " << m_sources[i].GetTS();
-	srcout << " " << m_sources[i].GetFlux();
-	srcout << " " << m_sources[i].GetFluxerr();
-	srcout << " " << m_sources[i].GetFluxul();
+	srcout << " " << exposure*m_sources[i].GetFlux()/expcor;
+	srcout << " " << exposure*m_sources[i].GetFluxerr()/expcor;
+	srcout << " " << exposure*m_sources[i].GetFluxul()/expcor;
 	srcout << " " << m_sources[i].GetIndex();
 	srcout << " " << m_inSrcDataArr[i].fixflag; /// zzz why not from the sources array?
 	srcout << " " << m_sources[i].GetMinTS();
@@ -3065,7 +4024,7 @@ for (int i=0; i<m_srcCount; ++i) {
 
 	srcout << " " << m_sources[i].GetExp();
 
-	double exposure = GetTotalExposure(i);
+
 
 	srcout << " " << exposure*m_sources[i].GetFlux();
 	srcout << " " << exposure*m_sources[i].GetFluxerr();
@@ -3079,7 +4038,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_fitInfo[i].edm1;
 	srcout << " " << m_fitInfo[i].iter0;
 	srcout << " " << m_fitInfo[i].iter1;
-	
+
 	char sep[2] = {' ', ','};
 	int count = SingleGalPar() ? 1 : m_mapCount;
 	for (int map=0; map<count; ++map)
@@ -3089,8 +4048,8 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << sep[bool(map)] << GetFinalDPM(true, map, i, false);
 
 	srcout << " ";
-	
-	
+
+
 	for (int b=0; b<simArraySize; ++b) {
 		const AgileMap& map = simArr[b];
 		long counts = 0;
@@ -3099,7 +4058,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				counts += map(y, x);
 				srcout << sep[bool(b)] << counts;
 	}
-	
+
 
 	srcout << endl;
 
@@ -3127,7 +4086,7 @@ if (OpenConditionalBin(f, sameValues, row, count))
 }
 
 
-void RoiMulti::WriteHtml(const char* fileName, const char* suffix) const
+void RoiMulti::WriteHtml(const char* fileName, bool expratioevaluation, bool isExpMapNormalized, double minThreshold, double maxThreshold, int squareSize, const char* suffix) const
 {
 if (!m_mapCount || !(m_srcCount+m_extCount)) {
 	cerr << "Not writing file " << fileName << ": No data to write" << endl;
@@ -3317,24 +4276,31 @@ if (ExtCount()) {
 
 if (SrcCount()) {
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td></tr>" << endl;
+	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td><td>Par2</td><td>Par3</td><td>TypeFun</td></tr>" << endl;
 	for (int i=0; i<SrcCount(); ++i) {
 		const SourceData& srcData = m_inSrcDataArr[i];
 		htmlout << "<tr><td>" << srcData.label
 					<< "</td><td>" << srcData.flux
 					<< "</td><td>" << srcData.index
 					<< "</td><td>" << srcData.srcL;
-	
+
 		if (m_srcLimits[i].lLim)
 			htmlout << " in [" << m_srcLimits[i].lMin << ", " << m_srcLimits[i].lMax << "]";
-	
+
 		htmlout << "</td><td>" << srcData.srcB;
-	
+
 		if (m_srcLimits[i].bLim)
 			htmlout << " in [" << m_srcLimits[i].bMin << ", " << m_srcLimits[i].bMax << "]";
-	
-		htmlout << "</td><td>" << sqrt(srcData.minTS) << "</td><td>" << srcData.fixflag << "</td><td>" << sqrt(m_sources[i].GetULCL()) << "</td><td>" << m_sources[i].GetLocCL() << "</td></tr>" << endl;
-	
+
+		htmlout << "</td><td>" << sqrt(srcData.minTS) << "</td><td>" << srcData.fixflag << "</td><td>" << sqrt(m_sources[i].GetULCL()) << "</td><td>" << m_sources[i].GetLocCL(); //
+
+
+		htmlout << "</td><td>" << m_inSrcDataArr[i].par2;
+		htmlout << "</td><td>" << m_inSrcDataArr[i].par3;
+		htmlout << "</td><td>" << m_inSrcDataArr[i].typefun;
+
+		htmlout << "</td></tr>" << endl;
+
 		}
 	htmlout << "</table>" << endl;
 	}
@@ -3361,7 +4327,7 @@ if (singleGal && singleIso) {
 	}
 else {
 	htmlout << "<td>DiffName</td><td>Coeff</td><td>Err</td><td>+Err</td><td>-Err</td></tr>" << endl;
-	
+
 	for (int map=0; map<m_mapCount; ++map) {
 		AlikeDiffMap& gasMap = m_galSrc[map];
 		AlikeDiffMap& isoMap = m_isoSrc[map];
@@ -3416,8 +4382,8 @@ if (ExtCount()) {
 		const AlikeExtMap& extSrc = m_extSrcArr[ExtIndex(0, i)];
 		//double BaryExposure = EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[0]);
 		double BaryExposure = 0;
-                for (int map=0; map<m_mapCount; ++map)
-                        BaryExposure += EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[map])*extSrc.GetNormFactor();
+		for (int map=0; map<m_mapCount; ++map)
+			BaryExposure += EvalExposure(extSrc.GetBaryL(), extSrc.GetBaryB(), m_expMaps[map])*extSrc.GetNormFactor();
 		htmlout << "<td>" << sqrt(extSrc.GetTS()) << "</td>";
 		htmlout << "<td>" << extSrc.GetCoeff()/BaryExposure << "</td>";
 		htmlout << "<td>" << extSrc.GetCoefferr()/BaryExposure << "</td>";
@@ -3428,35 +4394,36 @@ if (ExtCount()) {
 	htmlout << "<br>" << endl;
 	}
 
-	
+
 /// ///////////////////////////////////////////////////////
 
 
 if (SrcCount()) {
-	
+
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>dist</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Err</td><td>L</td><td>B</td><td>distE</td><td>Radius</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo (cts fcn0 fcn1 edm0 edm1 iter0 iter1)</td></tr>" << endl;
-	
+	htmlout << "<tr><td>SrcName</td><td>sqrt(TS)</td><td>L_peak</td><td>B_peak</td><td>dist</td><td>Exp</td><td>Counts</td><td>Err</td><td>Flux</td><td>Err</td><td>Flux UL</td><td>Index</td><td>Index Err</td><td>Par2</td><td>Par2 Err</td><td>Par3</td><td>Par3 Err</td><td>L</td><td>B</td><td>distE</td><td>Radius</td><td>a</td><td>b</td><td>phi</td><td>gal</td><td>gal0</td><td>iso</td><td>iso0</td><td>fitinfo (cts fcn0 fcn1 edm0 edm1 iter0 iter1)</td><td>exp-ratio</td></tr>" << endl;
+
 	for (int i=0; i<m_srcCount; ++i) {
 		const Ellipse& ellipse = m_sources[i].GetEllipse();
 	/*
 		double totalExposure = 0;
 		for (int map=0; map<m_mapCount; ++map)
 			totalExposure += m_sources[map*SrcCount()+i].GetExp();
-	
+
 		cerr << "**********************" << m_sources[i].GetExp() << endl;
 		cerr << "**********************" << m_sources[i].GetCounts() << endl;
 		cerr << "**********************" << m_sources[i].GetCountsErr() << endl;
 	*/
 
 		double exposure = GetTotalExposure(i);
+		double expcor = GetTotalExposureSpectraCorrected(i);
 		double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 		htmlout << "<tr><td>" << m_sources[i].GetLabel()
 					<< "</td><td>" << sqrt(m_sources[i].GetTS())
 					<< "</td><td>" << m_sources[i].GetSrcL()
 					<< "</td><td>" << m_sources[i].GetSrcB()
-		
-					
+
+
 					<< "</td><td>" << dist
 /**
 					<< "</td><td>" << m_sources[i].GetExp()
@@ -3467,13 +4434,17 @@ if (SrcCount()) {
 					<< "</td><td>" << exposure*m_sources[i].GetFlux()
 					<< "</td><td>" << exposure*m_sources[i].GetFluxerr()
 
-					<< "</td><td>" << m_sources[i].GetFlux()
-					<< "</td><td>" << m_sources[i].GetFluxerr()
-					<< "</td><td>" << m_sources[i].GetFluxul()
+					<< "</td><td>" << exposure*m_sources[i].GetFlux() / expcor
+					<< "</td><td>" << exposure*m_sources[i].GetFluxerr() / expcor
+					<< "</td><td>" << exposure*m_sources[i].GetFluxul() / expcor
 					<< "</td><td>" << m_sources[i].GetIndex()
-		            << "</td><td>" << m_sources[i].GetIndexerr();
-		
-		
+		            << "</td><td>" << m_sources[i].GetIndexerr()
+		<< "</td><td>" << m_sources[i].GetPar2()
+		<< "</td><td>" << m_sources[i].GetPar2err()
+		<< "</td><td>" << m_sources[i].GetPar3()
+		<< "</td><td>" << m_sources[i].GetPar3err();
+
+
 		if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
 			double dist2 = SphDistDeg(ellipse.center.x, ellipse.center.y, m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 			htmlout << "</td><td>" << ellipse.center.x
@@ -3486,7 +4457,7 @@ if (SrcCount()) {
 		} else {
 			htmlout << "</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1</td><td>-1";
 		}
-		
+
 		if (m_inSrcDataArr[i].fixflag) {
 			const char* sep[2] = {"", ","};
 			htmlout << "</td><td>";
@@ -3496,20 +4467,20 @@ if (SrcCount()) {
 			for (int m=0; m<m_mapCount; ++m)
 				htmlout << sep[bool(m)] << GetFinalDPMErr(false, m, i, false);
 			htmlout << "</td><td>";
-			
+
 			for (int m=0; m<m_mapCount; ++m)
 				htmlout << sep[bool(m)] << GetFinalDPM(false, m, i, true);
 				htmlout << " +/- ";
 			for (int m=0; m<m_mapCount; ++m)
 				htmlout << sep[bool(m)] << GetFinalDPMErr(false, m, i, true);
 			htmlout << "</td><td>";
-			
+
 			for (int m=0; m<m_mapCount; ++m)
 				htmlout << sep[bool(m)] << GetFinalDPM(true, m, i, false);
 				htmlout << " +/- ";
 			for (int m=0; m<m_mapCount; ++m)
 				htmlout << sep[bool(m)] << GetFinalDPMErr(true, m, i, false);
-			
+
 			htmlout << "</td><td>";
 			for (int m=0; m<m_mapCount; ++m)
 				htmlout << sep[bool(m)] << GetFinalDPM(true, m, i, true);
@@ -3519,27 +4490,49 @@ if (SrcCount()) {
 
 		} else {
 			htmlout << "</td><td>";
-			
+
 			htmlout << "</td><td>";
-			
+
 			htmlout << "</td><td>";
-			
+
 			htmlout << "</td><td>";
-			
+
 		}
-		
+
 		htmlout << "</td><td>";
 		htmlout << m_fitInfo[i].counts;
-		
+
 		htmlout << " " << m_fitInfo[i].fcn0;
 		htmlout << " " << m_fitInfo[i].fcn1;
 		htmlout << " " << m_fitInfo[i].edm0;
 		htmlout << " " << m_fitInfo[i].edm1;
 		htmlout << " " << m_fitInfo[i].iter0;
 		htmlout << " " << m_fitInfo[i].iter1;
-		
+
+
+
+		htmlout << "</td><td>";
+		const char* sep[2] = {"", ","};
+
+		/* ExpRatioEvaluation */
+		if(expratioevaluation)
+		{
+			/*
+			for (int exp=0; exp<m_mapCount; ++exp) {
+				htmlout << sep[bool(exp)] << ExpRatioEvaluation(m_expMaps[exp], m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+			}
+			*/
+			ExpRatioEvaluation(*m_sumExp, m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), isExpMapNormalized, minThreshold, maxThreshold, squareSize);
+		}
+		else
+			htmlout << "not enabled";
+
+
+
+
+
 			htmlout << "</td></tr>" << endl;
-		
+
 	}
 	htmlout << "</table>" << endl;
 	}
@@ -3586,7 +4579,7 @@ if (SrcCount() && m_mapCount>1) {
 			htmlout << "<td>" << eMinArr[map] << ".." << eMaxArr[map] << "</td>";
 		htmlout << "</tr><tr>" << endl;
 		for (int i=0; i<m_srcCount; ++i) {
-			htmlout << "<tr><td>" << m_sources[i].GetLabel() << "</td>";
+			htmlout << "<tr><td>L " << m_sources[i].GetLabel() << "</td>";
 			double flux = m_sources[i].GetFlux();
 			/// double index = m_sources[i].GetIndex();
 			for (int map=0; map<chCount; ++map)

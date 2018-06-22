@@ -1,11 +1,16 @@
 
 
-/** zzz Debug
+ //zzz Debug
 #include <iostream>
 using std::cout;
 using std::cerr;
 using std::endl;
-*/
+
+#include "TF1.h"
+#include "Math/WrappedTF1.h"
+#include "Math/GaussIntegrator.h"
+#include "Math/GaussLegendreIntegrator.h"
+#include "TMath.h"
 
 #include "wcstrig.h"
 
@@ -241,13 +246,234 @@ if (inside) {
 ///
 
 
-void AlikeNorm::UpdateNorm(double eMin, double eMax, double index)
+double AlikeNorm::UpdateNorm(double eMin, double eMax, double index, bool norm)
 {
-index = 1.0-index;
-m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
+	
+	//0 - PL -> (k E^-{\index})
+	//Analytical expression
+	index = 1.0-index;
+	if(norm)
+		m_normFactor = (pow(eMin, index)-pow(eMax, index))/(pow(m_eInf, index)-pow(m_eSup, index));
+	else
+		return (pow(eMin, index)-pow(eMax, index));
+	return m_normFactor;
+	/*
+	// cout << "NUMINT PL" << endl;
+	TF1 f("PowerLaw", "x^(-[0])", m_eInf, m_eSup);
+	f.SetParameter(0, index);
+	ROOT::Math::WrappedTF1 wf1(f);
+	ROOT::Math::GaussIntegrator ig;
+	ig.SetFunction(wf1);
+	ig.SetRelTolerance(0.001);
+	m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(m_eInf, m_eSup);
+	*/
+	
+}
+
+double AlikeNorm::PLnuFnu(double eMin, double eMax, double index, int type)
+{
+	if(type == 0) {
+		//0 - PL -> (k E^-{\index})
+		//Analytical expression
+		index = 1.0-index;
+	
+		//TF1 f("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
+		TF1 f1("PLnuFnu", "x^(-[0]) * x", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		TF1 f2("PLnuFnu2", "x^(-[0])", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+
+	
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
+}
+
+double AlikeNorm::UpdateNormPLExpCutOff(double eMin, double eMax, double index, double m_par2, bool norm)
+{
+	if(eMin == eMax) {
+		cout << "!## Error UpdateNormPLExpCutOff: eMin = eMax" << endl;
+		return 0;
+	}
+	if(std::isnan(index)) {
+		cout << "PLExpCutoff isnan with integrator " << m_integratortype << endl;
+		exit(0);
+	}
+	//1 - PLExpCutoff -> k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
+	TF1 f("PLExpCutoff", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
+	f.SetParameter(0, index);
+	f.SetParameter(1, m_par2);
+	
+	return UpdateIntegrator(f, eMin, eMax, m_eInf, m_eSup, norm);
+	
+}
+
+double AlikeNorm::PLExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, int type)
+{
+	if(type == 0) {
+		TF1 f1("PLExpCutoffnuFnu", "x * x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		f1.SetParameter(1, m_par2);
+		
+		TF1 f2("PLExpCutoffnuFnu2", "x^(-[0]) * exp(- x / [1])", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+		f2.SetParameter(1, m_par2);
+		
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
 }
 
 
+
+double AlikeNorm::UpdateIntegrator(TF1& f, double eMin, double eMax, double eInf, double eSup, bool norm) {
+	
+	ROOT::Math::WrappedTF1 wf1(f);
+	if(m_integratortype == 1 || m_integratortype == 2 || m_integratortype == 3) {
+		//cout << "Gauss " << m_integratortype << endl;
+		ROOT::Math::GaussIntegrator ig;
+		if(m_integratortype == 1) ig.SetRelTolerance(0.001);
+		if(m_integratortype == 2) ig.SetRelTolerance(0.000001);
+		if(m_integratortype == 3) ig.SetRelTolerance(0.00000001);
+		ig.SetFunction(wf1);
+		
+		if(norm) {
+			m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(eInf, eSup);
+		}
+		else
+			return ig.Integral(eMin, eMax);
+	}
+	
+	if(m_integratortype >= 4 ) {
+		//cout << "GaussLegendreIntegrator " << m_integratortype << endl;
+		ROOT::Math::GaussLegendreIntegrator ig;
+		//ig.SetRelTolerance(0.001);//A
+		ig.SetRelTolerance(0.000001); //B
+		if(m_integratortype == 4) ig.SetNumberPoints(80);
+		if(m_integratortype == 5) ig.SetNumberPoints(160);
+		if(m_integratortype == 6) ig.SetNumberPoints(1600);
+		if(m_integratortype == 7) ig.SetNumberPoints(2400);
+		if(m_integratortype == 8) ig.SetNumberPoints(3200);
+		ig.SetFunction(wf1);
+	
+		if(norm) {
+			m_normFactor = ig.Integral(eMin, eMax) / ig.Integral(eInf, eSup);
+		}
+		else
+			return ig.Integral(eMin, eMax);
+		
+	}
+	return m_normFactor;
+}
+
+double AlikeNorm::UpdateNormLogParabola(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
+{
+	if(eMin == eMax) {
+		cout << "!## Error UpdateNormLogParabola: eMin = eMax" << endl;
+		return 0;
+	}
+	TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+	if(std::isnan(index)) {
+		cout << "LogParabola isnan with integrator " << m_integratortype << endl;
+		exit(0);
+	}
+	f.SetParameter(0, index);
+	f.SetParameter(1, m_par2);
+	f.SetParameter(2, m_par3);
+	
+	if(norm)
+		if(eMax == m_eSup) {
+			//cout << "### " << m_normFactor << " " << eMin << " " << eMax << " " << m_eInf << " " << m_eSup << " " << index << " " << m_par2 << " " << m_par3 << endl;
+			cout << "[" << index << " " << m_par2 << " " << m_par3 << "] " << endl;
+		}
+	
+	return UpdateIntegrator(f, eMin, eMax, m_eInf, m_eSup, norm);
+	
+}
+
+double AlikeNorm::LogParabolanuFnu(double eMin, double eMax, double index, double m_par2, double m_par3, int type )
+{
+	if(type == 0) {
+		TF1 f1("LogParabolanuFnu", "x * ( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		f1.SetParameter(1, m_par2);
+		f1.SetParameter(2, m_par3);
+	
+		TF1 f2("LogParabolanuFnu2", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+		f2.SetParameter(1, m_par2);
+		f2.SetParameter(2, m_par3);
+	
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
+}
+
+double AlikeNorm::UpdateNormPLSuperExpCutOff(double eMin, double eMax, double index, double m_par2, double m_par3, bool norm)
+{
+	if(eMin == eMax) {
+		cout << "!## Error UpdateNormPLSuperExpCutOff: eMin = eMax" << endl;
+		return 0;
+	}
+	//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
+	TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
+	if(std::isnan(index)) {
+		cout << "PLSuperExpCutoff isnan with integrator " << m_integratortype << endl;
+		exit(0);
+	}
+	f.SetParameter(0, index);
+	f.SetParameter(1, m_par2);
+	f.SetParameter(2, m_par3);
+	
+	return UpdateIntegrator(f, eMin, eMax, m_eInf, m_eSup, norm);
+	
+}
+
+double AlikeNorm::PLSuperExpCutOffnuFnu(double eMin, double eMax, double index, double m_par2, double m_par3, int type )
+{
+	if(type == 0) {
+		TF1 f1("PLSuperExpCutoff", "x * x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
+		f1.SetParameter(0, index);
+		f1.SetParameter(1, m_par2);
+		f1.SetParameter(2, m_par3);
+	
+		TF1 f2("PLSuperExpCutoff2", "x^(-[0]) * exp(- pow(x / [1], [2]))", m_eInf, m_eSup);
+		f2.SetParameter(0, index);
+		f2.SetParameter(1, m_par2);
+		f2.SetParameter(2, m_par3);
+	
+		double upd1 = UpdateIntegrator(f1, eMin, eMax, m_eInf, m_eSup, 0);
+		double upd2 = UpdateIntegrator(f2, eMin, eMax, m_eInf, m_eSup, 0);
+		cout << "Int " << upd1 / upd2 << " index " << index <<  endl;
+		return ((upd1 / upd2 ) * (upd1 / upd2 ) / (eMax - eMin) ) * 1.6e-06;
+	}
+	if(type == 1) {
+		double elogcenter = CalcLogBarycenter(eMin, eMax);
+		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+	}
+	return 0;
+}
 
 
 ////////////////////////////////////////////////////
@@ -300,12 +526,16 @@ void AlikePsfSource::Set(
 	double theta,
 	double srcL,
 	double srcB,
-	double index)
+	double index,
+	int typefun,
+	double par2,
+	double par3)
 {
 m_psfTab = psfTab;
 AgileMap::operator=(map);
 SetEnergyRange(eInf, eSup);
 m_theta = theta;
+m_typefun = typefun;
 
 int rhoCount = m_psfTab->RhoCount();
 int psfeCount = m_psfTab->PsfeCount();
@@ -323,10 +553,12 @@ m_specwt = 0.0;
 m_psfArr = 0.0;
 
 /// Calcolo della dispersione energetica totale per ogni canale di energia
-for (int etrue=0; etrue<psfeCount; etrue++)
-	for (int eobs=lowetrue;  eobs<=highetrue; eobs++)
-		m_edpArr[etrue] += m_psfTab->EdpVal(psfEnergies[etrue], psfEnergies[eobs], m_theta, 0.0);
 
+	for (int etrue=0; etrue<psfeCount; etrue++)
+		for (int eobs=lowetrue;  eobs<=highetrue; eobs++)
+			m_edpArr[etrue] += m_psfTab->EdpVal(psfEnergies[etrue], psfEnergies[eobs], m_theta, 0.0);
+
+	
 /** zzz Debug
 cout << "rhoCount: " << rhoCount << endl;
 cout << "psfeCount: " << psfeCount << endl;
@@ -342,35 +574,182 @@ cout << "srcL: " << srcL << endl;
 cout << "srcB: " << srcB << endl;
 */
 
-SetSrcData(srcL, srcB, index, true);
+SetSrcData(srcL, srcB, index, par2, par3, true);
 }
 
 
 
 
-AlikePsfSource::Changes AlikePsfSource::SetSrcData(double srcL, double srcB, double index, bool force)
+AlikePsfSource::Changes AlikePsfSource::SetSrcData(double srcL, double srcB, double index, double par2, double par3, bool force)
 {
+//check parameters
 if (index<0)
 	index = -index;
-if (!force && index==m_index && srcL==m_srcL && srcB==m_srcB)
+	
+if (!force && index==m_index && srcL==m_srcL && srcB==m_srcB && par2 == m_par2 && par3 == m_par3)
 	return NoChanges;
 
 Changes changes = NoChanges;
-if (index!=m_index || force) {
+if (index!=m_index || par2 != m_par2 || par3 != m_par3 || force) { //AB
 	changes = IndexChanged;
 
 	m_index = index;
-	UpdateNorm(GetEmin(), GetEmax(), m_index);
+	m_par2 = par2;
+	m_par3 = par3;
+	
+	if(m_init == false) {
+		m_init_index = m_index;
+		m_init_par2 = m_par2;
+		m_init_par3 = m_par3;
+		m_init = true;
+	}
+		
 	
 	int rhoCount = m_psfTab->RhoCount();
 	int psfeCount = m_psfTab->PsfeCount();
 
 	/// Calcolo del peso di ogni energia in base all'indice spettrale
 	const VecF& psfEnergies = m_psfTab->PsfEnerges();
-	for (int i=0; i<psfeCount-1; ++i)
-		m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
-	m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
-
+	if(m_typefun == 0) {
+		//0 - PL (k E^-{\index})
+		UpdateNorm(GetEmin(), GetEmax(), m_index);
+		for (int i=0; i<psfeCount-1; ++i) {
+			m_specwt[i] = pow(psfEnergies[i], 1.0-m_index) - pow(psfEnergies[i+1], 1.0-m_index);
+			/*
+			TF1 f("PowerLaw", "x^(-[0])", GetEmin(), GetEmax());
+			f.SetParameter(0, m_index);
+			ROOT::Math::WrappedTF1 wf1(f);
+			
+			//ROOT::Math::GaussIntegrator ig;
+			//ig.SetFunction(wf1);
+			//ig.SetRelTolerance(0.00001);
+			
+			ROOT::Math::GaussLegendreIntegrator ig;
+			ig.SetFunction(wf1);
+			ig.SetRelTolerance(0.001);
+			ig.SetNumberPoints(80);
+			m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			*/
+			
+		}
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+		
+		if(psfEnergies[psfeCount-1] == 50000)
+			m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);// - pow(50000, 1.0-m_index);
+		else
+			m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index) - pow(50000, 1.0-m_index);
+		
+	}
+	if(m_typefun == 1) {
+		//cout << "PLExpCutOff"<< endl;
+		//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
+		//cout << GetEmax() << endl;
+		UpdateNormPLExpCutOff(GetEmin(), GetEmax(), m_index, m_par2);
+		for (int i=0; i<=psfeCount-1; ++i) {
+			TF1 f("PLExpCutoff", "x^(-[0]) * exp(- x / [1])", GetEmin(), GetEmax());
+			f.SetParameter(0, m_index);
+			f.SetParameter(1, m_par2);
+			/*
+			ROOT::Math::WrappedTF1 wf1(f);
+			
+			ROOT::Math::GaussIntegrator ig;
+			ig.SetRelTolerance(0.001);
+			
+			
+			 ROOT::Math::GaussLegendreIntegrator ig;
+			 ig.SetRelTolerance(0.001);
+			 //ig.SetRelTolerance(0.000001);
+			 ig.SetNumberPoints(40);
+			
+			
+			ig.SetFunction(wf1);
+			
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+				//m_specwt[psfeCount-1] = 0;
+			else
+				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			 */
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = UpdateIntegrator(f, psfEnergies[i], 50000, GetEmin(), GetEmax(), false);
+			else
+				m_specwt[i] = UpdateIntegrator(f, psfEnergies[i], psfEnergies[i+1], GetEmin(), GetEmax(), false);
+		}
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+	}
+	if(m_typefun == 2) {
+		//cout << "PLSuperExpCutOff"<< endl;
+		//3 - PLSuperExpCutoff k E^-{\index} e^ ( - pow(E / E_c, gamma2) ) -> par2 = E_c, par3 = gamma2, index=gamma1
+		UpdateNormPLSuperExpCutOff(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
+		for (int i=0; i<=psfeCount-1; ++i) {
+			TF1 f("PLSuperExpCutoff", "x^(-[0]) * exp(- pow(x / [1], [2]))", GetEmin(), GetEmax());
+			f.SetParameter(0, m_index);
+			f.SetParameter(1, m_par2);
+			f.SetParameter(2, m_par3);
+			//f.Print("V");
+			/*
+			ROOT::Math::WrappedTF1 wf1(f);
+			
+			ROOT::Math::GaussIntegrator ig;
+			//ig.SetRelTolerance(0.001);
+			ig.SetRelTolerance(0.001);
+			
+			
+			ROOT::Math::GaussLegendreIntegrator ig;
+			ig.SetRelTolerance(0.001);
+			//ig.SetRelTolerance(0.000001);
+			ig.SetNumberPoints(40);
+			
+			
+			ig.SetFunction(wf1);
+			
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			else
+				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			 */
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = UpdateIntegrator(f, psfEnergies[i], 50000, GetEmin(), GetEmax(), false);
+			else
+				m_specwt[i] = UpdateIntegrator(f, psfEnergies[i], psfEnergies[i+1], GetEmin(), GetEmax(), false);
+		}
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+	}
+	if(m_typefun == 3) {
+		UpdateNormLogParabola(GetEmin(), GetEmax(), m_index, m_par2, m_par3);
+		for (int i=0; i<=psfeCount-1; ++i) {
+			TF1 f("LogParabola", "( x / [1] ) ^ ( -( [0] + [2] * log ( x / [1] ) ) )", GetEmin(), GetEmax());
+			f.SetParameter(0, m_index);
+			f.SetParameter(1, m_par2);
+			f.SetParameter(2, m_par3);
+			/*
+			ROOT::Math::WrappedTF1 wf1(f);
+			
+			//ROOT::Math::GaussIntegrator ig;
+			//ig.SetRelTolerance(0.001);
+			
+			
+			//ROOT::Math::GaussLegendreIntegrator ig;
+			//ig.SetRelTolerance(0.001);
+			//ig.SetRelTolerance(0.000001);
+			//ig.SetNumberPoints(800);
+			
+			//ig.SetFunction(wf1);
+			
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = ig.Integral(psfEnergies[i], 50000);
+			else
+				m_specwt[i] = ig.Integral(psfEnergies[i], psfEnergies[i+1]);
+			 */
+			
+			if(i == psfeCount-1)
+				m_specwt[psfeCount-1] = UpdateIntegrator(f, psfEnergies[i], 50000, GetEmin(), GetEmax(), false);
+			else
+				m_specwt[i] = UpdateIntegrator(f, psfEnergies[i], psfEnergies[i+1], GetEmin(), GetEmax(), false);
+			
+		}
+		//m_specwt[psfeCount-1] = pow(psfEnergies[psfeCount-1], 1.0-m_index);
+	}
 	/// Calcolo della psf da normalizzare
 	m_psfArr = 0.0;
 	for (int etrue=0; etrue<psfeCount; ++etrue) {
@@ -419,15 +798,7 @@ if (changes!=NoChanges) {
     double deltaRhoMultInv = 1.0 / deltaRho;
 	for (int c=0; c<count; ++c) {
 		int bin = circle[c];
-/*
-		if (bin>28552) {
-			cerr << "bin=" << bin;
-			cerr << ", i(bin)=" << i(bin);
-			cerr << ", j(bin)=" << j(bin);
-			cerr << ", l(bin)=" << l(bin);
-			cerr << ", b(bin)=" << b(bin);
-			}
-*/
+
 		double srcdist = SphDistDeg(m_srcL, m_srcB, l(bin), b(bin));
 		int psfind = srcdist * deltaRhoMultInv;
 		double resid = (srcdist - rhoArr[psfind]) * deltaRhoMultInv;

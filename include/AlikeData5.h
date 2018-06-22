@@ -31,6 +31,9 @@ const FixFlag AllFixed  = 0;
 const FixFlag FluxFree  = 1;
 const FixFlag PosFree   = 2;
 const FixFlag IndexFree = 4;
+const FixFlag Par2Free =  8;
+const FixFlag Par3Free = 16;
+const FixFlag ForcePosFree = 32;
 /// typedef enum { AllFixed=0, FluxFree = 1, PosFree = 2, IndexFree = 4 } FixFlag;
 
 
@@ -80,16 +83,28 @@ struct SourceData
 	double srcL;
 	double srcB;
 	double index;
+	//0 - PL (k E^-{\index})
+	//1 - PLExpCutoff k E^-{\index} e^ ( - E / E_c ) -> par2 = E_c
+	int typefun; //0 PowerLaw - 1 PLExpCutoff - 2 PLSuperExpCutoff - 3 LogParabola 
+	double par2;
+	double par3;
 
 /// Output data
 	double TS;
 	double gal;
 	double iso;
 	double fluxul;
+	
+	double index_low_limit;
+	double index_upp_limit;
+	double par2_low_limit;
+	double par2_upp_limit;
+	double par3_low_limit;
+	double par3_upp_limit;
 
-	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), TS(0), gal(0), iso(0), fluxul(0) {}
+	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), typefun(0), par2(0), par3(0), TS(0), gal(0), iso(0), fluxul(0), index_low_limit(0.5), index_upp_limit(5.0), par2_low_limit(20.0), par2_upp_limit(10000.0), par3_low_limit(0.0), par3_upp_limit(100.0) {}
 	SourceData(const SourceData& another):
-		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul) {}
+		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), typefun(another.typefun), par2(another.par2), par3(another.par3), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul), index_low_limit(another.index_low_limit), index_upp_limit(another.index_upp_limit), par2_low_limit(another.par2_low_limit), par2_upp_limit(another.par2_upp_limit), par3_low_limit(another.par3_low_limit), par3_upp_limit(another.par3_upp_limit) {}
 	
 	/// void GetResultsFrom(const AlikeSourceMap& map);
 	

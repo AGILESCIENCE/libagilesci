@@ -425,3 +425,42 @@ for (int i=0; i<rows; ++i)
 		}
 }
 
+double AgileMap::SumBin(double lng, double lat, double radius) const {
+	double greyLevel;
+	double binSum = 0;
+	
+	if(IsRadiusInside(lng, lat, radius)) {
+		for(int r = 0; r < Rows(); r++){
+			for(int c=0; c < Cols(); c++){
+				greyLevel = (*this)(r, c);
+				if(greyLevel>0 && SrcDist(r,c,lng,lat) < radius){
+					binSum+=greyLevel;
+				}
+			}
+		}
+		
+	}else{
+		return -1;
+	}
+	return binSum;
+}
+
+bool AgileMap::IsRadiusInside(double lng, double lat, double radius) const {
+	double distSx;
+	double distDx;
+	double distUp;
+	double distDown;
+	
+	int x, y;
+	GetRowCol(lng,lat,&x,&y);
+	
+	distSx =  sqrt(pow(double(0-x),2));
+	distDx =  sqrt(pow(double(Cols()-1-x),2));
+	distUp =  sqrt(pow(double(0-y),2));
+	distDown = sqrt(pow(double(Rows()-1-y),2));
+	if(distSx < radius || distDx < radius || distUp < radius || distDown < radius)
+		return false;
+	else
+		return true;
+}
+

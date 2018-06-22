@@ -32,6 +32,8 @@
 /// #include "fitsio.h"
 #include "FitsUtils.h"
 
+#include "TH1D.h"
+
 #include "CalibUtils.h"
 
 
@@ -125,6 +127,7 @@ VecL naxes;
 if (GetImageSize(reffFile, naxes)) {
 	int anynul = 0;
 	m_aeffgrid.ResizeTo(naxes[2], naxes[1], naxes[0]);
+	cout << "Dimension of m_aeffgrid: " <<m_aeffgrid.Dim(0) << " " << m_aeffgrid.Dim(1) << " " << m_aeffgrid.Dim(2) << endl;
 	fits_read_3d_flt(reffFile, 0, 0, naxes[2], naxes[1], naxes[2], naxes[1], naxes[0], m_aeffgrid/*.Buffer()*/, &anynul, reffFile);
 	
 	reffFile.MoveAbsHDU(3);
@@ -230,6 +233,7 @@ AeffGridAverage::AeffGridAverage(const char* aeffFileName)
 {
 m_emax = m_energy.Last();
 m_avgValues.ResizeTo(m_aeffgrid.Dim(0), m_aeffgrid.Dim(1));
+	cout << "Dimension of m_avgValues: " << m_avgValues.Dim(0) << " " << m_avgValues.Dim(1) << endl;
 MakeGridAverage();
 }
 
@@ -237,6 +241,7 @@ AeffGridAverage::AeffGridAverage(const char* aeffFileName, float emin, float ema
  : AeffGrid(aeffFileName), m_hasEdp(false), m_emin(emin), m_emax(emax), m_index(index)
 {
 m_avgValues.ResizeTo(m_aeffgrid.Dim(0), m_aeffgrid.Dim(1));
+	cout << "Dimension of m_avgValues: " << m_avgValues.Dim(0) << " " << m_avgValues.Dim(1) << endl;
 MakeGridAverage();
 }
 
@@ -245,6 +250,7 @@ int AeffGridAverage::Read(const char* aeffFileName, float emin, float emax, floa
 int error = AeffGrid::Read(aeffFileName);
 if (!error) {
 	m_avgValues.ResizeTo(m_aeffgrid.Dim(0), m_aeffgrid.Dim(1));
+	cout << "Dimension of m_avgValues: " << m_avgValues.Dim(0) << " " << m_avgValues.Dim(1) << endl;
 	SetEIndex(emin, emax, index);
 	}
 return error;
@@ -264,62 +270,6 @@ if (!error)
 return error;
 }
 
-/*
-static float WeightedAvg(const VecD& eneArr, const float* aeffArr, double index)
-{
-if (index < 0)
-	index = -index;
-double result = aeffArr[0];
-if (eneArr.Size()>1) {
-	double specwt = 1.0;
-	double coeff = 0;
-	for (int i=0; i<eneArr.Size(); i++) {
-		if (i+1==eneArr.Size())
-			specwt *= pow(eneArr[i-1] / eneArr[i], 1.0-index);
-		else
-			specwt = pow(eneArr[i], 1.0-index) - pow(eneArr[i+1], 1.0-index) ;
-		if (i==0)
-			result = specwt * aeffArr[i];
-		else
-			result += specwt * aeffArr[i];
-		coeff += specwt;
-		}
-	result /= coeff;
-	}
-return result;
-}
-
-int AeffGridAverage::MakeGridAverage()
-{
-int resultMask = 0;
-
-int iMin = m_energy.GeomIndex(m_emin);
-if (m_emin!=m_energy[iMin])
-	resultMask = resultMask | 1;	/// Using different energy lower bound
-
-int iMax = m_energy.Size()-1;
-if (m_emax<=m_energy[iMax]) {
-	iMax = m_energy.GeomIndex(m_emax);
-	if (m_emax!=m_energy[iMax])
-		resultMask = resultMask | 2;	/// Using different energy upper bound
-	if (iMax>iMin)
-		--iMax;
-	}
-else
-	resultMask = resultMask | 4;	/// Upper bound treated as infinity
-
-VecD evect(iMax-iMin+1);
-for (int l=iMin ; l <= iMax; ++l)
-	evect[l-iMin] = m_energy[l];
-
-for (int i=0; i<m_avgValues.Dim(0); i++)
-	for (int j=0; j<m_avgValues.Dim(1); j++)
-		m_avgValues(i,j) = WeightedAvg(evect, &m_aeffgrid(i,j,iMin), m_index);
-return resultMask;
-}
-*/
-
-
 
 int AeffGridAverage::MakeGridAverage()
 {
@@ -336,42 +286,61 @@ if (m_emax<=m_energy[iMax]) {
 	if (m_emax!=m_energy[iMax])
 		resultMask = resultMask | 2;	/// Using different energy upper bound
 	if (iMax>iMin)
-		--iMax;
+		--iMax; //non capisco perche' bisogna sottrarre 1 !!!!!!!!!!!!!!!!!!!!!!	(A)
+		//iMax;
 	}
 else
 	resultMask = resultMask | 4;	/// Upper bound treated as infinity
 
+cout << "MakeGridAverage2: " << m_energy[iMin] <<  " " << m_energy[iMax] << endl;
 /// Calcolo del peso di ogni energia in base all'indice spettrale
 VecF specwt(eneChanCount);
 for (int i=0; i<eneChanCount-1; i++)
 	specwt[i] = pow(double(m_energy[i]), 1.0-m_index) - pow(double(m_energy[i+1]), 1.0-m_index);
-specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index);
+specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index) - pow(double(50000), 1.0-m_index);
 
 m_avgValues = 0.0f;
 float normsum = 0;
 for (int eobs = iMin; eobs <= iMax; eobs++)
 	normsum += specwt[eobs];
 
-int numtheta = m_avgValues.Dim(0);
-int numphi = m_avgValues.Dim(1);
+int numtheta = m_avgValues.Dim(1);
+int numphi = m_avgValues.Dim(0);
+//cout << "NUMTHETA: " << numtheta << endl;
+//cout << "NUMPHI: " << numphi << endl;
 for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 	for (int phiind = 0; phiind < numphi; phiind++) {
+		int phiindcor = phiind%2?phiind-1:phiind;
 		/// Calcolo della aeff da normalizzare
 		VecF edpArr(eneChanCount);
 		edpArr = 0.0f;
 		float avgValue = 0.0f;
 		for (int etrue = 0; etrue < eneChanCount; etrue++) {
-			if (m_hasEdp)
+			if (m_hasEdp) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
-				for (int eobs = iMin;  eobs <= iMax; eobs++)
-					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiind]);
-			else
+				//cout << "EOBS " << iMin << " " << m_energy[iMin] << " " << iMax << " " << m_energy[iMax] << endl;
+				for (int eobs = iMin;  eobs <= iMax; eobs++) {
+					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]);
+					//cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiindcor << " " << m_phi[phiindcor] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]) << endl;
+				}
+				//cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
+			} else
 				edpArr[etrue] = (etrue<iMin || etrue>iMax) ? 0.0f : 1.0f;
-			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(thetaind, phiind, etrue);
-			}
-		m_avgValues(thetaind, phiind) = avgValue/normsum;
+			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(phiind, thetaind, etrue);
+			/*cout << "m_aeffgrid " << (int) m_phi[phiind] << " " << (int) m_theta[thetaind] << " " << (int) m_energy[etrue] << "  - " << m_aeffgrid(phiind, thetaind, etrue) << endl;
+			if(m_aeffgrid(phiind, thetaind, etrue) == 0)
+				cout << "ERROR#################" << endl;
+			 */
 		}
+		m_avgValues(phiind, thetaind) = avgValue/normsum;
 	}
+}
+	/*
+	cout << "AVGVALUES" << endl;
+	for (int thetaind = 0; thetaind < numtheta; thetaind++)
+		for (int phiind = 0; phiind < numphi; phiind++)
+			cout << "TH " << thetaind << " " << m_theta[thetaind] << " - PH " << phiind << " " << m_phi[phiind] << " " << m_avgValues(phiind, thetaind) << endl;
+	*/
 return resultMask;
 }
 
@@ -589,6 +558,7 @@ psfFile.MoveAbsHDU(1);
 VecL naxes;
 if (GetImageSize(psfFile, naxes)) {
 	m_psfgrid.ResizeTo(naxes[4], naxes[3], naxes[2], naxes[1], naxes[0]);
+	cout << "dimension of m_psfgrid " << m_psfgrid.Dim(0) << " " << m_psfgrid.Dim(1) << " " << m_psfgrid.Dim(2) << " " << m_psfgrid.Dim(3) << " " << m_psfgrid.Dim(4) << endl;
 	long nelements = m_psfgrid.Size();
 	int anynul = 0;
 	fits_read_img_flt(psfFile, 0, 1, nelements, 0, m_psfgrid/*.Buffer()*/, &anynul, psfFile);
@@ -873,10 +843,12 @@ return psi;
 
 double EdpGrid::Val(double trueE, double obsE, double theta, double phi) const
 {
-int l = m_edptrueenergy.GeomIndex(trueE);
-int m = m_edpobsenergy.GeomIndex(obsE);
-int n = m_edptheta.LinearIndex(theta);
-int p = m_edpphi.LinearIndex(phi);
+int l = m_edptrueenergy.GeomIndex(trueE);//16
+int m = m_edpobsenergy.GeomIndex(obsE);//16
+int n = m_edptheta.LinearIndex(theta);//19
+int p = m_edpphi.LinearIndex(phi);//8
+//8 19 16 16
+//phi, theta, obs en, true en
 return m_edpgrid(p,n,m,l);
 }
 
@@ -894,15 +866,60 @@ edpFile.MoveAbsHDU(1);
 VecL naxes;
 if (GetImageSize(edpFile, naxes)) {
 	m_edpgrid.ResizeTo(naxes[3], naxes[2], naxes[1], naxes[0]);
+	cout << "Dimension of m_edpgrid: " <<m_edpgrid.Dim(0) << " " << m_edpgrid.Dim(1) << " " << m_edpgrid.Dim(2) << " " << m_edpgrid.Dim(3)  << endl;
 	long nelements = m_edpgrid.Size();
 	int anynul = 0;
 	fits_read_img_flt(edpFile, 0, 1, nelements, 0, m_edpgrid/*.Buffer()*/, &anynul, edpFile);
 	edpFile.MoveAbsHDU(3);
 	ReadFloatArray(edpFile, "TRUE_ENERGY", m_edptrueenergy);
 	ReadFloatArray(edpFile, "OBS_ENERGY_CHANNEL", m_edpobsenergy);
+	m_edpobsenergy[0] = 10; //PATCH AB TO EDP
 	ReadFloatArray(edpFile, "POLAR_ANGLE", m_edptheta);
 	ReadFloatArray(edpFile, "AZIMUTH_ANGLE", m_edpphi);
 	}
+	
+	
+	int edpqueuecorrection = 0;
+	//Correction factor
+	if(edpqueuecorrection > 0) {
+		int numtheta = m_edpgrid.Dim(1);
+		int numphi = m_edpgrid.Dim(0);
+		int eneChanCount = m_edptrueenergy.Dim(0);
+		
+		for (int thetaind = 0; thetaind < numtheta; thetaind++) {
+			for (int phiind = 0; phiind < numphi; phiind++) {
+			
+			double val3 = 0;
+			
+			for (int etrue = 0; etrue < eneChanCount; etrue++) {
+				TH1D* h1 = new TH1D("title", "title", eneChanCount, 0, eneChanCount);
+				TH1D* h2 = 0;
+				for (int eobs = 0;  eobs < eneChanCount; eobs++) {
+					val3 = m_edpgrid(phiind, thetaind, eobs, etrue);//CORRETTO
+					h1->SetBinContent(eobs+1, val3);
+					if(eobs == eneChanCount-2) {
+						h2 = (TH1D*) h1->Clone("edp2");
+						h2->SetBinContent(eobs+1, h1->GetBinContent(eneChanCount-3+1) / 2.0);
+					}
+					
+					if(eobs == eneChanCount-1) {
+						h2->SetBinContent(eobs+1, h1->GetBinContent(eneChanCount-3+1) / 4.0);
+						double scalefactor = h2->Integral();
+						h2->Scale(1.0/scalefactor);
+						
+						for (int eobs2 = 0;  eobs2 < eneChanCount; eobs2++) {
+							m_edpgrid(phiind, thetaind, eobs2, etrue) = h2->GetBinContent(eobs2+1);
+						}
+					}
+					
+				}
+				
+			}
+				
+			}
+		}
+	}
+
 return edpFile.Status();
 }
 
