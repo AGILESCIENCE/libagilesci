@@ -177,11 +177,11 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(int fluxcorrection, double edp
 		cout << m_label << " [";
 		for (int i=iMin; i<=iMax; i++) {
 			cout << edptrueenergy[i] << "-" << edptrueenergy[i+1] << " ";
-			double udp1;
+			double udp1 = 0;
 			double lastenergy = edptrueenergy[i+1];
 			if(i == iMax && GetEmax() == 50000)
 				lastenergy = 50000;
-		
+
 			if(m_typefun == 0) {
 				udp1 = UpdateNorm(edptrueenergy[i], lastenergy, indexstd, 0);
 			}
@@ -799,11 +799,11 @@ for (int map=0; map<m_mapCount; ++map) {
 	m_expMaps[map] = mapData.ExpMap(map);
 	m_gasMaps[map] = mapData.GasMap(map);
 	}
-	
+
 //sum cts and exp maps
 	m_sumCts = new AgileMap(mapData.CtsMap(0));
 	m_sumExp = new AgileMap(mapData.ExpMap(0));
-	
+
 	double emin = m_sumCts->GetEmin();
 	double emax = m_sumCts->GetEmax();
 	double fovmin = m_sumCts->GetFovMin();
@@ -840,9 +840,9 @@ for (int map=0; map<m_mapCount; ++map) {
 	m_sumCts->SetTT(tstart, tstop);
 	m_sumExp->SetTT(tstart, tstop);
 
-	
+
 //---
-	
+
 m_galSrc = new AlikeDiffMap[m_mapCount];
 m_isoSrc = new AlikeDiffMap[m_mapCount];
 for (int map=0; map<m_mapCount; ++map) {
@@ -985,7 +985,7 @@ if (m_logFile)
 
 bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
 	m_minimizerdefstrategy = minimizerdefstrategy;
-	
+
 	m_integratortype = integratortype;
 	cout << "## Set integrator type: " << m_integratortype << endl;
 	/*
@@ -1898,22 +1898,22 @@ double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, doub
 	//get float src_cnt and float mres
 	int x=0;
 	int y=0;
-	
+
 	int ulcl2 = (int) ulcl;
 	double alpha = 1.0-0.955;
-	
+
 	if(ulcl2 == 3)
 		alpha = 1.0-0.997; //UL al 95% di confidenza (2 sigma)
 	if(ulcl2 == 2)
 		alpha = 1.0-0.955; //UL al 95% di confidenza (2 sigma)
 	if(ulcl2 == 1)
 		alpha = 1.0-0.683; //UL al 68% di confidenza (1 sigma)
-	
-	
+
+
 	bool inside = ctsmap.GetRowCol(lng,lat,&x,&y);
 	if(!inside)
 		return -1;
-	
+
 	double emin = ctsmap.GetEmin();
 	double rads = 2;
 	double radsfact = 1;
@@ -1932,56 +1932,56 @@ double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, doub
 	double src_cnt = ctsmap.SumBin(lng, lat, rads);
 	//= ctsmap.SumBin(lng, lat, 2.0);
 	double area = ctsmap.Area(x, y);
-	
+
 	double exp = EvalExposure(lng, lat, expmap);
-	
+
 	if(exp <= 0)
 		return -1;
-	
+
 	//part 1
-	
+
 	Double_t non, noff, errnoff;
-	
-	
+
+
 	Float_t ratio_onoff = 4./100.;
-	
+
 	//AgileMap ha area(i,j)
 	noff=(exp*area*(iso*1.e-5 + gal))*ratio_onoff;
 	errnoff=sqrt(noff);
 	cout << "NOFF: " << noff << endl;
-	
+
 	non = src_cnt;
-	
+
 	//part 2
 	//input const Double_t non, const Double_t noff, const Double_t errnoff, const Float_t alpha=0.05
 	Int_t nbins = 4000;
 	Double_t minabar  = non-noff;
-	
+
 	//    if (minabar < 0.)
 	//      minabar = 0.;
 	cout << "EXCESS: " << minabar << endl;
-	
+
 	minabar = -minabar;
-	
+
 	if ((non+noff) < 0.)
 	{
 		cout << "ERROR: Cannot determine upper limit: background plus signal smaller 0" << endl;
 		return -1.;
 	}
-	
+
 	Float_t sigma   = TMath::Sqrt(non+(errnoff*errnoff));
 	cout << "sigma: " << sigma << endl;
-	
+
 	Float_t diff = TMath::Abs(non-noff);
 	cout << "diff: " << diff << endl;
-	
+
 	//TH1F ha("ha","",nbins,0., 50. * ((diff > 1.0) ? diff : 1.0));
-	
+
 	TH1F ha("ha","",nbins,0., 50. * diff);
-	
+
 	Float_t a = 0.;
 	Int_t i;
-	
+
 	Double_t quot = TMath::Erfc(minabar /sigma / TMath::Sqrt(2.));
 	cout << "quot: " << quot << endl;
 	if (quot < 0.0000001)
@@ -1989,9 +1989,9 @@ double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, doub
 		cout << "Cannot determine upper limit: Quotient too small" << endl;
 		return -1.;
 	}
-	
+
 	//    cout << "QUOT: " << quot << endl;
-	
+
 	for (i=1; i<nbins; i++)
 	{
 		a = ha.GetBinCenter(i);
@@ -1999,22 +1999,22 @@ double helene( AgileMap& ctsmap,  AgileMap& expmap, double lng, double lat, doub
 		if ((denom / quot) < alpha)
 			break;
 	}
-	
+
 	//    cout << "FOUND UL: " << a << endl;
 	//    cout << "IN BIN:  " << i << endl;
-	
+
 	if (i == nbins)
 	{
 		cout << "ERROR: Calculation of UL failed!!! Number of bins too low" << endl;
 		a = 0.;
 	}
-	
+
 	cout << "UL CTS: " << a << endl;
 	cout << "UL flux: " << a/exp << endl;
 
-	
+
 	return a/exp;
-	
+
 }
 
 
@@ -2233,7 +2233,7 @@ else {
 /// This function is called during the first fitting loop if (Fixflag&(PosFree|IndexFree))
 void RoiMulti::FitPositionIndex(int source, const char* fitOpt)
 {
-	
+
 ReleaseSrcFlux(source);
 for (int i=0; i<SrcCount(); ++i) {
 	if (m_sources[i].GetFixflag()) {
@@ -2475,8 +2475,8 @@ cout << endl << "Begin second loop" << endl << endl;
 		cout << endl;
 	}
 	cout << endl;
-	
-	
+
+
 
 ResetFitStatus();
 ResetFitCts();
@@ -2523,7 +2523,7 @@ for (int source=0; source<SrcCount(); ++source) {
 		 2 powerlaw fit
 		 */
 		if(m_galmode2 > 0) {
-			bool nulhyp;
+			bool nulhyp = false;
 			if(m_galmode2 == 1 || m_galmode2 == 2)
 				nulhyp = true;
 			if(m_galmode2 == 3)
@@ -2536,7 +2536,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				for (int m=0; m<m_mapCount; ++m)
 					edges[m] = m_galSrc[m].GetEmin();
 				edges[m_mapCount] = m_galSrc[m_mapCount-1].GetEmax();
-				
+
 				double meangal = 0;
 				for (int m=0; m<m_mapCount; ++m) {
 					meangal += GetFinalDPM(false, m, source, nulhyp);
@@ -2592,7 +2592,7 @@ for (int source=0; source<SrcCount(); ++source) {
 		 2 powerlaw fit
 		 */
 		if(m_isomode2 > 0) {
-			bool nulhyp;
+			bool nulhyp = false;
 			if(m_isomode2 == 1 || m_isomode2 == 2)
 				nulhyp = true;
 			if(m_isomode2 == 3)
@@ -2605,7 +2605,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				for (int m=0; m<m_mapCount; ++m)
 					edges[m] = m_isoSrc[m].GetEmin();
 				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
-				
+
 				double meaniso = 0;
 				for (int m=0; m<m_mapCount; ++m) {
 					meaniso += GetFinalDPM(true, m, source, nulhyp);
@@ -2621,7 +2621,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				for (int m=0; m<m_mapCount; ++m)
 					edges[m] = m_isoSrc[m].GetEmin();
 				edges[m_mapCount] = m_isoSrc[m_mapCount-1].GetEmax();
-				
+
 				/*
 				//linear regression
 				double xlr[m_mapCount];
@@ -2644,7 +2644,7 @@ for (int source=0; source<SrcCount(); ++source) {
 				ROOT::Math::MinimizerOptions::SetDefaultStrategy(m_minimizerdefstrategy);
 				for (int m=0; m<m_mapCount; ++m) {
 					double val = f3(edges[m] + (edges[m+1]-edges[m])/2);
-					
+
 					cout << "iso coeff " << edges[m] + (edges[m+1]-edges[m])/2 << " ori " << GetFinalDPM(true, m, source, nulhyp) << " new "  << val << endl;
 					//" linreg " << mm1 * (edges[m] + (edges[m+1]-edges[m])/2) + b1 << endl;
 					m_isoSrc[m].SetCoeff(val);
@@ -2674,7 +2674,7 @@ for (int source=0; source<SrcCount(); ++source) {
 
 		//fix gal and iso1
 		if(m_galmode2 > 0) {
-			bool nulhyp;
+			bool nulhyp = false;
 			if(m_galmode2 == 1 || m_galmode2 == 3)
 				nulhyp = false;
 			if(m_galmode2 == 2)
@@ -2734,7 +2734,7 @@ for (int source=0; source<SrcCount(); ++source) {
 
 		}
 		if(m_isomode2 > 0) {
-			bool nulhyp;
+			bool nulhyp = false;
 			if(m_isomode2 == 1 || m_isomode2 == 3)
 				nulhyp = false;
 			if(m_isomode2 == 2)
@@ -3245,7 +3245,7 @@ for (int i=0; i<SrcCount(); ++i) {
 	cout << "Total CNT = " << cnt << endl;
 	}
 
-	
+
 
 for (int i=0; i<m_extCount; ++i)
 	if (m_extSrcArr[i].GetFixflag())
@@ -3683,7 +3683,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << m_inSrcDataArr[i].typefun;
 	srcout << " " << m_inSrcDataArr[i].par2;
 	srcout << " " << m_inSrcDataArr[i].par3;
-	
+
 	srcout << " " << m_galmode2;
 	srcout << " " << m_galmode2fit;
 	srcout << " " << m_isomode2;
@@ -3695,13 +3695,13 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " " << minThreshold;
 	srcout << " " << maxThreshold;
 	srcout << " " << squareSize;
-	
+
 	srcout	<< endl;
 	/// zzz m_sources[i].PrintAbphi();
 	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
 
 	srcout << sqrt(m_sources[i].GetTS()) << endl << m_sources[i].GetSrcL() << " " << m_sources[i].GetSrcB() << " " << dist << endl;
-	
+
 	double ulbayes = 0;
 	for (int m=0; m<m_mapCount; ++m) {
 		double gal0 = GetFinalDPM(false, m, i, true);
@@ -3716,7 +3716,7 @@ for (int i=0; i<m_srcCount; ++i) {
 			break;
 		}
 		ulbayes += resf;
-		
+
 	}
 	cout << "helene   " << ulbayes << endl;
 	if (ellipse.horAxis!=0 && ellipse.verAxis!=0) {
