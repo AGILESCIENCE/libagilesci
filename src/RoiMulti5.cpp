@@ -3815,9 +3815,11 @@ for (int i=0; i<m_srcCount; ++i) {
 	
 
 	
-	double fluxc = m_sources[i].GetFlux() / expcor;
-	for (int map=0; map<m_mapCount; ++map)
-		srcout <<  fluxc*m_sources[map*m_srcCount+i].GetNormFactor() << ","
+	double fluxc = m_sources[i].GetFlux();
+	for (int map=0; map<m_mapCount; ++map) {
+		const char* sep[2] = {"", ","};
+		srcout << sep[bool(map)] << fluxc*m_sources[map*m_srcCount+i].GetNormFactor() * exposure / expcor;
+	}
 	
 	srcout << endl;
 
@@ -4589,8 +4591,11 @@ if (SrcCount() && m_mapCount>1) {
 			htmlout << "<tr><td>L " << m_sources[i].GetLabel() << "</td>";
 			double flux = m_sources[i].GetFlux();
 			/// double index = m_sources[i].GetIndex();
-			for (int map=0; map<chCount; ++map)
-				htmlout << "<td>" << flux*m_sources[map*m_srcCount+i].GetNormFactor() << "</td>";
+			for (int map=0; map<chCount; ++map) {
+				double exposure = GetTotalExposure(i);
+				double expcor = GetTotalExposureSpectraCorrected(i);
+				htmlout << "<td>" << flux*m_sources[map*m_srcCount+i].GetNormFactor() * exposure/expcor << "</td>";
+			}
 			htmlout << "</tr>" << endl;
 			}
 		htmlout << "</table>" << endl;
