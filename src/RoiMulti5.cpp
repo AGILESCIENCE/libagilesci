@@ -466,7 +466,9 @@ RoiMulti::RoiMulti():
 	m_isomode2fit(0),
 	m_edpcorrection(0),
 	m_fluxcorrection(0),
-	m_minimizerdefstrategy(2)
+	m_minimizerdefstrategy(2),
+
+	m_contourpoints(40)
 
 {
 	m_countsHist.Sumw2();
@@ -985,7 +987,9 @@ if (m_logFile)
 
 bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
 	m_minimizerdefstrategy = minimizerdefstrategy;
-
+	m_minimizertype = minimizertype;
+	m_minimizeralg = minimizeralg;
+	m_deftol = deftol;
 	m_integratortype = integratortype;
 	cout << "## Set integrator type: " << m_integratortype << endl;
 	/*
@@ -2430,7 +2434,7 @@ cout << "Finding contour for source " << source+1 << endl;
 for(int i=0; i<m_mapCount*2; i++) // Fix gal and iso parameters
     gMinuit->FixParameter(i);
 s_fitterIterations = 0;
-TGraph* graph = (TGraph*)gMinuit->Contour(40, SrcLPar(source), SrcBPar(source));
+TGraph* graph = (TGraph*)gMinuit->Contour(m_contourpoints, SrcLPar(source), SrcBPar(source));
 int status = gMinuit->GetStatus(); // we are avoiding m_status this time because overlap with the step before in the loop2
 m_sources[source].SetStatus(4, status);
 m_sources[source].SetCts(4, m_cts);
@@ -2957,7 +2961,7 @@ Int_t RoiMulti::Fit(const char* opt, int source, bool zero, int flags, Double_t*
     m_model.Print("V");
 #endif
 	std::cout << "### pre-fitting parameters" << std::endl;
-	m_model.Print("V");
+	//m_model.Print("V");
 
 /// zzz
 for (int i=0; i<SrcCount(); ++i) {
@@ -3639,7 +3643,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		continue;
 	string srcoutname(string(fileName) + "_" + m_sources[i].GetLabel() + ".source");
 	ofstream srcout(srcoutname.c_str());
-	srcout << "! Label Fix index ULConfidenceLevel SrcLocConfLevel start_l start_b start_flux [ lmin,  lmax ] [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor integratortype expratioEval expratio_minthr expratio_maxthr expratio_size [ index_min , index_max ] [ par2_min , par2_max ] [ par3_min , par3_max ]" << endl;
+	srcout << "! Label Fix index ULConfidenceLevel SrcLocConfLevel start_l start_b start_flux [ lmin,  lmax ] [ bmin, bmax ] typefun par2 par3 galmode2 galmode2fit isomode2 isomode2fit edpcor fluxcor integratortype expratioEval expratio_minthr expratio_maxthr expratio_size [ index_min , index_max ] [ par2_min , par2_max ] [ par3_min , par3_max ] contourpoints minimizerdefstrategy" << endl;
 	srcout << "! sqrt(TS)" << endl ;
 	srcout << "! L_peak B_peak Dist_from_start_position" << endl;
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
@@ -3702,6 +3706,8 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << " ] [ " << m_inSrcDataArr[i].par3_low_limit;
 	srcout << " , " << m_inSrcDataArr[i].par3_upp_limit;
 	srcout << " ] ";
+	srcout << " " << m_contourpoints;
+	srcout << " " << m_minimizerdefstrategy;
 	srcout	<< endl;
 	/// zzz m_sources[i].PrintAbphi();
 	double dist = SphDistDeg(m_sources[i].GetSrcL(), m_sources[i].GetSrcB(), m_inSrcDataArr[i].srcL, m_inSrcDataArr[i].srcB);
