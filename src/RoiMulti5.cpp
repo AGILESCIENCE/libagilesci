@@ -1096,6 +1096,12 @@ else if (chatter!=1) {
 SetSources(srcDataArr, ranal, ulcl, loccl);
 InitParams();
 
+	double corr = 0;
+	for (int i=0; i<m_srcCount; ++i) {
+		corr = GetSpectraCorrectionFactor(i);
+		cout << i+1 << " " << m_inSrcDataArr[i].label << " cf " << corr << endl;
+	}
+	
 return DoFit(option1, option2, sourceCheckTS, minSourceTS);
 }
 
@@ -1223,7 +1229,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		cout << " free (" << m_inSrcDataArr[i].par3_low_limit << ", " << m_inSrcDataArr[i].par3_upp_limit << ") ";
 	else
 		cout << " fixed ";
-
+	
 	cout << endl;
 	}
 
@@ -1242,17 +1248,19 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 		Double_t exposure = EvalExposure(srcL, srcB, expMap);
 		m_sources[src].Set(&m_psfTab, expMap, m_energyInf, m_energySup, theta, srcL, srcB, index, typefun, par2, par3, flux, exposure, m_integratortype);
 
-	double cnt = 0;
-	for (int r=0; r<m_sources[src].Rows(); ++r)
-		for (int c=0; c<m_sources[src].Cols(); ++c)
-			cnt += m_sources[src](r,c);
-	cout << "Total SRC = " << cnt << endl;
+		double cnt = 0;
+		for (int r=0; r<m_sources[src].Rows(); ++r)
+			for (int c=0; c<m_sources[src].Cols(); ++c)
+				cnt += m_sources[src](r,c);
+		
+		cout << "Total SRC = " << cnt << endl;
 
 		m_sources[src].SetFixflag(m_inSrcDataArr[i].fixflag);
 		m_sources[src].SetLabel(m_inSrcDataArr[i].label);
 		m_sources[src].SetMinTS(m_inSrcDataArr[i].minTS);
 		m_sources[src].SetULCL(ulcl*ulcl);
 		m_sources[src].SetLocCL(loccl);
+		
 		++src;
 		}
 	}
@@ -1281,6 +1289,16 @@ double RoiMulti::GetTotalExposureSpectraCorrected(int source) const
 			exposure +=  m_sources[map*m_srcCount+source].GetExp()*m_sources[map*m_srcCount+source].GetNormFactor() / m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection, m_edpcorrection);
 	//cout << "EXPC " << exposure << endl;
 	return exposure;
+}
+
+double RoiMulti::GetSpectraCorrectionFactor(int source) const
+{
+	double corr = 0;
+	if (source<m_srcCount && source>=0)
+		for (int map=0; map<m_mapCount; ++map)
+			corr +=  m_sources[map*m_srcCount+source].GetSpectraCorrectionFactor(m_fluxcorrection, m_edpcorrection);
+	//cout << "EXPC " << exposure << endl;
+	return corr;
 }
 
 

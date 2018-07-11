@@ -479,6 +479,7 @@ public:	/// Collecting the results
 	const AlikeSourceMap& GetSource(int source) const { return m_sources[source%m_srcCount]; }
 	double GetTotalExposure(int source) const;
 	double GetTotalExposureSpectraCorrected(int source) const;
+	double GetSpectraCorrectionFactor(int source) const;
 	Double_t GetSourceTS(const char* label) const;
 
 private:	/// Internal operations
