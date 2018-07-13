@@ -1093,14 +1093,18 @@ else if (chatter!=1) {
 	opt.Print();
 	 */
 
-SetSources(srcDataArr, ranal, ulcl, loccl);
-InitParams();
+	SetSources(srcDataArr, ranal, ulcl, loccl);
 
-	double corr = 0;
-	for (int i=0; i<m_srcCount; ++i) {
-		corr = GetSpectraCorrectionFactor(i);
-		cout << i+1 << " " << m_inSrcDataArr[i].label << " cf " << corr << endl;
+	if(m_fluxcorrection == 2) {
+		cout << "##### Correction factor of fluxes in input based on spectral shape." << endl;
+		double corr = 0;
+		for (int i=0; i<m_srcCount; ++i) {
+			corr = GetSpectraCorrectionFactor(i);
+			cout << i+1 << " " << m_inSrcDataArr[i].label << " cf " << corr << endl;
+			m_sources[i].CorrectFlux(corr);
+		}
 	}
+	InitParams();
 	
 return DoFit(option1, option2, sourceCheckTS, minSourceTS);
 }

@@ -167,6 +167,11 @@ public:	/// Data Access
 	void SetFluxlo(Double_t fluxlo) { m_fluxlo = fluxlo; }
 	void SetFluxhi(Double_t fluxhi) { m_fluxhi = fluxhi; }
 	void SetFluxul(Double_t fluxul) { m_fluxul = fluxul; }
+	void CorrectFlux(double corr) {
+		cout << "Warning: flux correction for spectral shape: done! Original value " << m_flux;
+		m_flux /= corr; m_fluxerr /= corr; m_fluxlo /= corr; m_fluxhi /= corr; m_fluxul /= corr;
+		cout << " new value " << m_flux << endl;
+	}
 
 /**
 	Double_t GetCounts() const { return m_flux*m_exposure; }
