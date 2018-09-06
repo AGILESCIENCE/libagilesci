@@ -19,6 +19,10 @@
 
 namespace eval
 {
+	bool YTolTest(double ra_y, double dec_y, double ra_y0, double dec_y0, double y_tol);
+	bool EarthTolTest(double earth_ra, double earth_dec, double earth_ra0, double earth_dec0, double earth_tol);
+	bool AlbTest(double ra, double dec, double earth_ra, double earth_dec, double albrad);
+	bool FovTest(Mapspec &maps, long i, double theta);
 
 bool LoadTimeList(const char* timelist, Intervals &intervals, double &tmin, double &tmax);
 
