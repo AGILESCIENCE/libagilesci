@@ -1379,8 +1379,10 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         long nrows;
         if(evtfilter == 0)
           fits_get_num_rows(templateFits, &nrows, &status);
-        else
+        else {
+          evtfilter->query(tmin, tmax, phasecode, filtercode, emin, emax, albrad, fovradmin, fovradmax );
           nrows = evtfilter->time.size();
+        }
 #ifdef DEBUG
         cout << "Reading all " << nrows << " rows" << endl;
 #endif
@@ -1415,6 +1417,8 @@ int EvalCountsInRadius(const char *outfile, double tmin,
               fits_read_col(templateFits, TDOUBLE, thetaColumn, k+1, 1, 1, NULL, &thetac, NULL, &status);
               fits_read_col(templateFits, TDOUBLE, phaseColumn, k+1, 1, 1, NULL, &phasec, NULL, &status);
             } else {
+
+
               ra = evtfilter->ra[k];
               dec = evtfilter->dec[k];
               energyc = evtfilter->energy[k];
@@ -1426,15 +1430,15 @@ int EvalCountsInRadius(const char *outfile, double tmin,
             Euler(ra, dec, &l, &b, 1);
             double the = SphDistDeg(l, b, laa, baa);
 
-        if (the < radius) {
-            	totalCounts++;
-            	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
+            if (the < radius) {
+                	totalCounts++;
+                	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
+                }
             }
-        }
-        counts[intvIndex]=totalCounts;
-        if (nrows > 0)
-          if(evtfilter == 0)
-            fits_delete_rows(templateFits, 1, nrows, &status);
+            counts[intvIndex]=totalCounts;
+            if (nrows > 0)
+              if(evtfilter == 0)
+                fits_delete_rows(templateFits, 1, nrows, &status);
     }
 #ifdef DEBUG
     cout << "Ending evaluation" << endl;
