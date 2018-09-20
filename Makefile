@@ -69,14 +69,14 @@ else
 CXX = g++
 endif
 
-CXXFLAGS = -g -O2 -pipe -I $(INCLUDE_DIR)
+CXXFLAGS = -g  -O2 -pipe -I $(INCLUDE_DIR)
 
 
 ifneq (, $(findstring agile, $(LINKERENV)))
     ifeq (, $(findstring -I $(AGILE)/include, $(CXXFLAGS)))
         CXXFLAGS += -I $(AGILE)/include
     endif
-    LIBS += -L$(AGILE)/lib -lagilesci
+    LIBS += -L$(AGILE)/lib -lagiletelem -lagilesci
 endif
 ifneq (, $(findstring wcs, $(LINKERENV)))
     ifeq (,$(findstring -I $(AGILE)/include, $(CXXFLAGS)))
@@ -148,7 +148,7 @@ $(shell  cut $(INCLUDE_DIR)/$(VER_FILE_NAME) -f 3 > version)
 ####### 9) Pattern rules
 
 %.o : %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $(OBJECTS_DIR)/$@
+	$(CXX) $(CXXFLAGS) -std=c++11 -c $< -o $(OBJECTS_DIR)/$@
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $(OBJECTS_DIR)/$@

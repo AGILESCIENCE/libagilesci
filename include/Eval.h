@@ -17,6 +17,9 @@
 #include "Intervals.h"
 #include "AgileMap.h"
 
+#include "EVTFilter.h"
+#include "LOGFilter.h"
+
 namespace eval
 {
 
@@ -28,7 +31,7 @@ namespace eval
 	    double emax;
 	    double index;
 	};
-	
+
 	class Mapspec : public std::vector<MapspecEntry>
 	{
 	public:
@@ -54,7 +57,7 @@ namespace eval
 	                 double emax, double fovradmin, double fovradmax,
 	                 const char *selectionFilename, const char *templateFilename,
 	                 Intervals &intervals, std::vector< std::vector<double> > &exposures,
-	                 bool saveMaps);
+	                 bool saveMaps, LOGFilter* logfilter = 0);
 
 	int EvalCounts(const char *outfile, const char *projection, double tmin,
 	               double tmax, double mdim, double mres, double la, double ba,
@@ -71,7 +74,7 @@ namespace eval
 	               double lonpole, double emin, double emax, double fovradmax,
 	               double fovradmin, double albrad, int phasecode, int filtercode,
 	               const char *selectionFilename,  const char *templateFilename,
-	               Intervals &intervals, std::vector<int> &counts);
+	               Intervals &intervals, std::vector<int> &counts, EVTFilter* evtfilter = 0);
 
 	int EvalGasMap(AgileMap &gasMap, AgileMap &expMap, const char* loresdiffuseFilename,
 	               const char* hiresdiffuseFilename);

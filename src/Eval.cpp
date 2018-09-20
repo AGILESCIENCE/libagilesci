@@ -284,7 +284,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                  double index, double tmin, double tmax, double emin,
                  double emax, double fovradmin, double fovradmax,
                  const char *selectionFilename, const char *templateFilename,
-                 Intervals &intervals, vector< vector<double> > &exposures, bool saveMaps)
+                 Intervals &intervals, vector< vector<double> > &exposures, bool saveMaps, LOGFilter* logfilter)
 {
     int status = 0;
 
@@ -412,28 +412,34 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     }
 
     fitsfile* selectionFits;
-    if (fits_open_file(&selectionFits, selectionFilename, READONLY, &status)) {
-        cerr << "ERROR opening selection file " << selectionFilename << endl;
-        return -1;
-    }
-    fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
-
     fitsfile* templateFits;
-    if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
-        cerr << "ERROR opening template file " << templateFilename << endl;
-        return -1;
-    }
-    fits_movabs_hdu(templateFits, 2, &hdutype, &status);
-    long oldnrows;
-    fits_get_num_rows(templateFits, &oldnrows, &status);
-    fits_delete_rows(templateFits, 1, oldnrows, &status);
+    char tempFilename[FLEN_FILENAME];
+
+    if(logfilter == 0) {
+
+      if (fits_open_file(&selectionFits, selectionFilename, READONLY, &status)) {
+          cerr << "ERROR opening selection file " << selectionFilename << endl;
+          return -1;
+      }
+      fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
+      if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
+          cerr << "ERROR opening template file " << templateFilename << endl;
+          return -1;
+      }
+      fits_movabs_hdu(templateFits, 2, &hdutype, &status);
+      long oldnrows;
+      fits_get_num_rows(templateFits, &oldnrows, &status);
+      fits_delete_rows(templateFits, 1, oldnrows, &status);
 
 #ifdef DEBUG
     cout << "Evaluating exposure.." << endl;
 #endif
 
-    char tempFilename[FLEN_FILENAME];
-    tmpnam(tempFilename);
+      tmpnam(tempFilename);
+    } else {
+      //use logfilter
+
+    }
     double lp = 0., bp = 0.;
     double learth, bearth;
     double lp0 = 0., bp0 = 0., gp0 = 0.;
@@ -448,20 +454,33 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 #ifdef DEBUG
         cout << "selExpr: " << selExpr << endl;
 #endif
-        fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
+        if(logfilter == 0) {
+          fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
+        } else {
+          if ( sIntv.Count() == 1)
+            logfilter->query( sIntv[0].Start(), sIntv[0].Stop(), phasecode );
+          else
+            std::cerr << "More than one time interval not managed by telemetry verion of the Science Tools." << '\n';
+        }
 #ifdef DEBUG
         cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         find++;
 
         long allnrows;
-        fits_get_num_rows(templateFits, &allnrows, &status);
+        if(logfilter == 0) {
+          fits_get_num_rows(templateFits, &allnrows, &status);
+        } else {
+          allnrows = logfilter->time.size();
+        }
 #ifdef DEBUG
         cout << "all nrows: " << allnrows << endl;
 #endif
 
         long rowblockincrement = size;
-        fits_get_rowsize(templateFits, &rowblockincrement, &status);
+        if(logfilter == 0) {
+          fits_get_rowsize(templateFits, &rowblockincrement, &status);
+        }
 #ifdef DEBUG
         cout << "Row block size = " << rowblockincrement << endl;
 #endif
@@ -473,13 +492,25 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 #ifdef DEBUG
             cout << "Reading " << nrows << " rows" << endl;
 #endif
-            ReadFitsCol(templateFits, ra_y, "ATTITUDE_RA_Y", rowblockzero, nrows, &status);
-            ReadFitsCol(templateFits, dec_y, "ATTITUDE_DEC_Y", rowblockzero, nrows, &status);
-            ReadFitsCol(templateFits, livetime, "LIVETIME", rowblockzero, nrows, &status);
-            ReadFitsCol(templateFits, phase, "PHASE", rowblockzero, nrows, &status);
-            ReadFitsCol(templateFits, earth_ra, "EARTH_RA", rowblockzero, nrows, &status);
-            ReadFitsCol(templateFits, earth_dec, "EARTH_DEC", rowblockzero, nrows, &status);
-
+            if(logfilter == 0) {
+              ReadFitsCol(templateFits, ra_y, "ATTITUDE_RA_Y", rowblockzero, nrows, &status);
+              ReadFitsCol(templateFits, dec_y, "ATTITUDE_DEC_Y", rowblockzero, nrows, &status);
+              ReadFitsCol(templateFits, livetime, "LIVETIME", rowblockzero, nrows, &status);
+              ReadFitsCol(templateFits, phase, "PHASE", rowblockzero, nrows, &status);
+              ReadFitsCol(templateFits, earth_ra, "EARTH_RA", rowblockzero, nrows, &status);
+              ReadFitsCol(templateFits, earth_dec, "EARTH_DEC", rowblockzero, nrows, &status);
+            } else {
+              long nr = 0;
+              for(long ii=rowblockzero; ii<rowblockzero+nrows; ii++) {
+                ra_y[nr] = logfilter->earth_ra[ii];
+                dec_y[nr] = logfilter->earth_dec[ii];
+                livetime[nr] = logfilter->livetime[ii];
+                phase[nr] = logfilter->phase[ii];
+                earth_ra[nr] = logfilter->earth_ra[ii];
+                earth_dec[nr] = logfilter->dec_y[ii];
+                nr++;
+              }
+            }
             long count = 0;
             double earth_ra0 = earth_ra[0], earth_dec0 = earth_dec[0];
             double ra_y0 = ra_y[0], dec_y0 = dec_y[0];
@@ -570,7 +601,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 #endif
         delete []change;
         if (allnrows > 0)
-            fits_delete_rows(templateFits, 1, allnrows, &status);
+            if(logfilter == 0) {
+              fits_delete_rows(templateFits, 1, allnrows, &status);
+            }
         if (status) {
             delete []raeffArr;
             return status;
@@ -836,8 +869,10 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             fits_close_file(mapFits, &status);
         }
     }
-    fits_close_file(selectionFits, &status);
-    fits_close_file(templateFits, &status);
+    if(logfilter == 0) {
+      fits_close_file(selectionFits, &status);
+      fits_close_file(templateFits, &status);
+    }
 
     return status;
 }
@@ -1248,7 +1283,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
                double lonpole, double emin, double emax, double fovradmax,
                double fovradmin, double albrad, int phasecode, int filtercode,
                const char *selectionFilename,  const char *templateFilename,
-               Intervals &intervals, vector<int> &counts)
+               Intervals &intervals, vector<int> &counts, EVTFilter* evtfilter)
 {
     int status = 0;
 
@@ -1257,23 +1292,28 @@ int EvalCountsInRadius(const char *outfile, double tmin,
             counts[i] = 0;
     }
 
-    int hdutype;
     fitsfile* selectionFits;
-    if (fits_open_file(&selectionFits, selectionFilename, READONLY, &status)) {
-        cerr << "ERROR opening selection file " << selectionFilename << endl;
-        return -1;
-    }
-    fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
-
     fitsfile* templateFits;
-    if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
-        cerr << "ERROR opening template file " << templateFilename << endl;
-        return -1;
+
+    if(evtfilter == 0) {
+      int hdutype;
+
+      if (fits_open_file(&selectionFits, selectionFilename, READONLY, &status)) {
+          cerr << "ERROR opening selection file " << selectionFilename << endl;
+          return -1;
+      }
+      fits_movabs_hdu(selectionFits, 2, &hdutype, &status);
+
+
+      if (fits_open_file(&templateFits, templateFilename, READWRITE, &status)) {
+          cerr << "ERROR opening template file " << templateFilename << endl;
+          return -1;
+      }
+      fits_movabs_hdu(templateFits, 2, &hdutype, &status);
+      long oldnrows;
+      fits_get_num_rows(templateFits, &oldnrows, &status);
+      fits_delete_rows(templateFits, 1, oldnrows, &status);
     }
-    fits_movabs_hdu(templateFits, 2, &hdutype, &status);
-    long oldnrows;
-    fits_get_num_rows(templateFits, &oldnrows, &status);
-    fits_delete_rows(templateFits, 1, oldnrows, &status);
 
 #ifdef DEBUG
     cout << "Evaluating counts.." << endl;
@@ -1292,26 +1332,32 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         cout << "selExpr: " << selExpr << endl;
 #endif
 		cout << "selExpr: " << selExpr << endl;
-        fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
+        if(evtfilter == 0)
+          fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
 #ifdef DEBUG
         cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         long nrows;
-        fits_get_num_rows(templateFits, &nrows, &status);
+        if(evtfilter == 0)
+          fits_get_num_rows(templateFits, &nrows, &status);
+        else
+          nrows = evtfilter->time.size();
 #ifdef DEBUG
         cout << "Reading all " << nrows << " rows" << endl;
 #endif
 
         int raColumn, decColumn;
-        fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
-        fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
-
         int enColumn, pheColumn, thetaColumn, phaseColumn, timeColumn;
-        fits_get_colnum(templateFits, 1, (char*)"ENERGY", &enColumn, &status);
-        fits_get_colnum(templateFits, 1, (char*)"PH_EARTH", &pheColumn, &status);
-        fits_get_colnum(templateFits, 1, (char*)"THETA", &thetaColumn, &status);
-        fits_get_colnum(templateFits, 1, (char*)"PHASE", &phaseColumn, &status);
-		fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
+
+        if(evtfilter == 0) {
+          fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
+          fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
+          fits_get_colnum(templateFits, 1, (char*)"ENERGY", &enColumn, &status);
+          fits_get_colnum(templateFits, 1, (char*)"PH_EARTH", &pheColumn, &status);
+          fits_get_colnum(templateFits, 1, (char*)"THETA", &thetaColumn, &status);
+          fits_get_colnum(templateFits, 1, (char*)"PHASE", &phaseColumn, &status);
+          fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
+        }
 
         double ra, dec, l, b, the;
         double baa = ba;// * DEG2RAD;
@@ -1319,36 +1365,45 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         double timec, energyc, ph_earthc, thetac, phasec;
         cout << "time  l  b  energy  theta  ph_earth  phasec dist " << endl;
         for (long k = 0; k<nrows; k++) {
-            fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
-            fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
+            if(evtfilter == 0) {
+              fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
+              fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
+              //l *= DEG2RAD;
+              //b *= DEG2RAD;
+              fits_read_col(templateFits, TDOUBLE, enColumn, k+1, 1, 1, NULL, &energyc, NULL, &status);
+              fits_read_col(templateFits, TDOUBLE, timeColumn, k+1, 1, 1, NULL, &timec, NULL, &status);
+              fits_read_col(templateFits, TDOUBLE, pheColumn, k+1, 1, 1, NULL, &ph_earthc, NULL, &status);
+              fits_read_col(templateFits, TDOUBLE, thetaColumn, k+1, 1, 1, NULL, &thetac, NULL, &status);
+              fits_read_col(templateFits, TDOUBLE, phaseColumn, k+1, 1, 1, NULL, &phasec, NULL, &status);
+            } else {
+              ra = evtfilter->ra[k];
+              dec = evtfilter->dec[k];
+              energyc = evtfilter->energy[k];
+              timec = evtfilter->time[k];
+              ph_earthc = evtfilter->ph_earth[k];
+              thetac = evtfilter->theta[k];
+              phasec = -1;
+            }
             Euler(ra, dec, &l, &b, 1);
-            //l *= DEG2RAD;
-            //b *= DEG2RAD;
-            fits_read_col(templateFits, TDOUBLE, enColumn, k+1, 1, 1, NULL, &energyc, NULL, &status);
-            fits_read_col(templateFits, TDOUBLE, timeColumn, k+1, 1, 1, NULL, &timec, NULL, &status);
-            fits_read_col(templateFits, TDOUBLE, pheColumn, k+1, 1, 1, NULL, &ph_earthc, NULL, &status);
-            fits_read_col(templateFits, TDOUBLE, thetaColumn, k+1, 1, 1, NULL, &thetac, NULL, &status);
-            fits_read_col(templateFits, TDOUBLE, phaseColumn, k+1, 1, 1, NULL, &phasec, NULL, &status);
-
-
             double the = SphDistDeg(l, b, laa, baa);
 
-			if (the < radius) {
+        if (the < radius) {
             	totalCounts++;
             	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
             }
         }
         counts[intvIndex]=totalCounts;
         if (nrows > 0)
+          if(evtfilter == 0)
             fits_delete_rows(templateFits, 1, nrows, &status);
     }
 #ifdef DEBUG
     cout << "Ending evaluation" << endl;
 #endif
-
-    fits_close_file(selectionFits, &status);
-    fits_close_file(templateFits, &status);
-
+    if(evtfilter == 0) {
+      fits_close_file(selectionFits, &status);
+      fits_close_file(templateFits, &status);
+    }
     return status;
 }
 
