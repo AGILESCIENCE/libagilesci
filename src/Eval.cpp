@@ -306,7 +306,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
     long mxdim = long(mdim / mres + 0.1); // dimension (in pixels) of the map
 #ifdef DEBUG
-    cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
+    cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << " npixels: " << npixels << endl;
 #endif
     long npixels = mxdim * mxdim;
     exposures.resize(intervals.Count());
@@ -351,6 +351,18 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                 lat[i*mxdim+ii] = lat0;
                 area[i*mxdim+ii] = AG_expmapgen_area(mres, mres, 90-theta, proj);
 #ifdef DEBUG
+                cout  << "\nx: " << x
+                      << "\ny: " << y
+                      << "\ntheta2: " << theta
+                      << "\nphi2: " << phi
+                      << "\neul[0]: " << eul[0]
+                      << "\neul[1]: " << eul[1]
+                      << "\neul[2]: " << eul[2]
+                      << "\neul[3]: " << eul[3]
+                      << "\neul[4]: " << eul[4]
+                      << "\nlng0: " << lng0
+                      << "\nlat0: " << lat0
+                      << endl;
                 cout << "lng[" << i << "][" << ii << "]=" << lng[i*mxdim+ii] << endl;
                 cout << "lat[" << i << "][" << ii << "]=" << lat[i*mxdim+ii] << endl;
                 cout << "area[" << i << "][" << ii << "]=" << area[i*mxdim+ii] << endl;
@@ -515,13 +527,40 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             double earth_ra0 = earth_ra[0], earth_dec0 = earth_dec[0];
             double ra_y0 = ra_y[0], dec_y0 = dec_y[0];
 
+#ifdef DEBUG
+            cout << "earth_ra0 " << earth_ra0 << " earth_dec0 " << earth_dec0 << " ra_y0 " << ra_y0<<" dec_y0 " << dec_y0 << endl;
+            cout << "time.size (allnrows!!): " << allnrows << endl;
+            cout << "nrows " << nrows << endl;
+#endif
+
             for (long k = 1; k<nrows; k++) {
+#ifdef DEBUG
+                cout << "filter->phase[k-1]" << phase[k-1] << " phase[k]" << phase[k] << endl;
+                cout << ra_y[k-1] << " <-ra_y[k-1] "<< dec_y[k-1] << " <-dec_y[k-1] "<< ra_y0 << " <-ra_y0 "<< dec_y0 << " <-dec_y0 "<< y_tol << " <-y_tol" << endl;
+                cout << earth_ra[k-1] << " <-earth_ra[k-1] "<<  earth_dec[k-1] << " <-earth_dec[k-1] "<<  earth_ra0 << " <-earth_ra0 "<<  earth_dec0 << " <-earth_dec0 "<<  earth_tol << " <-earth_tol"<< endl;
+
+                cout <<"YTolTest: " << YTolTest(ra_y[k-1], dec_y[k-1], ra_y0, dec_y0, y_tol) << endl;
+                cout <<"EarthTolTest: " << EarthTolTest(earth_ra[k-1], earth_dec[k-1], earth_ra0, earth_dec0, earth_tol) << endl;
+                cout << "phase[k-1] != phase[k]: " << (phase[k-1] != phase[k]) << endl;
+                cout << "K: " << k << endl;
+#endif
                 if ((phase[k-1] != phase[k]) || YTolTest(ra_y[k-1], dec_y[k-1], ra_y0, dec_y0, y_tol) || EarthTolTest(earth_ra[k-1], earth_dec[k-1], earth_ra0, earth_dec0, earth_tol)) {
                     change[count++] = k;
                     earth_ra0 = earth_ra[k-1];
                     earth_dec0 = earth_dec[k-1];
                     ra_y0 = ra_y[k-1];
                     dec_y0 = dec_y[k-1];
+#ifdef DEBUG
+                    cout << "----" << endl;
+                    cout << "K: " << k << endl;
+                    cout << " count " << count;
+                    cout << " change[count] " << change[count];
+                    cout << " earth_ra0 " << earth_ra0;
+                    cout << " earth_dec0 " << earth_dec0;
+                    cout << " ra_y0 " << ra_y0;
+                    cout << " dec_y0 " << dec_y0;
+                    cout << endl;
+#endif
                 }
             }
             if (count == 0)
