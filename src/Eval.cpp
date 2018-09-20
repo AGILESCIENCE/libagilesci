@@ -24,7 +24,7 @@
 #include "Selection.h"
 #include "Eval.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 using std::cout;
 using std::cerr;
