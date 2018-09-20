@@ -1380,6 +1380,8 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         if(evtfilter == 0)
           fits_get_num_rows(templateFits, &nrows, &status);
         else {
+          double tmin = intervals[intvIndex].Start();
+          double tmax = intervals[intvIndex].Stop();
           evtfilter->query(tmin, tmax, phasecode, filtercode, emin, emax, albrad, fovradmin, fovradmax );
           nrows = evtfilter->time.size();
         }
