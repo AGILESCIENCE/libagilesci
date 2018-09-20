@@ -24,7 +24,7 @@
 #include "Selection.h"
 #include "Eval.h"
 
-//#define DEBUG 1
+#define DEBUG 1
 
 using std::cout;
 using std::cerr;
@@ -306,7 +306,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
     long mxdim = long(mdim / mres + 0.1); // dimension (in pixels) of the map
 #ifdef DEBUG
-    cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << " npixels: " << npixels << endl;
+    cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps  << endl;
 #endif
     long npixels = mxdim * mxdim;
     exposures.resize(intervals.Count());
@@ -475,7 +475,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             std::cerr << "More than one time interval not managed by telemetry verion of the Science Tools." << '\n';
         }
 #ifdef DEBUG
-        cout << "Rows from " << tempFilename << " selected" << endl;
+        //cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         find++;
 
@@ -514,12 +514,12 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             } else {
               long nr = 0;
               for(long ii=rowblockzero; ii<rowblockzero+nrows; ii++) {
-                ra_y[nr] = logfilter->earth_ra[ii];
-                dec_y[nr] = logfilter->earth_dec[ii];
+                ra_y[nr] = logfilter->ra_y[ii];
+                dec_y[nr] = logfilter->dec_y[ii];
                 livetime[nr] = logfilter->livetime[ii];
                 phase[nr] = logfilter->phase[ii];
                 earth_ra[nr] = logfilter->earth_ra[ii];
-                earth_dec[nr] = logfilter->dec_y[ii];
+                earth_dec[nr] = logfilter->earth_dec[ii];
                 nr++;
               }
             }
@@ -980,7 +980,7 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
 #endif
         fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
 #ifdef DEBUG
-        cout << "Rows from " << tempFilename << " selected" << endl;
+        //cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         long nrows;
         fits_get_num_rows(templateFits, &nrows, &status);
@@ -1374,7 +1374,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         if(evtfilter == 0)
           fits_select_rows(selectionFits, templateFits, (char*)selExpr.c_str(), &status);
 #ifdef DEBUG
-        cout << "Rows from " << tempFilename << " selected" << endl;
+        //cout << "Rows from " << tempFilename << " selected" << endl;
 #endif
         long nrows;
         if(evtfilter == 0)
