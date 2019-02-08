@@ -452,7 +452,7 @@ RoiMulti::RoiMulti():
     m_isoLimitMin(0.0),
     m_isoLimitMax(100.0),
     m_extLimitMin(0.0),
-    m_extLimitMax(1000.0),
+    m_extLimitMax(1000000.0),
     m_fluxLimitMin(0.0),
     m_fluxLimitMax(FLUX_UPPER_BOUND),
     m_indexLimitMin(0.5),
