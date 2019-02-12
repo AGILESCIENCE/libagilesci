@@ -402,6 +402,9 @@ RoiMulti::RoiMulti():
 	m_gasMaps(0),
 	m_alignedMaps(false),
 
+	m_sumCts(0),
+	m_sumExp(0),
+
 	m_counts(0),
 	m_thetaArr(0),
 	m_galCoeffs(0),
@@ -503,6 +506,9 @@ delete[] m_thetaArr;
 delete[] m_galCoeffs;
 delete[] m_isoCoeffs;
 
+delete m_sumCts;
+delete m_sumExp;
+
 delete[] m_extSrcArr;
 delete[] m_extFlux;
 delete[] m_extIndex;
@@ -513,6 +519,9 @@ m_expMaps = 0;
 m_gasMaps = 0;
 m_extSrcArr = 0;
 m_extFlux = m_extIndex = 0;
+
+m_sumCts = 0;
+m_sumExp = 0;
 
 m_extCount = 0;
 m_counts = 0;
@@ -1107,7 +1116,7 @@ else if (chatter!=1) {
 		}
 	}
 	InitParams();
-	
+
 return DoFit(option1, option2, sourceCheckTS, minSourceTS);
 }
 
@@ -1235,7 +1244,7 @@ for (int i=0; i<m_srcCount; ++i) {
 		cout << " free (" << m_inSrcDataArr[i].par3_low_limit << ", " << m_inSrcDataArr[i].par3_upp_limit << ") ";
 	else
 		cout << " fixed ";
-	
+
 	cout << endl;
 	}
 
@@ -1258,7 +1267,7 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 		for (int r=0; r<m_sources[src].Rows(); ++r)
 			for (int c=0; c<m_sources[src].Cols(); ++c)
 				cnt += m_sources[src](r,c);
-		
+
 		cout << "Total SRC = " << cnt << endl;
 
 		m_sources[src].SetFixflag(m_inSrcDataArr[i].fixflag);
@@ -1266,7 +1275,7 @@ for (int exp=0; exp<m_mapCount; ++exp) {
 		m_sources[src].SetMinTS(m_inSrcDataArr[i].minTS);
 		m_sources[src].SetULCL(ulcl*ulcl);
 		m_sources[src].SetLocCL(loccl);
-		
+
 		++src;
 		}
 	}
@@ -3851,15 +3860,15 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << erglogerr
 				<< " " << erglogul
 	            << " 0.0 ";
-	
 
-	
+
+
 	double fluxc = m_sources[i].GetFlux();
 	for (int map=0; map<m_mapCount; ++map) {
 		const char* sep[2] = {"", ","};
 		srcout << sep[bool(map)] << fluxc*m_sources[map*m_srcCount+i].GetNormFactor() * exposure / expcor;
 	}
-	
+
 	srcout << endl;
 
 	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;
