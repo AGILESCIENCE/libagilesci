@@ -1,20 +1,31 @@
+////////////////////////////////////////////////////////////////////////////////
+// DESCRIPTION
+//       AGILE Science Tools
+//       2012-07-21
+//
+// NOTICE
+//       Any information contained in this software
+//       is property of the AGILE TEAM and is strictly
+//       private and confidential.
+//       Copyright (C) 2005-2019 AGILE Team. All rights reserved.
 /*
- * Copyright (c) 2005-2016
- *     AGILE Team
- *
- * Any information contained in this software
- * is property of the AGILE TEAM and is strictly
- * private and confidential.
- * GPL License
-*/
-
-
-
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _ARRAY_OF_
 #define _ARRAY_OF_
-
-// Date: 2012-07-21
 
 #include <stdarg.h>
 #include <iostream>

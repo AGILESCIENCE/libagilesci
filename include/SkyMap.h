@@ -1,25 +1,46 @@
-/// ////////////////////////////////////////////////////////
-///
-///
-/// SkyMap class
-///
-/// Version 1.0
-/// Date 2011-03-28
-/// Author Tomaso Contessi
-///
-/// Version 1.1
-/// Date 2013-07-27
-/// Addressed an issue related to BSCALE and BZERO
-///
-///
-/// Class for handlig an image representing a rectangular SKYMAP.
-/// Methods for loading and saving to a FITS file
-/// The FITS file shall contain the keywords:
-/// CDELT1, CDELT2, CRPIX1, CRPIX2, CRVAL1, CRVAL2, and optionally BSCALE and BZERO
-/// All the other keywords possibly present in the FITS file are loaded, preserved in all the copies, and saved.
-///
-
-
+////////////////////////////////////////////////////////////////////////////////
+// DESCRIPTION
+//       AGILE Science Tools
+//       2011-03-28
+//       Authors: Tomaso Contessi, IASF-Milano
+//
+// INFO
+//     Class for handlig an image representing a rectangular SKYMAP.
+//     Methods for loading and saving to a FITS file
+//     The FITS file shall contain the keywords:
+//     CDELT1, CDELT2, CRPIX1, CRPIX2, CRVAL1, CRVAL2, and optionally BSCALE and BZERO
+//     All the other keywords possibly present in the FITS file are loaded, 
+//     preserved in all the copies, and saved.
+//
+// HISTORY
+//      Version 1.0
+//      Date 2011-03-28
+//      Author Tomaso Contessi
+//
+//      Version 1.1
+//      Date 2013-07-27
+//      Addressed an issue related to BSCALE and BZERO
+//
+// NOTICE
+//       Any information contained in this software
+//       is property of the AGILE TEAM and is strictly
+//       private and confidential.
+//       Copyright (C) 2005-2019 AGILE Team. All rights reserved.
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+////////////////////////////////////////////////////////////////////////////////////
 
 
 

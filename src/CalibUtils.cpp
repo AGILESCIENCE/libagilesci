@@ -1,28 +1,33 @@
 ////////////////////////////////////////////////////////////////////////////////
 // DESCRIPTION
-//       Scientific pipeline I/O routine
-//       CalibUtils.cpp
-//       Release: V1.0 -  14/Feb/2012
-//       Contributors: 
-//       Author: Andrew Chen, Tomaso Contessi (IASF-Milano), Andrea Bulgarelli (IASF-Bologna)
-//
-// INPUT
-//       TBD
-//
-// OUTPUT
-//       TBD
-//
+//       AGILE Science Tools
+//       Authors: Andrew Chen, Tomaso Contessi (IASF-Milano), Andrea Bulgarelli (IASF-Bologna)
 //
 // FILE HISTORY
 //       28/May/2012
 //             First release: V1.0
 //             Author: Andrew Chen, Tomaso Contessi (IASF-Milano), Andrea Bulgarelli (IASF-Bologna)
 //             Based on 3 classes previously defined in AlikeLib.h
+//
 // NOTICE
 //       Any information contained in this software
 //       is property of the AGILE TEAM and is strictly
 //       private and confidential.
-//       All rights reserved.
+//       Copyright (C) 2005-2019 AGILE Team. All rights reserved.
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 ////////////////////////////////////////////////////////////////////////////////////
 
 #include <cmath>
