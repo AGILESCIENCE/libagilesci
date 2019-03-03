@@ -201,9 +201,11 @@ for (int i=0; i<count; ++i) {
 			}
 		else
 			cerr << "PIL Error " << status << " (" << PIL_err_table[PIL_ERR_BASE-status] << ") loading parameter " << m_names[i] << endl;
+			PILClose(status);
 		return false;
 		}
 	}
+status = PILClose(status);
 return true;
 }
 
