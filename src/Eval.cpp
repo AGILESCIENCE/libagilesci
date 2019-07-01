@@ -123,6 +123,10 @@ bool inmap(int i, int ii, int mxdim)
 bool LoadTimeList(const char* timelist, Intervals& intervals, double& tmin, double& tmax)
 {
     if (strcmp(timelist, "None")) {
+		//TODO
+		cerr << "ERROR: timelist feature still have a problem. Use AG_summapgen. " << endl;
+		return false;
+		
         intervals = ReadIntervals(timelist);
         int count = intervals.Count();
         if (!count)
