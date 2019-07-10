@@ -2,7 +2,7 @@
 // DESCRIPTION
 //       AGILE Science Tools
 //       Authors: Andrew Chen, Alberto Pellizzoni, Alessio Trois (IASF-Milano),
-//       Andrea Bulgarelli, Andrea Zoli (IASF-Bologna),
+//       Andrea Bulgarelli, Andrea Zoli (IASF-Bologna), Leonardo Baroncelli
 //       Tomaso Contessi (Nuove Idee sas)
 //
 // NOTICE
@@ -15,12 +15,12 @@
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -32,6 +32,7 @@
 #include <cstdio>
 #include <fitsio.h>
 #include <string.h>
+//#include <regex>
 
 #include <pil.h>
 #include <FitsUtils.h>
@@ -220,7 +221,54 @@ string EvtExprString(const Intervals &intvs, double emin, double emax, double al
     return str.str();
 }
 
+std::string updateExprWithIntervalSubset(string evtExprString, string replaceWith)
+{
 
+  //cout << "evtExprString: " << evtExprString << endl;
+  //cout << "replaceWith: " << replaceWith << endl;
+  /*
+  evtExprString: ((TIME >= 181774800.000000 && TIME < 181861200.000000) || (TIME >= 182230000.000000 && TIME < 182450000.000000)) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
+  replaceWith: TIME >= 181774800.000000 && TIME < 181861200.000000
+  */
+
+  /*
+  REGEX compatible only with gcc >= 4.9 and c++11
+  std::regex r("^\\((\\(TIME >= \\d{1,}.\\d{1,} && TIME < \\d{1,}.\\d{1,}\\) \\|\\| ){1,}\\(TIME >= \\d{1,}.\\d{1,} && TIME < \\d{1,}.\\d{1,}\\)\\)");
+  std::smatch m;
+  bool found = regex_search(evtExprString, m, r, regex_constants::match_any);
+
+  int max_l=0;
+  string toReplace;
+  for(auto v: m){
+      if (v.length() > max_l)
+      {
+          max_l = v.length();
+          toReplace = v;
+      }
+  }
+  cout << "Regex found: "<< found << " => " << toReplace << endl;
+  */
+
+  // searching the last "TIME" term
+  bool last_timestr_found = false;
+  std::size_t found = evtExprString.find("TIME");
+  std::size_t last_found = found;
+
+  while(!last_timestr_found)
+  {
+    found = evtExprString.find("TIME",found+1,4);
+
+    if (found != std::string::npos)
+      last_found = found;
+    else
+      last_timestr_found = true;
+  }
+
+  found = evtExprString.find("))",last_found+1,2);
+  evtExprString.replace(0, found+2, replaceWith);
+
+  return evtExprString;
+}
 
 void CopyFile(const char* iname, const char* oname)
 {
@@ -235,6 +283,8 @@ int MakeSelection(const char *fileList, Intervals& selection,
                   string expr, const char *selectionFilename,
                   const char *templateFilename)
 {
+
+    cout << "filelist: " << fileList << endl;
     FILE *fp = fopen(fileList, "r");
     if (!fp) {
         cerr << "Error opening file " << fileList << endl;
@@ -246,6 +296,7 @@ int MakeSelection(const char *fileList, Intervals& selection,
     char scratchFilename[FLEN_FILENAME];
     tmpnam(scratchFilename);
 
+    string expr_backup = expr;
     FitsFile selectionFits;
     int skippedFiles = 0;
     int status = 0;
@@ -261,6 +312,7 @@ int MakeSelection(const char *fileList, Intervals& selection,
 
         char* nname = 0;
         pil_curly_expand(name, &nname);
+
         if (sel.Count()) {
             if (skippedFiles) {
                 cout << "Skipped " << skippedFiles << " files." << endl;
@@ -271,16 +323,29 @@ int MakeSelection(const char *fileList, Intervals& selection,
         else
             skippedFiles++;
 
+        //string sel_int = TimesExprString(sel);
+        //cout << "sel_int: " << sel_int << endl;
+
         for (int i=0; i<sel.Count() && !status; i++) {
             Intervals selInt;
             selInt.Add(sel[i]);
 
+            // This is a bug fix
+            if(sel.Count() > 1){
+              string timeExpr = TimesExprString(selInt);
+              expr = updateExprWithIntervalSubset(expr_backup, timeExpr);
+              // before:  ((TIME >= 181774800.000000 && TIME < 181861200.000000) || (TIME >= 182230000.000000 && TIME < 182450000.000000)) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
+              // after 1: ((TIME >= 181774800.000000 && TIME < 181861200.000000) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
+              // after 2: ((TIME >= 182230000.000000 && TIME < 182450000.000000)) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
+            }
+
+
             string sin(nname);
             if(sin.compare(sin.size()-3, sin.size(), ".gz") == 0) {
                 string command = string("gunzip -c ") + nname + string(" > ") + scratchFilename;
-#ifdef DEBUG
+
                 cout << command << endl;
-#endif
+
                 system(command.c_str());
             }
             else
@@ -326,17 +391,18 @@ int MakeSelection(const char *fileList, Intervals& selection,
                 selectionFits.MoveAbsHDU(2);
                 selectionOpened = true;
             }
-#ifdef DEBUG
+
             long nrows, nrows2;
             fits_get_num_rows(selectionFits, &nrows, &status);
             cout << "Log expr: " << expr << endl;
-#endif
+
+
             fits_select_rows(scratchFits, selectionFits, (char*)expr.c_str(), &status);
-#ifdef DEBUG
+
             fits_get_num_rows(selectionFits, &nrows2, &status);
             cout << nrows2-nrows << " rows total" << endl;
             cout << "Selection file total: " << nrows2 << endl;
-#endif
+
             scratchFits.Delete();
         }
         PIL_free(nname);
