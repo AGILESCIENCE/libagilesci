@@ -325,10 +325,12 @@ int MakeSelection(const char *fileList, Intervals& selection,
 
         //string sel_int = TimesExprString(sel);
         //cout << "sel_int: " << sel_int << endl;
-
+        //cout << "=> Number of intervals satisfied: " << sel.Count() << endl;
         for (int i=0; i<sel.Count() && !status; i++) {
             Intervals selInt;
             selInt.Add(sel[i]);
+
+            //cout << "selInt["<<i<<"]: " << TimesExprString(selInt) <<endl;
 
             // This is a bug fix
             if(sel.Count() > 1){
@@ -337,6 +339,9 @@ int MakeSelection(const char *fileList, Intervals& selection,
               // before:  ((TIME >= 181774800.000000 && TIME < 181861200.000000) || (TIME >= 182230000.000000 && TIME < 182450000.000000)) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
               // after 1: ((TIME >= 181774800.000000 && TIME < 181861200.000000) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
               // after 2: ((TIME >= 182230000.000000 && TIME < 182450000.000000)) && ENERGY >= 100 && ENERGY <= 10000 && PH_EARTH > 80 && THETA < 60 && THETA >= 0 && PHASE .NE. 1 && PHASE .NE. 4 && EVSTATUS .NE. 'L' && EVSTATUS .NE. 'S'
+            }
+            else {
+              expr = expr_backup;
             }
 
 
