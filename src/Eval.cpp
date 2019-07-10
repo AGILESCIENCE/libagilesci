@@ -15,12 +15,12 @@
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -124,9 +124,9 @@ bool LoadTimeList(const char* timelist, Intervals& intervals, double& tmin, doub
 {
     if (strcmp(timelist, "None")) {
 		//TODO
-		cerr << "ERROR: timelist feature still have a problem. Use AG_summapgen. " << endl;
-		return false;
-		
+		//cerr << "ERROR: timelist feature still have a problem. Use AG_summapgen. " << endl;
+		//return false;
+
         intervals = ReadIntervals(timelist);
         int count = intervals.Count();
         if (!count)
@@ -135,7 +135,9 @@ bool LoadTimeList(const char* timelist, Intervals& intervals, double& tmin, doub
         tmax = intervals.Max();
         cout << "Time intervals:" << endl;
         for (int i=0; i<count; i++)
-            cout << intervals[i].Start() << " " << intervals[i].Stop() << endl;
+            cout << std::fixed << std::setprecision(10) << intervals[i].Start() << " " << intervals[i].Stop() << endl;
+        cout << "Time intervals count: " << count << endl;
+        cout << "New tmin = "<<tmin<<" , new tmax = " << tmax << endl;
     }
     else {
         Interval intv(tmin, tmax);
@@ -305,7 +307,8 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                  double index, double tmin, double tmax, double emin,
                  double emax, double fovradmin, double fovradmax,
                  const char *selectionFilename, const char *templateFilename,
-                 Intervals &intervals, vector< vector<double> > &exposures, bool saveMaps)
+                 Intervals &intervals, vector< vector<double> > &exposures, bool saveMaps,
+                 bool sum_exposure, std::vector<double> &summed_exposures)
 {
     int status = 0;
 
@@ -326,6 +329,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     long nmaps = maps.size();
 
     long mxdim = long(mdim / mres + 0.1); // dimension (in pixels) of the map
+
 #ifdef DEBUG
     cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
 #endif
@@ -605,9 +609,13 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     if (find == 0)
         return 1005;
 
+    //cout << "intervals: "<<intervals.Count()<<" maps: " << nmaps << endl;
+
     for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++) {
         Interval intv = intervals[intvIndex];
         vector<double> &A = exposures[intvIndex];
+
+
 
         long nrows = mxdim;
         long ncols = mxdim;
@@ -705,7 +713,63 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             cout << "Ending interpolation" << endl;
 #endif
         }
+
+
     }
+
+
+    if(sum_exposure)
+    {
+
+      float center_x = mxdim / 2 - 0.5;
+      float center_y = mxdim / 2 - 0.5;
+      float radius_of_circle = mxdim/2;
+
+      cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
+      cout << "radius_of_circle: " << radius_of_circle << endl;
+      cout << "center: " << center_x << " " << center_y << endl;
+      cout << "intervals count: " << intervals.Count() << endl;
+
+
+      for (long long m=0; m<nmaps; m++) {
+
+        double summed_exposure = 0;
+
+        vector<double> sum;
+        sum.resize(npixels);
+
+        for (unsigned int j=0; j<npixels; j++)
+            sum[j] = 0;
+
+        for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
+
+            for (unsigned int j=0; j<npixels; j++)
+                sum[j] += exposures[intvIndex][m * npixels + j];
+
+        for (int y = 0; y < mxdim; y++) {
+          for (int x = 0; x < mxdim; x++) {
+
+            float xx = x + 0.5;
+            float yy = y + 0.5;
+
+            float dist = sqrt( pow(center_x - x, 2) + pow(center_y - y, 2) );
+
+            if (dist <= radius_of_circle){
+              double pixel_exp = sum[m*npixels + x*mxdim + y];
+              //cout << x << "," << y << " = " << pixel_exp << endl;
+              summed_exposure += pixel_exp;
+
+            }
+          }
+        }
+
+        summed_exposures.push_back(summed_exposure);
+      }
+
+      for (std::vector<double>::iterator it = summed_exposures.begin() ; it != summed_exposures.end(); ++it)
+        cout << "summed exp: " << *it << endl;
+    }
+
 
     if (saveMaps) {
         vector<double> sum;
@@ -758,12 +822,15 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             long naxes[2] = { mxdim, mxdim };
             long startpixel[2] = {1,1};
             fits_create_img(mapFits, bitpix, naxis, naxes, &status);
+
+
             // Write exp sum from all the intervals
             for (unsigned int j=0; j<npixels; j++)
                 sum[j] = 0;
             for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
                 for (unsigned int j=0; j<npixels; j++)
                     sum[j] += exposures[intvIndex][i * npixels + j];
+
             fits_write_pix(mapFits, TDOUBLE, startpixel, npixels, &sum[0], &status);
 
             double fovradmin = maps[i].fovradmin;
