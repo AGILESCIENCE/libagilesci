@@ -725,11 +725,13 @@ int EvalExposure(const char *outfile, const char *sarFileName,
       float center_y = mxdim / 2 - 0.5;
       float radius_of_circle = mxdim/2;
 
+      #ifdef DEBUG
       cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
       cout << "radius_of_circle: " << radius_of_circle << endl;
       cout << "center: " << center_x << " " << center_y << endl;
       cout << "intervals count: " << intervals.Count() << endl;
-
+      cout << "npixels: " << npixels << endl;
+      #endif
 
       for (long long m=0; m<nmaps; m++) {
 
@@ -741,10 +743,15 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         for (unsigned int j=0; j<npixels; j++)
             sum[j] = 0;
 
-        for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
 
-            for (unsigned int j=0; j<npixels; j++)
-                sum[j] += exposures[intvIndex][m * npixels + j];
+        for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
+        {
+
+          for (unsigned int j=0; j<npixels; j++)
+            sum[j] += exposures[intvIndex][m * npixels + j];
+        }
+
+
 
         for (int y = 0; y < mxdim; y++) {
           for (int x = 0; x < mxdim; x++) {
@@ -755,7 +762,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             float dist = sqrt( pow(center_x - x, 2) + pow(center_y - y, 2) );
 
             if (dist <= radius_of_circle){
-              double pixel_exp = sum[m*npixels + x*mxdim + y];
+              double pixel_exp = sum[x*mxdim + y];
               //cout << x << "," << y << " = " << pixel_exp << endl;
               summed_exposure += pixel_exp;
 
@@ -766,8 +773,12 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         summed_exposures.push_back(summed_exposure);
       }
 
+      int map_ind = 0;
       for (std::vector<double>::iterator it = summed_exposures.begin() ; it != summed_exposures.end(); ++it)
-        cout << "summed exp: " << *it << endl;
+      {
+        cout << "Exposure summed for map "<<map_ind<< " in a radius of "<< radius_of_circle << " degrees = " <<*it << endl;
+        map_ind ++;
+      }
     }
 
 
