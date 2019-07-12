@@ -326,6 +326,13 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         mapspec.index = index;
         maps.push_back(mapspec);
     }
+
+    // the pixel dimension must be lower than the map dimension
+    if(mres > mdim){
+      cout << "Eval.cpp error! The pixel dimension must be lower than the map dimension." << endl;
+      return 1;
+    }
+
     long nmaps = maps.size();
 
     long mxdim = long(mdim / mres + 0.1); // dimension (in pixels) of the map
