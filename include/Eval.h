@@ -15,12 +15,12 @@
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -44,7 +44,7 @@ namespace eval
 	    double emax;
 	    double index;
 	};
-	
+
 	class Mapspec : public std::vector<MapspecEntry>
 	{
 	public:
@@ -70,7 +70,7 @@ namespace eval
 	                 double emax, double fovradmin, double fovradmax,
 	                 const char *selectionFilename, const char *templateFilename,
 	                 Intervals &intervals, std::vector< std::vector<double> > &exposures,
-	                 bool saveMaps);
+	                 bool saveMaps, bool sum_exposure, std::vector<double> &summed_exposures);
 
 	int EvalCounts(const char *outfile, const char *projection, double tmin,
 	               double tmax, double mdim, double mres, double la, double ba,
