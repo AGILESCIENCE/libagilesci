@@ -337,9 +337,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
     long mxdim = long(mdim / mres + 0.1); // dimension (in pixels) of the map
 
-#ifdef DEBUG
+//#ifdef DEBUG
     cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
-#endif
+//#endif
     long npixels = mxdim * mxdim;
     exposures.resize(intervals.Count());
     for (int i=0; i < intervals.Count(); i++) {
@@ -724,13 +724,33 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
     }
 
+    double pixel1 = DEG2RAD * DEG2RAD * fabs(mdim * mdim);
+    double areapixel =  pixel1 * Sinaa(DEG2RAD*45.);
+    
+    if(mxdim == 1)
+    {
+      for (long long m=0; m<nmaps; m++) {
 
-    if(sum_exposure)
+
+        summed_exposures.resize(npixels);
+
+        for (unsigned int j=0; j<npixels; j++)
+            summed_exposures[j] = 0;
+
+
+        for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
+          for (unsigned int j=0; j<npixels; j++)
+            summed_exposures[j] += exposures[intvIndex][m * npixels + j]/areapixel;
+
+      }
+    }
+    else if(sum_exposure)
     {
 
       float center_x = mxdim / 2 - 0.5;
       float center_y = mxdim / 2 - 0.5;
       float radius_of_circle = mxdim/2;
+
 
       #ifdef DEBUG
       cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
@@ -752,11 +772,9 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
 
         for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
-        {
-
           for (unsigned int j=0; j<npixels; j++)
-            sum[j] += exposures[intvIndex][m * npixels + j];
-        }
+            sum[j] += exposures[intvIndex][m * npixels + j]/areapixel;
+
 
 
 
