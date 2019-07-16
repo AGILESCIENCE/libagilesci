@@ -801,7 +801,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
       int map_ind = 0;
       for (std::vector<double>::iterator it = summed_exposures.begin() ; it != summed_exposures.end(); ++it)
       {
-        cout << "Exposure summed for map "<<map_ind<< " in a radius of "<< radius_of_circle << " degrees = " <<*it << endl;
+        cout << "Exposure summed for map "<<map_ind<< " in a radius of "<< radius_of_circle*mres << " degrees = " <<*it << endl;
         map_ind ++;
       }
     }
