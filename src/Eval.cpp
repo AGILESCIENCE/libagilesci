@@ -40,6 +40,7 @@
 
 #include "Selection.h"
 #include "Eval.h"
+#include "AgileMap.h"
 
 //#define DEBUG 1
 
@@ -725,8 +726,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     }
 
     double pixel1 = DEG2RAD * DEG2RAD * fabs(mdim * mdim);
-    double areapixel =  pixel1 * Sinaa(DEG2RAD*45.);
-    
+
     if(mxdim == 1)
     {
       for (long long m=0; m<nmaps; m++) {
@@ -737,10 +737,22 @@ int EvalExposure(const char *outfile, const char *sarFileName,
         for (unsigned int j=0; j<npixels; j++)
             summed_exposures[j] = 0;
 
+        float center_x = mxdim / 2 - 0.5;
+        float center_y = mxdim / 2 - 0.5;
 
         for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
-          for (unsigned int j=0; j<npixels; j++)
-            summed_exposures[j] += exposures[intvIndex][m * npixels + j]/areapixel;
+          for (unsigned int c=0; c<npixels; c++)
+          {
+            int j = c % mxdim;
+            int i = ( c - j ) / mxdim;
+
+            double xx = (i+1-center_x)*mres;
+            double yy = (j+1-center_y)*mres;
+            double theta = sqrt(xx*xx+yy*yy);
+            double areapixel =  pixel1 * Sinaa(DEG2RAD*theta);
+
+            summed_exposures[c] += exposures[intvIndex][m * npixels + c]/areapixel;
+          }
 
       }
     }
@@ -772,8 +784,24 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
 
         for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
-          for (unsigned int j=0; j<npixels; j++)
-            sum[j] += exposures[intvIndex][m * npixels + j]/areapixel;
+          for (unsigned int c=0; c<npixels; c++)
+          {
+            int j = c % mxdim;
+            int i = ( c - j ) / mxdim;
+            double xx = (i+1-center_x)*mres;
+            double yy = (j+1-center_y)*mres;
+            double theta = sqrt(xx*xx+yy*yy);
+            double areapixel =  pixel1 * Sinaa(DEG2RAD*theta);
+            /*
+            cout << "( "<<i<<" , "<<j<<" )" << endl;
+            cout << "( "<<xx<<" , "<<yy<<" )" << endl;
+            cout << "theta: " << theta << endl;
+            cout << "Areapixel = " << areapixel << endl;
+            cout << "Areapixel old = " << pixel1 * Sinaa(DEG2RAD*45.) << endl;
+            */
+
+            sum[c] += exposures[intvIndex][m * npixels + c]/areapixel;
+          }
 
 
 
