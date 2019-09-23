@@ -1486,7 +1486,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
 
 
         char outfile_str[60];
-        sprintf(outfile_str, "%s_int_%d.ap", outfile, intvIndex);
+        sprintf(outfile_str, "%s.ph", outfile, intvIndex);
 
         ofstream outfile_stream;
         outfile_stream.open(outfile_str);
@@ -1500,7 +1500,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         string header = "time  l  b  energy  theta  ph_earth  phasec dist ";
 
         cout << header << endl;
-        outfile_stream << header << endl;
+
 
         for (long k = 0; k<nrows; k++) {
             fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
