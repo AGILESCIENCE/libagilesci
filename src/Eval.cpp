@@ -165,7 +165,7 @@ bool FovTest(Mapspec &maps, long i, double theta)
 void addexpval(long i, long ii, long mxdim, const vector<int> &aitstatus,
         const vector<double>& lng, const vector<double>& lat, double lp, double bp,
         Mapspec &maps, double learth, double bearth, double albrad, double time, vector<double> &A,
-        AeffGridAverage *raeffArr, const vector<double>& area)
+        AeffGridAverage *raeffArr, const vector<double>& area, bool no_area = false)
 {
     long element = i * mxdim + ii;
     if (aitstatus[element] == 0 && AlbTest(lng[element], lat[element], learth, bearth, albrad)) {
@@ -174,11 +174,15 @@ void addexpval(long i, long ii, long mxdim, const vector<int> &aitstatus,
         long nmaps = maps.size();
         for (long m = 0; m < nmaps; m++) {
             if (FovTest(maps, m, theta)) {
-                A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
+                if(no_area)
+                  A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi));
+                else
+                  A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
             }
         }
     }
 }
+
 
 bool LoadProjection(const char *projstr, ProjectionType &proj)
 {
@@ -573,20 +577,20 @@ int EvalExposure(const char *outfile, const char *sarFileName,
                 /// Rotation satRot(q4[lowrow], q1[lowrow], q2[lowrow], q3[lowrow]);
 
                 if (mxdim == 1) {
-                    addexpval(0, 0, 1, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area);
+                    addexpval(0, 0, 1, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area, sum_exposure);
                 }
                 else {
                     for (i = 0; i <= mxdim-2; i += binstep) {
                         for (ii = 0; ii <= mxdim-2; ii += binstep)
-                            addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area);
+                            addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area, sum_exposure);
                         ii = mxdim - 1;
-                        addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area);
+                        addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area, sum_exposure);
                     }
                     i = mxdim - 1;
                     for (ii = 0; ii <= mxdim-2; ii += binstep)
-                        addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area);
+                        addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area, sum_exposure);
                     ii = mxdim - 1;
-                    addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area);
+                    addexpval(i, ii, mxdim, aitstatus, lng, lat, lp, bp, maps, learth, bearth, albrad, time, A, raeffArr, area, sum_exposure);
                 }
             }
         }
@@ -751,7 +755,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             double theta = sqrt(xx*xx+yy*yy);
             double areapixel =  pixel1 * Sinaa(DEG2RAD*theta);
 
-            summed_exposures[c] += exposures[intvIndex][m * npixels + c]/areapixel;
+            summed_exposures[c] += exposures[intvIndex][m * npixels + c];
           }
 
       }
@@ -759,18 +763,18 @@ int EvalExposure(const char *outfile, const char *sarFileName,
     else if(sum_exposure)
     {
 
-      float center_x = mxdim / 2 - 0.5;
-      float center_y = mxdim / 2 - 0.5;
-      float radius_of_circle = mxdim/2;
+      float center_x = mxdim / 2;// - 0.5;
+      float center_y = mxdim / 2;// - 0.5;
+      float radius_of_circle = mxdim / 2;
 
 
-      #ifdef DEBUG
+      //#ifdef DEBUG
       cout << "mdim: " << mdim << " mres: " << mres << " mxdim: " << mxdim << " nmaps: " << nmaps << endl;
       cout << "radius_of_circle: " << radius_of_circle << endl;
       cout << "center: " << center_x << " " << center_y << endl;
       cout << "intervals count: " << intervals.Count() << endl;
       cout << "npixels: " << npixels << endl;
-      #endif
+      //#endif
 
       for (long long m=0; m<nmaps; m++) {
 
@@ -783,45 +787,58 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             sum[j] = 0;
 
 
+        // per ogni intervallo
         for (int intvIndex=0; intvIndex<intervals.Count(); intvIndex++)
+
+
+          //  si sommano pixel a pixel le exposures delle mappe m-esime di tutti gli intervalli.
+          //  le somme si mettono non in una matrice ma nell'array sum che viene re-inizializzato a 0
+          //  all'inizio del processamento di una nuova mappa
           for (unsigned int c=0; c<npixels; c++)
           {
+
+            /* not neede anymore, normalization is handled in addexpval
             int j = c % mxdim;
             int i = ( c - j ) / mxdim;
             double xx = (i+1-center_x)*mres;
             double yy = (j+1-center_y)*mres;
             double theta = sqrt(xx*xx+yy*yy);
             double areapixel =  pixel1 * Sinaa(DEG2RAD*theta);
-            /*
-            cout << "( "<<i<<" , "<<j<<" )" << endl;
-            cout << "( "<<xx<<" , "<<yy<<" )" << endl;
-            cout << "theta: " << theta << endl;
-            cout << "Areapixel = " << areapixel << endl;
-            cout << "Areapixel old = " << pixel1 * Sinaa(DEG2RAD*45.) << endl;
             */
 
-            sum[c] += exposures[intvIndex][m * npixels + c]/areapixel;
+            #ifdef DEBUG
+            cout << "( "<<i<<" , "<<j<<" )" << endl;
+            cout << "( "<<xx<<" , "<<yy<<" )" << endl;
+            cout << "theta: " << theta << endl; // dovrebbe andare da 0 a 360
+            cout << "Areapixel = " << areapixel << endl;
+            cout << "Areapixel old = " << pixel1 * Sinaa(DEG2RAD*45.) << endl;
+            #endif
+
+            sum[c] += exposures[intvIndex][m * npixels + c];///areapixel;
           }
 
 
 
+          // Si calcola la distanza
+          for (int x = 0; x < mxdim; x++)
+          {
+            for (int y = 0; y < mxdim; y++)
+            {
 
-        for (int y = 0; y < mxdim; y++) {
-          for (int x = 0; x < mxdim; x++) {
+              float pixel_center_x = x + 0.5;
+              float pixel_center_y = y + 0.5;
 
-            float xx = x + 0.5;
-            float yy = y + 0.5;
+              float dist = sqrt( pow(center_x - pixel_center_x, 2) + pow(center_y - pixel_center_y, 2) );
 
-            float dist = sqrt( pow(center_x - x, 2) + pow(center_y - y, 2) );
+              if (dist <= radius_of_circle)
+              {
+                double pixel_exp = sum[x*mxdim + y];
+                //cout << x << "," << y << " = " << pixel_exp << endl;
+                summed_exposure += pixel_exp;
 
-            if (dist <= radius_of_circle){
-              double pixel_exp = sum[x*mxdim + y];
-              //cout << x << "," << y << " = " << pixel_exp << endl;
-              summed_exposure += pixel_exp;
-
+              }
             }
           }
-        }
 
         summed_exposures.push_back(summed_exposure);
       }
@@ -829,7 +846,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
       int map_ind = 0;
       for (std::vector<double>::iterator it = summed_exposures.begin() ; it != summed_exposures.end(); ++it)
       {
-        cout << "Exposure summed for map "<<map_ind<< " in a radius of "<< radius_of_circle*mres << " degrees = " <<*it << endl;
+        cout << "Exposure summed for map " << map_ind << " in a radius of "<< radius_of_circle*mres << " degrees ("<< radius_of_circle <<" pixels ) is " <<*it << endl;
         map_ind ++;
       }
     }
@@ -1039,6 +1056,8 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
     fits_movabs_hdu(templateFits, 2, &hdutype, &status);
     long oldnrows;
     fits_get_num_rows(templateFits, &oldnrows, &status);
+    cout << "fits_get_num_rows " << oldnrows  << " rows." << endl;
+
     fits_delete_rows(templateFits, 1, oldnrows, &status);
 
 #ifdef DEBUG
@@ -1062,9 +1081,9 @@ int EvalCounts(const char *outfile, const char *projection, double tmin,
 #endif
         long nrows;
         fits_get_num_rows(templateFits, &nrows, &status);
-#ifdef DEBUG
+//#ifdef DEBUG
         cout << "Reading all " << nrows << " rows" << endl;
-#endif
+//#endif
 
         int raColumn, decColumn;
         fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
@@ -1463,13 +1482,26 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         fits_get_colnum(templateFits, 1, (char*)"PH_EARTH", &pheColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"THETA", &thetaColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"PHASE", &phaseColumn, &status);
-		fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
+		    fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
+
+
+        char outfile_str[60];
+        sprintf(outfile_str, "%s.ph", outfile, intvIndex);
+
+        ofstream outfile_stream;
+        outfile_stream.open(outfile_str);
+
 
         double ra, dec, l, b, the;
         double baa = ba;// * DEG2RAD;
         double laa = la;// * DEG2RAD;
         double timec, energyc, ph_earthc, thetac, phasec;
-        cout << "time  l  b  energy  theta  ph_earth  phasec dist " << endl;
+
+        string header = "time  l  b  energy  theta  ph_earth  phasec dist ";
+
+        cout << header << endl;
+
+
         for (long k = 0; k<nrows; k++) {
             fits_read_col(templateFits, TDOUBLE, raColumn, k+1, 1, 1, NULL, &ra, NULL, &status);
             fits_read_col(templateFits, TDOUBLE, decColumn, k+1, 1, 1, NULL, &dec, NULL, &status);
@@ -1485,12 +1517,17 @@ int EvalCountsInRadius(const char *outfile, double tmin,
 
             double the = SphDistDeg(l, b, laa, baa);
 
-			if (the < radius) {
-            	totalCounts++;
-            	cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
-            }
+  			  if (the < radius)
+          {
+              totalCounts++;
+              cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
+              outfile_stream << std::fixed << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
+          }
         }
         counts[intvIndex]=totalCounts;
+
+        outfile_stream.close();
+
         if (nrows > 0)
             fits_delete_rows(templateFits, 1, nrows, &status);
     }
