@@ -1489,7 +1489,7 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         sprintf(outfile_str, "%s.ph", outfile, intvIndex);
 
         ofstream outfile_stream;
-        outfile_stream.open(outfile_str);
+        outfile_stream.open(outfile_str, ios::app);
 
 
         double ra, dec, l, b, the;
