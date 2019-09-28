@@ -841,7 +841,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             }
           }
 		//divide the summed_exposure in cm2 s sr and remove sr calculated as a cone
-        summed_exposure /= 2.0*M_PI*(1.0 - cos(mdim * DEG2RAD));
+        summed_exposure /= 2.0*M_PI*(1.0 - cos((mdim / 2.0 )* DEG2RAD ));
         summed_exposures.push_back(summed_exposure);
       }
 
