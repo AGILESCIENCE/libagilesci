@@ -174,11 +174,11 @@ void addexpval(long i, long ii, long mxdim, const vector<int> &aitstatus,
         long nmaps = maps.size();
         for (long m = 0; m < nmaps; m++) {
             if (FovTest(maps, m, theta)) {
-                if(no_area)
-                  A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
-                else
+               // if(no_area)
+               //   A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi));
+               // else
                   //original
-                  A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
+               A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
             }
         }
     }
@@ -730,7 +730,7 @@ int EvalExposure(const char *outfile, const char *sarFileName,
 
     }
 
-    double pixel1 = DEG2RAD * DEG2RAD * fabs(mdim * mdim);
+    //double pixel1 = DEG2RAD * DEG2RAD * fabs(mdim * mdim);
 
     if(mxdim == 1)
     {
@@ -751,10 +751,10 @@ int EvalExposure(const char *outfile, const char *sarFileName,
             int j = c % mxdim;
             int i = ( c - j ) / mxdim;
 
-            double xx = (i+1-center_x)*mres;
-            double yy = (j+1-center_y)*mres;
-            double theta = sqrt(xx*xx+yy*yy);
-            double areapixel =  pixel1 * Sinaa(DEG2RAD*theta);
+            //double xx = (i+1-center_x)*mres;
+            //double yy = (j+1-center_y)*mres;
+            //double theta = sqrt(xx*xx+yy*yy);
+            //double areapixel =  pixel1 * Sinaa(DEG2RAD*theta);
 
             summed_exposures[c] += exposures[intvIndex][m * npixels + c];
           }
@@ -840,7 +840,8 @@ int EvalExposure(const char *outfile, const char *sarFileName,
               }
             }
           }
-
+		//divide the summed_exposure in cm2 s sr and remove sr calculated as a cone
+        summed_exposure /= 2.0*M_PI*(1.0 - cos(mdim * DEG2RAD));
         summed_exposures.push_back(summed_exposure);
       }
 
