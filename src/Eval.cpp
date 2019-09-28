@@ -175,8 +175,9 @@ void addexpval(long i, long ii, long mxdim, const vector<int> &aitstatus,
         for (long m = 0; m < nmaps; m++) {
             if (FovTest(maps, m, theta)) {
                 if(no_area)
-                  A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi));
+                  A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
                 else
+                  //original
                   A[m*mxdim*mxdim+element] += 1e-3*time*(raeffArr[m].AvgVal(theta, phi))*area[element];
             }
         }
