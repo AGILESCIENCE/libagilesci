@@ -3695,7 +3695,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL ULbayes Exp ExpSpectraCorFactor Erg Erg_Err Erg_UL Erglog Erglog_Err Erglog_UL Senstivity FluxPerChannel" << endl;
+	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL ULbayes Exp ExpSpectraCorFactor Erg Erg_Err Erg_UL Erglog Erglog_Err Erglog_UL Sensitivity FluxPerChannel" << endl;
 	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index_Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
@@ -3709,7 +3709,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << "! Emin..emax fovmin..fovmax albedo binsize expstep phasecode ExpRatio" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
-    srcout << "! skytype.filter_irf" << std::endl;
+    srcout << "! skytypeL.filter_irf skytypeH.filter_irf" << std::endl;
 	srcout << m_sources[i].GetLabel()
 				<< " " << m_inSrcDataArr[i].fixflag	/// Original flag
 				<< " " << m_inSrcDataArr[i].index	/// Original index
@@ -4022,8 +4022,8 @@ for (int i=0; i<m_srcCount; ++i) {
     srcout << tmp << " ";
 
     tmp = "None";
-    if(gasMap.GetSkyL()[0] != 0) {
-        tmp = gasMap.GetSkyL();
+    if(gasMap.GetSkyH()[0] != 0) {
+        tmp = gasMap.GetSkyH();
         std::string::size_type pos1 = tmp.find(".")+1;
         std::string::size_type pos2 = tmp.find("_", pos1)+1;
         std::string::size_type pos3 = tmp.find(".", pos2);
