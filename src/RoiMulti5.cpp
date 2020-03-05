@@ -3695,7 +3695,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	const Ellipse& ellipse = m_sources[i].GetEllipse();
 	srcout << "! L B Dist_from_start_position r a b phi" << endl;
 	srcout << "! Counts Err +Err -Err UL" << endl;
-	srcout << "! Flux [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL ULbayes Exp ExpSpectraCorFactor Erg Erg_Err Erg_UL Erglog Erglog_Err Erglog_UL Sensitivity FluxPerChannel" << endl;
+	srcout << "! Flux(ph/cm2s) [" << m_fluxLimitMin << " , " << m_fluxLimitMax << "] Err +Err -Err UL(ph/cm2s) ULbayes(ph/cm2s) Exp(cm2s) ExpSpectraCorFactor null null null Erglog(erg/cm2s) Erglog_Err Erglog_UL(erg/cm2s) Sensitivity FluxPerChannel(ph/cm2s)" << endl;
 	srcout << "! Index [" << m_inSrcDataArr[i].index_low_limit << " , " << m_inSrcDataArr[i].index_upp_limit  << "] Index_Err" << " Par2 [" << m_inSrcDataArr[i].par2_low_limit  << " , " << m_inSrcDataArr[i].par2_upp_limit  << "] Par2_Err Par3 [" << m_inSrcDataArr[i].par3_low_limit << " , " << m_inSrcDataArr[i].par3_upp_limit << "] Par3_Err" << endl;
 	srcout << "! cts fitstatus0 fcn0 edm0 nvpar0 nparx0 iter0 fitstatus1 fcn1 edm1 nvpar1 nparx1 iter1 Likelihood1" << endl;
 
@@ -3705,8 +3705,8 @@ for (int i=0; i<m_srcCount; ++i) {
 		srcout << "! Iso coeffs [" << m_isoLimitMin << " , " << m_isoLimitMax << "] and errs" << endl;
 		srcout << "! Iso zero coeffs and errs" << endl;
 	//	}
-	srcout << "! Start_date_UTC End_date_UTC Start_data_TT End_data_TT Start_date_MJD End_date_MJD" << endl;
-	srcout << "! Emin..emax fovmin..fovmax albedo binsize expstep phasecode ExpRatio" << endl;
+	srcout << "! Start_date(UTC) End_date(UTC) Start_date(TT) End_date(TT) Start_date(MJD) End_date(MJD)" << endl;
+	srcout << "! Emin..emax(MeV) fovmin..fovmax(deg) albedo(deg) binsize(deg) expstep phasecode ExpRatio" << endl;
 	srcout << "! Fit status of steps ext1, step1, ext2, step2, contour, index, ul [-1 step skipped, 0 ok, 1 errors]" << endl;
 	srcout << "! Number of counts for each step (to evaluate hypothesis)" << endl;
     srcout << "! skytypeL.filter_irf skytypeH.filter_irf" << std::endl;
@@ -4346,7 +4346,7 @@ if (ExtCount()) {
 
 if (SrcCount()) {
 	htmlout << "<table border=1 cellpadding=2 cellspacing=0>" << endl;
-	htmlout << "<tr><td>Source</td><td>Flux</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td><td>Par2</td><td>Par3</td><td>TypeFun</td></tr>" << endl;
+	htmlout << "<tr><td>Source</td><td>Flux (ph/cm2s)</td><td>Index</td><td>L</td><td>B</td><td>sqrt(minTS)</td><td>FixFlag</td><td>ULCL</td><td>LOCL</td><td>Par2</td><td>Par3</td><td>TypeFun</td></tr>" << endl;
 	for (int i=0; i<SrcCount(); ++i) {
 		const SourceData& srcData = m_inSrcDataArr[i];
 		htmlout << "<tr><td>" << srcData.label
