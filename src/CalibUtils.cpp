@@ -306,8 +306,24 @@ specwt[eneChanCount-1] = pow(double(m_energy[eneChanCount-1]), 1.0-m_index) - po
 
 m_avgValues = 0.0f;
 float normsum = 0;
-for (int eobs = iMin; eobs <= iMax; eobs++)
+for (int eobs = iMin; eobs <= iMax; eobs++) {
 	normsum += specwt[eobs];
+}
+
+/*	
+//EDPEVAL
+//Questa parte è usata per stabilire come la dispersione energetica
+//si distribuisce tra i diversi canali. Da riattivare per avere le stampe
+//AB togli se non usato
+float normsumfull = 0;
+float edpratioidealfull = 0;
+float edpratioidealfullAE = 0;
+for (int etrue = 0; etrue < eneChanCount; etrue++) {
+	normsumfull += specwt[etrue];
+	edpratioidealfull += 1 * specwt[etrue];
+	edpratioidealfullAE += 1 * specwt[etrue] * m_aeffgrid(0, 0, etrue);
+}
+*/
 
 int numtheta = m_avgValues.Dim(1);
 int numphi = m_avgValues.Dim(0);
@@ -320,24 +336,74 @@ for (int thetaind = 0; thetaind < numtheta; thetaind++) {
 		VecF edpArr(eneChanCount);
 		edpArr = 0.0f;
 		float avgValue = 0.0f;
+		/*	
+		//EDPEVAL
+		float edpratiofullideal = 0.0f;
+		float edpratio = 0.0f;
+		float idealratio = 0.0f;
+		float idealratioAE = 0.0f;
+		float edpratiobandideal = 0.0f;
+		*/
 		for (int etrue = 0; etrue < eneChanCount; etrue++) {
+			/*	
+			//EDPEVAL
+			edpratiofullideal += 1 * specwt[etrue] * m_aeffgrid(phiind, thetaind, etrue);
+			*/
 			if (m_hasEdp) {
 				/// Calcolo della dispersione energetica totale per ogni canale di energia
-				//cout << "EOBS " << iMin << " " << m_energy[iMin] << " " << iMax << " " << m_energy[iMax] << endl;
+				/*	
+				//EDPEVAL
+				cout << "IRES*** ETRUE: " << etrue << " " << m_energy[etrue] << " of eneChanCount " << eneChanCount << endl;
+				cout << "EOBS from " << iMin << " " << m_energy[iMin] << " to " << iMax << " " << m_energy[iMax] << endl;
+				edpratiobandideal = 0;
+				idealratio = 0;
+				idealratioAE = 0;
+				*/
 				for (int eobs = iMin;  eobs <= iMax; eobs++) {
+					/*	
+					//EDPEVAL
+					edpratiobandideal += 1 * specwt[eobs] * m_aeffgrid(phiind, thetaind, eobs);
+					idealratio += 1 * specwt[eobs];
+					idealratioAE += 1 * specwt[eobs] * m_aeffgrid(phiind, thetaind, eobs);
+					*/
 					edpArr[etrue] += m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]);
-					//cout << "EDP VALUE: " << etrue << " " << m_energy[etrue] << " " << eobs << " " << m_energy[eobs] << " " << thetaind << " " << m_theta[thetaind] << " " << phiindcor << " " << m_phi[phiindcor] << " " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]) << endl;
+					/*	
+					//EDPEVAL
+					cout << "EDP VALUE: true energy " << etrue << " " << m_energy[etrue] << " obs energy " << eobs << " " << m_energy[eobs] << " theta " << thetaind << " " << m_theta[thetaind] << " phi " << phiindcor << " " << m_phi[phiindcor] << " val: " << m_edp.Val(m_energy[etrue], m_energy[eobs], m_theta[thetaind], m_phi[phiindcor]) << endl;
+					*/
 				}
-				//cout << "FINAL EDP etrue: " << m_energy[etrue] << " " << edpArr[etrue] << endl;
-			} else
+				/*	
+				//EDPEVAL				
+				cout << "FINAL EDP etrue for " << m_energy[etrue] << " MeV: " << edpArr[etrue] << endl;
+				*/
+			} else {
 				edpArr[etrue] = (etrue<iMin || etrue>iMax) ? 0.0f : 1.0f;
+				/*	
+				//EDPEVAL
+				edpratiobandideal = 1;
+				*/
+			}
 			avgValue += edpArr[etrue] * specwt[etrue] * m_aeffgrid(phiind, thetaind, etrue);
+			/*	
+			//EDPEVAL
+			edpratio += edpArr[etrue] * specwt[etrue];
+			*/
+			
 			/*cout << "m_aeffgrid " << (int) m_phi[phiind] << " " << (int) m_theta[thetaind] << " " << (int) m_energy[etrue] << "  - " << m_aeffgrid(phiind, thetaind, etrue) << endl;
 			if(m_aeffgrid(phiind, thetaind, etrue) == 0)
 				cout << "ERROR#################" << endl;
 			 */
 		}
 		m_avgValues(phiind, thetaind) = avgValue/normsum;
+		/*	
+		//EDPEVAL
+		cout << "edpratioideal (full band): " << edpratiofullideal/normsumfull <<  " edpratioideal (working band) " << edpratiobandideal/normsum << " edpratioreal (working band - avgValue) " << avgValue/normsum << endl;
+		cout << "edpratio % " << edpratio/edpratioidealfull <<endl;
+		cout << "idealratio % " << idealratio/edpratioidealfull <<endl;
+		cout << "edpratioAE % " << avgValue/edpratioidealfullAE <<endl;
+		cout << "idealratioAE % " << idealratioAE/edpratioidealfullAE <<endl;
+		cout << "IRESF*** for phi " << (int) m_phi[phiind] << " theta " << (int) m_theta[thetaind] << " avgValue: " << avgValue/normsum << "\n" << endl;
+		*/
 	}
 }
 	/*
