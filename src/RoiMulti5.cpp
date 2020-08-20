@@ -4078,17 +4078,17 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << iterNum;
 	srcout << " " << m_sources[i].GetSrcL();
 	srcout << " " << m_sources[i].GetSrcB();
-	srcout << " " << m_sources[i].GetTS();
+	srcout << " " << setprecision(4) << m_sources[i].GetTS();
 	srcout << " " << exposure*m_sources[i].GetFlux()/expcor;
 	srcout << " " << exposure*m_sources[i].GetFluxerr()/expcor;
 	srcout << " " << exposure*m_sources[i].GetFluxul()/expcor;
-	srcout << " " << m_sources[i].GetIndex();
+	srcout << " " << setprecision(4) << m_sources[i].GetIndex();
 	srcout << " " << m_inSrcDataArr[i].fixflag; /// zzz why not from the sources array?
-	srcout << " " << m_sources[i].GetMinTS();
+	srcout << " " << setprecision(4) << m_sources[i].GetMinTS();
 
 
 	if (m_sources[i].GetRadius())
-		srcout << " " << m_sources[i].GetRadius();
+		srcout << " " << setprecision(4) << m_sources[i].GetRadius();
 	else
 		srcout << " -1";
 
@@ -4117,7 +4117,7 @@ for (int i=0; i<m_srcCount; ++i) {
 	for (int map=0; map<count; ++map)
 		srcout << sep[bool(map)] << GetFinalDPM(true, map, i, false);
 
-	srcout << " ";
+	//srcout << " ";
 
 
 	for (int b=0; b<simArraySize; ++b) {
