@@ -37,6 +37,9 @@ struct Ellipse
 	double attitude;	///  radians;
 	Point  center;
 	Ellipse(): horAxis(0), verAxis(0), attitude(0), center() {}
+	Ellipse(const Ellipse& ellipse) { horAxis=ellipse.horAxis; verAxis=ellipse.verAxis; attitude=ellipse.attitude; center=ellipse.center;}
+	~Ellipse() {}
+	Ellipse& operator=(const Ellipse& ellipse) { horAxis=ellipse.horAxis; verAxis=ellipse.verAxis; attitude=ellipse.attitude; center=ellipse.center; return *this; }
 };
 
 /// Find the best fitting ellipse starting from a circle of the same area and centered in the barycente

@@ -261,7 +261,7 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(int fluxcorrection, double edp
 			}
 		}
 	}
-
+	return 1.0;
 }
 
 void AlikeSourceMap::WriteEllipse(string fileprefix) const
@@ -1009,7 +1009,7 @@ if (m_logFile)
 }
 */
 
-bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
+void RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
 	m_minimizerdefstrategy = minimizerdefstrategy;
 	m_minimizertype = minimizertype;
 	m_minimizeralg = minimizeralg;
