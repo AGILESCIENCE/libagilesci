@@ -1479,13 +1479,13 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         fits_get_colnum(templateFits, 1, (char*)"RA", &raColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"DEC", &decColumn, &status);
 
-        int enColumn, pheColumn, thetaColumn, phaseColumn, timeColumn;
+        int enColumn, pheColumn, thetaColumn, phaseColumn, timeColumn, evstatusColumn;
         fits_get_colnum(templateFits, 1, (char*)"ENERGY", &enColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"PH_EARTH", &pheColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"THETA", &thetaColumn, &status);
         fits_get_colnum(templateFits, 1, (char*)"PHASE", &phaseColumn, &status);
-		    fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
-
+		fits_get_colnum(templateFits, 1, (char*)"TIME", &timeColumn, &status);
+        fits_get_colnum(templateFits, 1, (char*)"EVSTATUS", &evstatusColumn, &status);
 
         char outfile_str[60];
         sprintf(outfile_str, "%s.ph", outfile, intvIndex);
@@ -1498,8 +1498,9 @@ int EvalCountsInRadius(const char *outfile, double tmin,
         double baa = ba;// * DEG2RAD;
         double laa = la;// * DEG2RAD;
         double timec, energyc, ph_earthc, thetac, phasec;
+        char* evstatusc = new char[1];
 
-        string header = "time  l  b  energy  theta  ph_earth  phasec dist ";
+        string header = "time  l  b  energy  theta  ph_earth  phase dist evstatus";
 
         cout << header << endl;
 
@@ -1515,15 +1516,15 @@ int EvalCountsInRadius(const char *outfile, double tmin,
             fits_read_col(templateFits, TDOUBLE, pheColumn, k+1, 1, 1, NULL, &ph_earthc, NULL, &status);
             fits_read_col(templateFits, TDOUBLE, thetaColumn, k+1, 1, 1, NULL, &thetac, NULL, &status);
             fits_read_col(templateFits, TDOUBLE, phaseColumn, k+1, 1, 1, NULL, &phasec, NULL, &status);
-
+            fits_read_col(templateFits, TSTRING, evstatusColumn, k+1, 1, 1, NULL, &evstatusc, NULL, &status);
 
             double the = SphDistDeg(l, b, laa, baa);
 
   			  if (the < radius)
           {
               totalCounts++;
-              cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
-              outfile_stream << std::fixed << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << endl;
+              cout << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << " " << evstatusc << endl;
+              outfile_stream << std::fixed << timec << " " << l << " " << b << " " << energyc << " " << thetac << " " << ph_earthc << " " << phasec << " " << the << " " << evstatusc << endl;
           }
         }
         counts[intvIndex]=totalCounts;
