@@ -245,7 +245,7 @@ int LabelingDuePassi8()
 	unsigned int last_i;
 
 	int i, j;
-	int k;
+	unsigned int k;
 	int NumObject = 0;	//utilizzato per contare il numero di oggetti individuati
 	// 	UChar_t BG = 0;
 	long int count=0;

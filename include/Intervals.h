@@ -32,6 +32,8 @@ class Interval
 {
 public:
 	Interval(): m_start(0), m_stop(0) {}
+	Interval(const Interval& interval) { m_start=interval.m_start; m_stop=interval.m_stop; }
+
 	Interval(double start, double stop) { Set(start, stop); }
 	~Interval() {}
 

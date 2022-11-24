@@ -41,6 +41,9 @@ public:
 	Point(const double* point): x(point[0]), y(point[1]) {}
 	Point(const Point& point): x(point.x), y(point.y) {}
 
+	~Point() {}
+	Point& operator=(const Point& point) { x=point.x; y=point.y; return *this; }
+
 	Point& operator+=(Point p) { x+=p.x; y+=p.y; return *this; }
 	Point& operator*=(double a) { x*=a; y*=a; return *this; }
 	Point& operator/=(double a) { x/=a; y/=a; return *this; }
@@ -65,7 +68,7 @@ public:
 	Segment(): a(), b() {}
 	Segment(const Point& p1, const Point& p2): a(p1), b(p2) {}
 	Segment(const Segment& other): a(other.a), b(other.b) {}
-
+	Segment& operator=(const Segment& segment) { a=segment.a; b=segment.b; return *this; }
 	double Angle() const { return a.AngleTo(b); }
 	double AngleTo(const Point& p) const;
 	double Length() const { return a.DistanceTo(b); }

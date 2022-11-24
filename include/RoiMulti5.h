@@ -446,9 +446,9 @@ public:	/// Getting the singleton object
 public:	/// Main operations
 	bool SetPsf(const char* psfFileName, const char* raeffFileName, const char* edpFileName);
 	bool SetMaps(const MapData& mapData, int galMode=DiffDefault, int isoMode=DiffDefault);
-	bool SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype);
-	bool SetContourPoints(int contourpoints) { m_contourpoints = contourpoints; };
-	bool SetCorrections(int galmode2, int galmode2fit, int isomode2, int isomode2fit, double edpcorrection, int fluxcorrection) { m_galmode2 = galmode2; m_galmode2fit = galmode2fit; m_isomode2 = isomode2; m_isomode2fit = isomode2fit; m_edpcorrection = edpcorrection; m_fluxcorrection = fluxcorrection;};
+	void SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype);
+	void SetContourPoints(int contourpoints) { m_contourpoints = contourpoints; };
+	void SetCorrections(int galmode2, int galmode2fit, int isomode2, int isomode2fit, double edpcorrection, int fluxcorrection) { m_galmode2 = galmode2; m_galmode2fit = galmode2fit; m_isomode2 = isomode2; m_isomode2fit = isomode2fit; m_edpcorrection = edpcorrection; m_fluxcorrection = fluxcorrection;};
 	/// Add the Extended Sources for analysis
 	bool SetExtendedSources(const ExtData& extData);
 

@@ -122,7 +122,8 @@ struct SourceData
 	SourceData(): label(), fixflag(0), minTS(0), loclimit(0), flux(0), srcL(0), srcB(0), index(0), typefun(0), par2(0), par3(0), TS(0), gal(0), iso(0), fluxul(0), index_low_limit(0.5), index_upp_limit(5.0), par2_low_limit(20.0), par2_upp_limit(10000.0), par3_low_limit(0.0), par3_upp_limit(100.0) {}
 	SourceData(const SourceData& another):
 		label(another.label), fixflag(another.fixflag), minTS(another.minTS), loclimit(another.loclimit), flux(another.flux), srcL(another.srcL), srcB(another.srcB), index(another.index), typefun(another.typefun), par2(another.par2), par3(another.par3), TS(another.TS), gal(another.gal), iso(another.iso), fluxul(another.fluxul), index_low_limit(another.index_low_limit), index_upp_limit(another.index_upp_limit), par2_low_limit(another.par2_low_limit), par2_upp_limit(another.par2_upp_limit), par3_low_limit(another.par3_low_limit), par3_upp_limit(another.par3_upp_limit) {}
-	
+	SourceData& operator=(const SourceData& source) { label = source.label; fixflag = source.fixflag; minTS = source.minTS; loclimit = source.loclimit; flux = source.flux; srcL = source.srcL; srcB = source.srcB; index = source.index; typefun = source.typefun; par2 = source.par2; par3 = source.par3; TS = source.TS; gal = source.gal; iso = source.iso; fluxul = source.fluxul; index_low_limit = source.index_low_limit; index_upp_limit = source.index_upp_limit; par2_low_limit = source.par2_low_limit; par2_upp_limit = source.par2_upp_limit; par3_low_limit = source.par3_low_limit; par3_upp_limit = source.par3_upp_limit; return *this; };
+
 	/// void GetResultsFrom(const AlikeSourceMap& map);
 	
 	void Print(std::ostream& oFile) const;
@@ -136,6 +137,7 @@ class SourceDataArray
 public:
 	SourceDataArray(int length=0): m_dataArr(length) {}
 	SourceDataArray(const SourceDataArray& another): m_dataArr(another.m_dataArr) {}
+	SourceDataArray& operator=(const SourceDataArray& sourcedata) { m_dataArr = sourcedata.m_dataArr; return *this; };
 
 	friend SourceDataArray operator+(const SourceDataArray& arr1, const SourceDataArray& arr2);
 

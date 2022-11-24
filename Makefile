@@ -69,7 +69,7 @@ else
 CXX = g++
 endif
 
-CXXFLAGS = -g -O2 -pipe -I $(INCLUDE_DIR)
+CXXFLAGS = -O2 -pipe -I $(INCLUDE_DIR)
 
 
 ifneq (, $(findstring agile, $(LINKERENV)))

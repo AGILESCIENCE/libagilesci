@@ -261,7 +261,7 @@ double AlikeSourceMap::GetSpectraCorrectionFactor(int fluxcorrection, double edp
 			}
 		}
 	}
-
+	return 1.0;
 }
 
 void AlikeSourceMap::WriteEllipse(string fileprefix) const
@@ -1009,7 +1009,7 @@ if (m_logFile)
 }
 */
 
-bool RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
+void RoiMulti::SetMinimizer(const char* minimizertype, const char* minimizeralg, int minimizerdefstrategy, double deftol, int integratortype) {
 	m_minimizerdefstrategy = minimizerdefstrategy;
 	m_minimizertype = minimizertype;
 	m_minimizeralg = minimizeralg;
@@ -4078,19 +4078,22 @@ for (int i=0; i<m_srcCount; ++i) {
 	srcout << iterNum;
 	srcout << " " << m_sources[i].GetSrcL();
 	srcout << " " << m_sources[i].GetSrcB();
-	srcout << " " << setprecision(4) << m_sources[i].GetTS();
+	if(m_sources[i].GetTS() == 0)
+		srcout << " 0.0";
+	else
+		srcout << " " << m_sources[i].GetTS();
 	srcout << " " << exposure*m_sources[i].GetFlux()/expcor;
 	srcout << " " << exposure*m_sources[i].GetFluxerr()/expcor;
 	srcout << " " << exposure*m_sources[i].GetFluxul()/expcor;
-	srcout << " " << setprecision(4) << m_sources[i].GetIndex();
+	srcout << " " << m_sources[i].GetIndex();
 	srcout << " " << m_inSrcDataArr[i].fixflag; /// zzz why not from the sources array?
-	srcout << " " << setprecision(4) << m_sources[i].GetMinTS();
+	srcout << " " << m_sources[i].GetMinTS();
 
 
 	if (m_sources[i].GetRadius())
-		srcout << " " << setprecision(4) << m_sources[i].GetRadius();
+		srcout << " " << m_sources[i].GetRadius();
 	else
-		srcout << " -1";
+		srcout << " -1.0";
 
 	srcout << " " << m_sources[i].GetExp();
 
