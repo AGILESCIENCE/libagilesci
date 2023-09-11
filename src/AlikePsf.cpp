@@ -317,7 +317,11 @@ double AlikeNorm::PLnuFnu(double eMin, double eMax, double index, int type)
 	}
 	if(type == 1) {
 		double elogcenter = CalcLogBarycenter(eMin, eMax);
-		return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+		//BUILD25 return ( (elogcenter * elogcenter) / (eMax - eMin) ) * 1.6e-06;
+        //BUILD26:
+        double factor = 0.00000160217733; // MeV to erg
+        double res1 = std::pow(factor, 3 - index) * std::pow(elogcenter, 2 - index) * (eMax*eMin) / (eMax - eMin);
+        return res1;
 	}
 	return 0;
 }
