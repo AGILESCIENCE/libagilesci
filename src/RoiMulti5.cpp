@@ -3796,13 +3796,16 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << m_sources[i].GetCountsul()
 				<< endl;
 */
-	srcout << exposure*m_sources[i].GetFlux()
+	if(exposure != 0)
+        srcout << exposure*m_sources[i].GetFlux()
 				<< " " << exposure*m_sources[i].GetFluxerr()
 				<< " " << exposure*m_sources[i].GetFluxhi()
 				<< " " << exposure*m_sources[i].GetFluxlo()
 				<< " " << exposure*m_sources[i].GetFluxul()
 				<< endl;
-
+    else
+        srcout << " 0 0 0 0 0 " << endl;
+    
 	double absEmin = 0;
 	double absEmax = 0;
 	double erg = 0;
@@ -3857,7 +3860,8 @@ for (int i=0; i<m_srcCount; ++i) {
 			erglogul = (exposure*m_sources[i].GetFluxul() / expcor) * fact;
 		}
 	}
-	srcout << exposure*m_sources[i].GetFlux() / expcor
+    if(exposure != 0)
+        srcout << exposure*m_sources[i].GetFlux() / expcor
 				//<< " " << exposure*m_sources[i].GetFlux() / expcor
 				<< " " << exposure*m_sources[i].GetFluxerr() / expcor
 				<< " " << exposure*m_sources[i].GetFluxhi() / expcor
@@ -3873,15 +3877,22 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << erglogerr
 				<< " " << erglogul
 	            << " 0.0 ";
+    else
+        srcout << " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.0 " << endl;
 
 
-
-	double fluxc = m_sources[i].GetFlux();
-	for (int map=0; map<m_mapCount; ++map) {
-		const char* sep[2] = {"", ","};
-		srcout << sep[bool(map)] << fluxc*m_sources[map*m_srcCount+i].GetNormFactor() * exposure / expcor;
-	}
-
+    if(exposure != 0) {
+        double fluxc = m_sources[i].GetFlux();
+        for (int map=0; map<m_mapCount; ++map) {
+            const char* sep[2] = {"", ","};
+            srcout << sep[bool(map)] << fluxc*m_sources[map*m_srcCount+i].GetNormFactor() * exposure / expcor;
+        }
+    } else {
+        for (int map=0; map<m_mapCount; ++map) {
+            const char* sep[2] = {"", ","};
+            srcout << sep[bool(map)] << "0";
+        }
+    }
 	srcout << endl;
 
 	srcout << m_sources[i].GetIndex() << " " << m_sources[i].GetIndexerr() << " " << m_sources[i].GetPar2() << " " << m_sources[i].GetPar2err() << " " << m_sources[i].GetPar3() << " " << m_sources[i].GetPar3err() << endl;
