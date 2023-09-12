@@ -1,3 +1,7 @@
+202309-12
+TAG: v2.3.0
++ flux output 0 in .source when exposure = 0
+
 2023-09-11
 TAG: v2.2.2
 + erglog correction
