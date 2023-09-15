@@ -3804,7 +3804,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << exposure*m_sources[i].GetFluxul()
 				<< endl;
     else
-        srcout << " 0 0 0 0 0 " << endl;
+        srcout << "0 0 0 0 0 " << endl;
     
 	double absEmin = 0;
 	double absEmax = 0;
@@ -3878,7 +3878,7 @@ for (int i=0; i<m_srcCount; ++i) {
 				<< " " << erglogul
 	            << " 0.0 ";
     else
-        srcout << " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.0 " << endl;
+        srcout << "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.0 ";
 
 
     if(exposure != 0) {
