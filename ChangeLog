@@ -1,4 +1,8 @@
-202309-12
+2023-09-15
+TAG: v2.3.1
++ bug in .source
+
+2023-09-12
 TAG: v2.3.0
 + flux output 0 in .source when exposure = 0
 
